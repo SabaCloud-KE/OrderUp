@@ -11,8 +11,21 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [role, setRole] = useState<StaffRole>('admin');
-  const [username, setUsername] = useState('');
+  const [role, setRole] = useState<StaffRole>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const r = (params.get('role') || '').toLowerCase();
+      if (r === 'waiter' || r === 'manager' || r === 'admin') return r;
+    } catch {}
+    return 'admin';
+  });
+  const [username, setUsername] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('email') || params.get('username') || '';
+    } catch {}
+    return '';
+  });
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);

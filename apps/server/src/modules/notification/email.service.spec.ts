@@ -51,26 +51,44 @@ describe('EmailService', () => {
     expect(callArgs.subject).toContain('Welcome to Java House');
     expect(callArgs.html).toContain('John Waiter');
     expect(callArgs.html).toContain('TempPass123!');
-    expect(callArgs.html).toContain('https://orderup-staff.vercel.app');
+    expect(callArgs.html).toContain('role=waiter');
+    expect(callArgs.html).toContain('email=waiter%40test.co.ke');
     expect(callArgs.html).toContain('Staff Portal');
     expect(callArgs.html).toContain('Security Notice');
   });
 
-  it('should direct admin roles to Admin Portal', async () => {
+  it('should direct business admin roles to Staff Portal with role=admin', async () => {
     const sendSpy = vi.spyOn(emailService, 'sendEmail').mockResolvedValue(true);
 
     await emailService.sendUserCredentialsEmail({
       email: 'admin@test.co.ke',
-      fullName: 'Alice Manager',
+      fullName: 'Alice Admin',
       rawPassword: 'AdminPass456!',
       role: 'ADMIN',
       businessName: 'Serena Hotel',
     });
 
     const callArgs = sendSpy.mock.calls[0][0];
-    expect(callArgs.html).toContain('https://orderup-admin.vercel.app');
-    expect(callArgs.html).toContain('Admin Portal');
+    expect(callArgs.html).toContain('role=admin');
+    expect(callArgs.html).toContain('email=admin%40test.co.ke');
+    expect(callArgs.html).toContain('Staff Portal (Admin)');
     expect(callArgs.html).toContain('Business Administrator');
+  });
+
+  it('should direct super admin role to Admin Portal', async () => {
+    const sendSpy = vi.spyOn(emailService, 'sendEmail').mockResolvedValue(true);
+
+    await emailService.sendUserCredentialsEmail({
+      email: 'superadmin@test.co.ke',
+      fullName: 'Platform Super Admin',
+      rawPassword: 'SuperPass789!',
+      role: 'SUPER_ADMIN',
+    });
+
+    const callArgs = sendSpy.mock.calls[0][0];
+    expect(callArgs.html).toContain('https://orderup-admin.vercel.app');
+    expect(callArgs.html).toContain('Super Admin Portal');
+    expect(callArgs.html).toContain('Platform Super Administrator');
   });
 
   it('should support mock mode gracefully when RESEND_API_KEY is not set', async () => {

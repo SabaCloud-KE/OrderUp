@@ -56,19 +56,40 @@ export class EmailService {
   }
 
   /**
-   * Determine the appropriate login portal URL based on user role
+   * Determine the appropriate login portal URL based on user role.
+   * Business Admin (Owner), Manager, and Waiter all log into the unified Staff Portal.
+   * Only Platform Super Admin uses the dedicated Admin Portal.
    */
-  private resolvePortalUrl(role: string): { url: string; portalName: string } {
+  private resolvePortalUrl(role: string, email?: string): { url: string; portalName: string } {
     const normalized = (role || '').toUpperCase();
-    if (normalized === 'SUPER_ADMIN' || normalized === 'ADMIN' || normalized === 'CLUB_ADMIN' || normalized === 'TENANT_ADMIN') {
+
+    if (normalized === 'SUPER_ADMIN') {
       return {
         url: env.ADMIN_PORTAL_URL,
-        portalName: 'Admin Portal',
+        portalName: 'Platform Super Admin Portal',
       };
     }
+
+    const baseStaffUrl = (env.STAFF_PORTAL_URL || 'https://order-up-staffportal.vercel.app').replace(/\/+$/, '');
+    const emailParam = email ? `&email=${encodeURIComponent(email)}` : '';
+
+    if (normalized === 'ADMIN' || normalized === 'CLUB_ADMIN' || normalized === 'TENANT_ADMIN') {
+      return {
+        url: `${baseStaffUrl}?role=admin${emailParam}`,
+        portalName: 'Staff Portal (Admin)',
+      };
+    }
+
+    if (normalized === 'MANAGER') {
+      return {
+        url: `${baseStaffUrl}?role=manager${emailParam}`,
+        portalName: 'Staff Portal (Manager)',
+      };
+    }
+
     return {
-      url: env.STAFF_PORTAL_URL,
-      portalName: 'Staff Portal',
+      url: `${baseStaffUrl}?role=waiter${emailParam}`,
+      portalName: 'Staff Portal (Waiter)',
     };
   }
 
@@ -117,7 +138,7 @@ export class EmailService {
     const cleanEmail = (params.email || '').trim().toLowerCase();
     const cleanName = (params.fullName || '').trim() || 'Team Member';
     const readableRole = this.formatRole(params.role);
-    const { url: defaultUrl, portalName } = this.resolvePortalUrl(params.role);
+    const { url: defaultUrl, portalName } = this.resolvePortalUrl(params.role, cleanEmail);
     const portalUrl = params.loginUrl || defaultUrl;
     const businessLabel = params.businessName ? params.businessName.trim() : null;
 
