@@ -2247,7 +2247,13 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
 /*                                                                                                                   
    DASHBOARD PAGE
                                                                                                                    */
-const DashboardPage = ({ showToast }: { showToast: (m: string) => void }) => {
+const DashboardPage = ({
+  showToast,
+  businessType,
+}: {
+  showToast: (m: string) => void;
+  businessType?: string;
+}) => {
   const [refreshing, setRefreshing] = React.useState(false);
   const [kpis, setKpis] = React.useState({
     revenue: 'KES 0',
@@ -2399,10 +2405,13 @@ const DashboardPage = ({ showToast }: { showToast: (m: string) => void }) => {
     showToast('Dashboard refreshed');
   };
 
+  const isClub = (businessType || '').toUpperCase() === 'CLUB';
+  const overviewTitle = isClub ? 'Club Overview' : 'Business Overview';
+
   return (
     <div className="space-y-5">
       <SectionHeader
-        title="Club Overview"
+        title={overviewTitle}
         subtitle="Live dashboard"
         action={
           <button
@@ -2629,7 +2638,17 @@ const ReportsPage = ({ showToast }: { showToast: (m: string, type?: 'success' | 
 };
 
 /* --- Settings Page --- */
-const ManagerSettingsPage = ({ showToast }: { showToast: (m: string, type?: 'success' | 'error') => void; user?: any; onSettingsSaved?: (oh: string, ch: string) => void }) => {
+const ManagerSettingsPage = ({
+  showToast,
+  user,
+  businessType,
+  onSettingsSaved,
+}: {
+  showToast: (m: string, type?: 'success' | 'error') => void;
+  user?: any;
+  businessType?: string;
+  onSettingsSaved?: (oh: string, ch: string) => void;
+}) => {
   const [orderNotifs, setOrderNotifs] = React.useState(() => {
     try {
       const saved = localStorage.getItem('orderup_manager_notifs') || localStorage.getItem('drinkhub_manager_notifs');
@@ -2660,9 +2679,11 @@ const ManagerSettingsPage = ({ showToast }: { showToast: (m: string, type?: 'suc
     }
   };
 
+  const isClub = (businessType || '').toUpperCase() === 'CLUB';
+
   return (
     <div className="space-y-6 max-w-2xl">
-      <SectionHeader title="Club Settings" subtitle="Venue configuration" />
+      <SectionHeader title={isClub ? "Club Settings" : "Business Settings"} subtitle="Venue configuration" />
 
       {/* Notification Toggles */}
       {[{ label: 'Order Notifications', desc: 'Get notified when new orders arrive.', val: orderNotifs, set: setOrderNotifs }, { label: 'Sound Alerts', desc: 'Play a chime when an order status changes.', val: soundAlerts, set: setSoundAlerts }].map(item => (
@@ -4080,6 +4101,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
   const clubLocation = `${clubCity}, ${clubCounty}`;
   const clubLogoUrl = currentClub?.logoUrl || user.club?.logoUrl || user.business?.logoUrl || null;
   const clubThemeColor = currentClub?.themeColor || user.club?.themeColor || user.business?.themeColor || '#2563EB';
+  const businessType = currentClub?.businessType || currentClub?.business_type || user.business?.businessType || user.club?.businessType || 'RESTAURANT';
 
   React.useEffect(() => {
     setLogoError(false);
@@ -4154,13 +4176,13 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
   const renderPage = () => {
     const p = { showToast };
     switch (page) {
-      case 'dashboard': return <DashboardPage {...p} />;
+      case 'dashboard': return <DashboardPage {...p} businessType={businessType} />;
       case 'orders':    return <OrdersPage {...p} />;
       case 'menu':      return <MenuPage {...p} />;
       case 'staff':     return <StaffManagementPage {...p} />;
       case 'qr':        return <QrCodesPage user={user} showToast={showToast} clubName={clubName} clubLogoUrl={clubLogoUrl} clubThemeColor={clubThemeColor} />;
       case 'reports':   return <ReportsPage {...p} />;
-      case 'settings':  return <ManagerSettingsPage {...p} user={user} onSettingsSaved={handleSettingsSaved} />;
+      case 'settings':  return <ManagerSettingsPage {...p} user={user} businessType={businessType} onSettingsSaved={handleSettingsSaved} />;
     }
   };
 
