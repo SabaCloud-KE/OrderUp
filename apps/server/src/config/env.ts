@@ -25,6 +25,7 @@ const envSchema = z.object({
     (process.env.MPESA_TRANSACTION_TYPE as 'CustomerPayBillOnline' | 'CustomerBuyGoodsOnline') || 'CustomerPayBillOnline'
   ),
   MPESA_CALLBACK_URL: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);
