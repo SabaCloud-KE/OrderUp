@@ -34,6 +34,9 @@ const envSchema = z.object({
     process.env.CUSTOMER_PWA_URL || 'https://orderup-customer.vercel.app'
   ),
   RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default(process.env.EMAIL_FROM || 'OrderUp <devops@sabacloud.co.ke>'),
+  STAFF_PORTAL_URL: z.string().default(process.env.STAFF_PORTAL_URL || 'https://orderup-staff.vercel.app'),
+  ADMIN_PORTAL_URL: z.string().default(process.env.ADMIN_PORTAL_URL || 'https://orderup-admin.vercel.app'),
 });
 
 const _env = envSchema.safeParse(process.env);

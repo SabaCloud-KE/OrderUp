@@ -3,6 +3,8 @@ import { Business, SubscriptionStatus, BusinessStatus, BusinessType } from '@pri
 import { ITenantRepository } from './tenant.interface';
 import { NotFoundError, BadRequestError } from '../../common/errors/app-error';
 import { prisma } from '../../config/prisma';
+import { emailService } from '../notification/email.service';
+import { logger } from '../../config/logger';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -120,7 +122,7 @@ export class TenantService {
 
     const adminPasswordHash = await bcrypt.hash(rawPassword, BCRYPT_ROUNDS);
 
-    return this.tenantRepository.createBusinessWithAdmin({
+    const result = await this.tenantRepository.createBusinessWithAdmin({
       name: data.name,
       slug: finalSlug,
       businessType: data.businessType,
@@ -141,6 +143,24 @@ export class TenantService {
       adminEmail: (data.adminEmail || data.managerEmail || '').trim().toLowerCase(),
       adminPhone: data.adminPhone || data.managerPhone,
     });
+
+    // Dispatch welcome email with credentials via Resend (fire-and-forget)
+    if (result.admin?.email && rawPassword) {
+      emailService
+        .sendUserCredentialsEmail({
+          email: result.admin.email,
+          fullName: result.admin.fullName,
+          rawPassword,
+          role: result.admin.role,
+          businessName: result.business?.name,
+          mustChangePassword: result.admin.mustChangePassword,
+        })
+        .catch((err) => {
+          logger.error(`Failed to send admin credentials email to ${result.admin.email}:`, err);
+        });
+    }
+
+    return result;
   }
 
   // Alias for backward compatibility

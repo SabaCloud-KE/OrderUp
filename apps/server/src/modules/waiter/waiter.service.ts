@@ -14,6 +14,8 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { prisma } from '../../config/prisma';
+import { emailService } from '../notification/email.service';
+import { logger } from '../../config/logger';
 import {
   UnauthorizedError,
   ForbiddenError,
@@ -177,6 +179,24 @@ export class WaiterService {
     if (!waiterDetail) {
       throw new NotFoundError('Waiter created but could not be retrieved.');
     }
+
+    // Dispatch welcome email with credentials via Resend (fire-and-forget)
+    (async () => {
+      const biz = await prisma?.business?.findUnique({
+        where: { businessUuid },
+        select: { name: true },
+      });
+      await emailService.sendUserCredentialsEmail({
+        email: created.email,
+        fullName: created.fullName,
+        rawPassword: input.password,
+        role: created.role,
+        businessName: biz?.name,
+        mustChangePassword: created.mustChangePassword,
+      });
+    })().catch((err) => {
+      logger.error(`Failed to send waiter credentials email to ${created.email}:`, err);
+    });
 
     return waiterDetail;
   }

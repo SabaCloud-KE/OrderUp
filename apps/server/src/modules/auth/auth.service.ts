@@ -5,6 +5,8 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '.
 import { UnauthorizedError, BadRequestError, NotFoundError } from '../../common/errors/app-error';
 import { normalizeRole, UserRole } from '@orderup/shared';
 import { prisma } from '../../config/prisma';
+import { emailService } from '../notification/email.service';
+import { logger } from '../../config/logger';
 
 // OWASP: bcrypt cost factor ≥ 12
 const BCRYPT_ROUNDS = 12;
@@ -372,6 +374,28 @@ export class AuthService {
         ipAddress: data.ipAddress || null,
       },
     })?.catch?.(() => {/* non-fatal */});
+
+    // Dispatch welcome email with credentials via Resend (fire-and-forget)
+    (async () => {
+      let businessName: string | undefined;
+      if (finalBusinessUuid) {
+        const biz = await prisma?.business?.findUnique({
+          where: { businessUuid: finalBusinessUuid },
+          select: { name: true },
+        });
+        businessName = biz?.name;
+      }
+      await emailService.sendUserCredentialsEmail({
+        email: user.email,
+        fullName: user.fullName,
+        rawPassword: data.password,
+        role: user.role,
+        businessName,
+        mustChangePassword: user.mustChangePassword,
+      });
+    })().catch((err) => {
+      logger.error(`Failed to send credentials email to ${user.email}:`, err);
+    });
 
     return {
       id: user.userUuid,

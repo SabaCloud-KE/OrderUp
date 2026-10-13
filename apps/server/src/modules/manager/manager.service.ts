@@ -14,6 +14,8 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { prisma } from '../../config/prisma';
+import { emailService } from '../notification/email.service';
+import { logger } from '../../config/logger';
 import {
   UnauthorizedError,
   ForbiddenError,
@@ -165,6 +167,24 @@ export class ManagerService {
     if (!managerDetail) {
       throw new NotFoundError('Manager created but could not be retrieved.');
     }
+
+    // Dispatch welcome email with credentials via Resend (fire-and-forget)
+    (async () => {
+      const biz = await prisma?.business?.findUnique({
+        where: { businessUuid },
+        select: { name: true },
+      });
+      await emailService.sendUserCredentialsEmail({
+        email: createdUser.email,
+        fullName: createdUser.fullName,
+        rawPassword: input.password,
+        role: createdUser.role,
+        businessName: biz?.name,
+        mustChangePassword: createdUser.mustChangePassword,
+      });
+    })().catch((err) => {
+      logger.error(`Failed to send manager credentials email to ${createdUser.email}:`, err);
+    });
 
     return managerDetail;
   }
