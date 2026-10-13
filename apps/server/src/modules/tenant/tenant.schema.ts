@@ -85,6 +85,10 @@ export const updateBusinessSchema = z.object({
     openingHours: z.string().optional(),
     closingHours: z.string().optional(),
     isActive: z.boolean().optional(),
+    mpesaShortcode: z.string().optional().nullable().or(z.literal('')),
+    mpesaPasskey: z.string().optional().nullable().or(z.literal('')),
+    mpesaTransactionType: z.enum(['CustomerPayBillOnline', 'CustomerBuyGoodsOnline']).optional(),
+    isMpesaActive: z.boolean().optional(),
   }),
 });
 

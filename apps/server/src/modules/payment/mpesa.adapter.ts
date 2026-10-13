@@ -7,6 +7,11 @@ export interface StkPushParams {
   amount: number;
   accountReference: string;
   transactionDesc: string;
+  venueConfig?: {
+    shortcode?: string | null;
+    passkey?: string | null;
+    transactionType?: string | null;
+  };
 }
 
 export interface StkPushResponse {
@@ -83,22 +88,23 @@ export class MpesaAdapter {
     const isProduction = env.MPESA_ENVIRONMENT === 'production';
     const { token, simulated } = await this.getOAuthToken();
 
+    const shortcode = params.venueConfig?.shortcode?.trim() || env.MPESA_SHORTCODE || '174379';
+    const passkey = params.venueConfig?.passkey?.trim() || env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
+    const transactionType = params.venueConfig?.transactionType || env.MPESA_TRANSACTION_TYPE;
+    const callbackUrl = env.MPESA_CALLBACK_URL || '';
+
     // Production credential validation
     if (isProduction) {
-      if (!env.MPESA_SHORTCODE) {
-        throw new Error('MPESA_SHORTCODE (Paybill or Till Number) is required in production.');
+      if (!shortcode || shortcode === '174379') {
+        throw new Error('A valid M-Pesa Shortcode (Paybill or Till Number) is required in production.');
       }
-      if (!env.MPESA_PASSKEY) {
-        throw new Error('MPESA_PASSKEY is required in production. Obtain this from Safaricom Daraja portal.');
+      if (!passkey || passkey.includes('bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919')) {
+        throw new Error('A valid M-Pesa Passkey is required in production. Obtain this from Safaricom Daraja portal.');
       }
-      if (!env.MPESA_CALLBACK_URL || env.MPESA_CALLBACK_URL.includes('localhost') || env.MPESA_CALLBACK_URL.includes('127.0.0.1')) {
+      if (!callbackUrl || callbackUrl.includes('localhost') || callbackUrl.includes('127.0.0.1')) {
         throw new Error('MPESA_CALLBACK_URL in production must be a public HTTPS endpoint accessible by Safaricom.');
       }
     }
-
-    const shortcode = env.MPESA_SHORTCODE || '174379';
-    const passkey = env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
-    const callbackUrl = env.MPESA_CALLBACK_URL || '';
 
     // Format timestamp in Africa/Nairobi (EAT = UTC+3) YYYYMMDDHHmmss
     const now = new Date();
@@ -133,7 +139,7 @@ export class MpesaAdapter {
       BusinessShortCode: shortcode,
       Password: password,
       Timestamp: timestamp,
-      TransactionType: env.MPESA_TRANSACTION_TYPE,
+      TransactionType: transactionType,
       Amount: Math.max(1, Math.ceil(params.amount)),
       PartyA: formattedPhone,
       PartyB: shortcode,

@@ -51,6 +51,10 @@ export class BusinessRepository {
       closingHours: business.closingHours,
       operatingSchedule: (business as any).operatingSchedule as WeeklyOperatingSchedule | null,
       status: business.status,
+      mpesaShortcode: (business as any).mpesaShortcode || null,
+      mpesaPasskey: (business as any).mpesaPasskey || null,
+      mpesaTransactionType: (business as any).mpesaTransactionType || 'CustomerPayBillOnline',
+      isMpesaActive: (business as any).isMpesaActive ?? false,
       createdAt: business.createdAt.toISOString(),
       updatedAt: business.updatedAt.toISOString(),
     };
@@ -104,6 +108,10 @@ export class BusinessRepository {
     if (data.operatingSchedule !== undefined) {
       updateData.operatingSchedule = data.operatingSchedule as any;
     }
+    if (data.mpesaShortcode !== undefined) updateData.mpesaShortcode = data.mpesaShortcode;
+    if (data.mpesaPasskey !== undefined) updateData.mpesaPasskey = data.mpesaPasskey;
+    if (data.mpesaTransactionType !== undefined) updateData.mpesaTransactionType = data.mpesaTransactionType;
+    if (data.isMpesaActive !== undefined) updateData.isMpesaActive = data.isMpesaActive;
 
     return prisma.business.update({
       where: { businessUuid },

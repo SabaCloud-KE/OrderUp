@@ -168,6 +168,21 @@ export const updateBusinessSettingsSchema = z.object({
         .string()
         .regex(TIME_REGEX, 'Closing hours must be in HH:mm format (e.g. 23:00)')
         .optional(),
+      mpesaShortcode: z
+        .string()
+        .trim()
+        .max(20, 'Shortcode cannot exceed 20 characters')
+        .nullable()
+        .optional(),
+      mpesaPasskey: z
+        .string()
+        .trim()
+        .nullable()
+        .optional(),
+      mpesaTransactionType: z
+        .enum(['CustomerPayBillOnline', 'CustomerBuyGoodsOnline'])
+        .optional(),
+      isMpesaActive: z.boolean().optional(),
     })
     .strict({ message: 'Unrecognized or unauthorized fields in request body' }),
 });

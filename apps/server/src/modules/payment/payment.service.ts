@@ -35,11 +35,38 @@ export class PaymentService {
       throw new BadRequestError('Could not resolve businessUuid for order payment');
     }
 
+    // Model A: Look up the specific venue's M-Pesa Shortcode & Passkey
+    const business = await prisma.business.findUnique({
+      where: { businessUuid },
+      select: {
+        name: true,
+        mpesaShortcode: true,
+        mpesaPasskey: true,
+        mpesaTransactionType: true,
+        isMpesaActive: true,
+      },
+    });
+
+    const isVenueMpesaConfigured = !!(
+      business?.isMpesaActive &&
+      business?.mpesaShortcode &&
+      business?.mpesaPasskey
+    );
+
+    const venueConfig = isVenueMpesaConfigured
+      ? {
+          shortcode: business.mpesaShortcode,
+          passkey: business.mpesaPasskey,
+          transactionType: business.mpesaTransactionType || 'CustomerPayBillOnline',
+        }
+      : undefined;
+
     const stkResponse = await this.mpesaAdapter.initiateStkPush({
       phoneNumber: params.phoneNumber,
       amount: params.amount,
-      accountReference: params.accountReference,
-      transactionDesc: `Order Payment ${params.accountReference}`,
+      accountReference: params.accountReference || business?.name?.slice(0, 12) || 'OrderUp',
+      transactionDesc: `Order ${params.accountReference || 'Payment'}`.slice(0, 13),
+      venueConfig,
     });
 
     const payment = await this.paymentRepository.createPayment({

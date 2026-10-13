@@ -81,6 +81,10 @@ export async function autoMigrateDatabase(): Promise<void> {
       `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS business_status business_status_enum NOT NULL DEFAULT 'ACTIVE';`,
       `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS subscription_status subscription_status_enum NOT NULL DEFAULT 'ACTIVE';`,
       `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`,
+      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS mpesa_shortcode VARCHAR(20);`,
+      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS mpesa_passkey TEXT;`,
+      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS mpesa_transaction_type VARCHAR(50) DEFAULT 'CustomerPayBillOnline';`,
+      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS is_mpesa_active BOOLEAN DEFAULT false;`,
       `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ(6);`,
     ];
 

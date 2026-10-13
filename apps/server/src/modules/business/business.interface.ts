@@ -45,6 +45,10 @@ export interface BusinessProfileDTO {
   closingHours: string;
   operatingSchedule: WeeklyOperatingSchedule | null;
   status: string;
+  mpesaShortcode?: string | null;
+  mpesaPasskey?: string | null;
+  mpesaTransactionType?: string | null;
+  isMpesaActive?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,4 +74,8 @@ export interface UpdateBusinessSettingsInput {
   operatingSchedule?: WeeklyOperatingSchedule;
   openingHours?: string;
   closingHours?: string;
+  mpesaShortcode?: string | null;
+  mpesaPasskey?: string | null;
+  mpesaTransactionType?: string;
+  isMpesaActive?: boolean;
 }
