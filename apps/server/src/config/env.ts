@@ -30,6 +30,9 @@ const envSchema = z.object({
   MPESA_CALLBACK_URL: z.string().default(
     process.env.MPESA_CALLBACK_URL || process.env.MPESA_CALLBACK_URI || ''
   ),
+  CUSTOMER_PWA_URL: z.string().default(
+    process.env.CUSTOMER_PWA_URL || 'https://orderup-customer.vercel.app'
+  ),
   RESEND_API_KEY: z.string().optional(),
 });
 

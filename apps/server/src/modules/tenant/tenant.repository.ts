@@ -1,5 +1,6 @@
 import { Business, User, VenueTable, QrCode, UserRole, SubscriptionStatus, BusinessStatus, BusinessType } from '@prisma/client';
 import { prisma } from '../../config/prisma';
+import { env } from '../../config/env';
 import { ITenantRepository, CreateBusinessWithAdminInput, BusinessWithAdmin, PlatformStats, BusinessSummary } from './tenant.interface';
 
 export class TenantRepository implements ITenantRepository {
@@ -381,8 +382,11 @@ export class TenantRepository implements ITenantRepository {
         },
       });
 
-      const pwaBase = process.env.CUSTOMER_PWA_URL || process.env.CLIENT_URL || 'https://drink-hub-ke-customer-pwa.vercel.app';
-      const cleanPwaBase = pwaBase.endsWith('/') ? pwaBase.slice(0, -1) : pwaBase;
+      let rawPwa = env.CUSTOMER_PWA_URL || process.env.CUSTOMER_PWA_URL || process.env.CLIENT_URL || 'https://orderup-customer.vercel.app';
+      if (rawPwa.includes('drink-hub') || rawPwa.includes('orderup-ke-customer-pwa')) {
+        rawPwa = 'https://orderup-customer.vercel.app';
+      }
+      const cleanPwaBase = rawPwa.endsWith('/') ? rawPwa.slice(0, -1) : rawPwa;
       const qrPayload = `${cleanPwaBase}/v/${business.slug}/t/${tableNum}`;
       const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrPayload)}`;
 

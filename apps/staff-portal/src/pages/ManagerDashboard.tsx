@@ -2711,8 +2711,11 @@ const QrCodesPage = ({
   const clubThemeColor = propClubThemeColor || user.club?.themeColor || user.business?.themeColor || '#2563EB';
   const clubLogoUrl = propClubLogoUrl ?? (user.club?.logoUrl || user.business?.logoUrl || null);
   const clubUuid = user.club?.clubUuid || user.club?.uuid || user.business?.uuid || user.businessUuid || user.clubUuid || user.tenantId || '';
-  const pwaBase = (import.meta as any).env?.VITE_CUSTOMER_PWA_URL || 'https://orderup-ke-customer-pwa.vercel.app';
-  const cleanPwaBase = pwaBase.endsWith('/') ? pwaBase.slice(0, -1) : pwaBase;
+  let rawPwa = (import.meta as any).env?.VITE_CUSTOMER_PWA_URL;
+  if (!rawPwa || rawPwa.includes('drink-hub') || rawPwa.includes('orderup-ke-customer-pwa')) {
+    rawPwa = 'https://orderup-customer.vercel.app';
+  }
+  const cleanPwaBase = rawPwa.endsWith('/') ? rawPwa.slice(0, -1) : rawPwa;
   const fullBaseUrl = `${cleanPwaBase}/v/${clubSlug}`;
 
   const storageKey = `orderup_qr_tables_${clubSlug}`;

@@ -268,6 +268,25 @@ export async function autoMigrateDatabase(): Promise<void> {
       logger.warn(`Superadmin auto-provision warning: ${err.message}`);
     }
 
+    // 7. Auto-heal any legacy QR code URLs in qr_codes table
+    try {
+      await prisma.$executeRawUnsafe(`
+        UPDATE qr_codes 
+        SET qr_code_payload = REPLACE(qr_code_payload, 'drink-hub-ke-customer-pwa.vercel.app', 'orderup-customer.vercel.app'),
+            image_url = REPLACE(image_url, 'drink-hub-ke-customer-pwa.vercel.app', 'orderup-customer.vercel.app')
+        WHERE qr_code_payload LIKE '%drink-hub-ke-customer-pwa.vercel.app%';
+      `);
+      await prisma.$executeRawUnsafe(`
+        UPDATE qr_codes 
+        SET qr_code_payload = REPLACE(qr_code_payload, 'orderup-ke-customer-pwa.vercel.app', 'orderup-customer.vercel.app'),
+            image_url = REPLACE(image_url, 'orderup-ke-customer-pwa.vercel.app', 'orderup-customer.vercel.app')
+        WHERE qr_code_payload LIKE '%orderup-ke-customer-pwa.vercel.app%';
+      `);
+      logger.info('📱 Verified & auto-healed QR code URLs to orderup-customer.vercel.app');
+    } catch (err: any) {
+      logger.warn(`QR code URL auto-heal warning: ${err.message}`);
+    }
+
     logger.info("✅ Database auto-migration completed successfully");
   } catch (error: any) {
     logger.error(`❌ Database auto-migration failed: ${error.message}`);
