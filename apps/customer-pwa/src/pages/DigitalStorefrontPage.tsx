@@ -130,8 +130,10 @@ const resolveImageUrl = (url?: string | null): string => {
     return url;
   }
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  const envUrl = (import.meta as any).env?.VITE_API_URL || '';
-  const base = envUrl.includes('onrender.com') ? 'https://orderup-ke.onrender.com' : 'http://localhost:5000';
+  const envUrl = ((import.meta as any).env?.VITE_API_URL || '').trim();
+  const base = envUrl
+    ? envUrl.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '')
+    : 'http://localhost:5000';
   return `${base}${cleanPath}`;
 };
 
