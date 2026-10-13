@@ -57,7 +57,12 @@ export const WaiterDashboardPage: React.FC = () => {
 
   const loggedInUser = React.useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem('drinkhub_user') || localStorage.getItem('user') || '{}');
+      return JSON.parse(
+        localStorage.getItem('orderup_user') ||
+        localStorage.getItem('drinkhub_user') ||
+        localStorage.getItem('user') ||
+        '{}'
+      );
     } catch {
       return {};
     }

@@ -6,7 +6,7 @@ RUN apk add --no-cache openssl libc6-compat python3 make g++
 WORKDIR /app
 
 ENV CI=true
-ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/drinkhub?sslmode=disable"
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/orderup?sslmode=disable"
 ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x"
 
 # Copy package manifests & source files
@@ -34,7 +34,7 @@ RUN apk add --no-cache openssl libc6-compat python3 make g++
 WORKDIR /app
 ENV NODE_ENV=production
 ENV CI=true
-ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/drinkhub?sslmode=disable"
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/orderup?sslmode=disable"
 ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x"
 
 COPY package.json package-lock.json tsconfig.base.json ./

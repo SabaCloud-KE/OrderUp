@@ -14,6 +14,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@orderup/shared': path.resolve(__dirname, '../../packages/shared/src'),
       '@drinkhub/shared': path.resolve(__dirname, '../../packages/shared/src'),
     },
   },

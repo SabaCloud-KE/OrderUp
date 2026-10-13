@@ -4,7 +4,7 @@ import { PaymentService } from './payment.service';
 import { PaymentController } from './payment.controller';
 import { validateRequest } from '../../common/middlewares/validate.middleware';
 import { authenticate, authorize } from '../../common/middlewares/auth.middleware';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 import {
   initiateMpesaSchema,
   processCardPaymentSchema,

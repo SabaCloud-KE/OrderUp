@@ -7,7 +7,7 @@ import {
   Loader2, RefreshCcw, WifiOff, Lock, Key, Eye, EyeOff, X, Check,
 } from 'lucide-react';
 import { resolveImageUrl } from '../config/api';
-import { useTheme, ThemeToggle } from '@drinkhub/ui';
+import { useTheme, ThemeToggle } from '@orderup/ui';
 
 /* ─── API config ─── */
 const getApiUrl = (path: string): string => {
@@ -27,7 +27,7 @@ const getSocketUrl = (): string => {
 };
 
 const authHeaders = (): Record<string, string> => {
-  const token = localStorage.getItem('drinkhub_token');
+  const token = localStorage.getItem('orderup_token') || localStorage.getItem('drinkhub_token');
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -130,7 +130,7 @@ export const WaiterDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }
 
   /* Read logged-in user & venue from localStorage */
   const user = React.useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('drinkhub_user') || '{}'); }
+    try { return JSON.parse(localStorage.getItem('orderup_user') || localStorage.getItem('drinkhub_user') || '{}'); }
     catch { return {}; }
   }, []);
 
@@ -333,7 +333,7 @@ export const WaiterDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }
   /* ── Logout Handler ── */
   const handleLogout = async () => {
     try {
-      const refreshToken = localStorage.getItem('drinkhub_refresh_token');
+      const refreshToken = localStorage.getItem('orderup_refresh_token') || localStorage.getItem('drinkhub_refresh_token');
       if (refreshToken) {
         await fetch(getApiUrl('/auth/logout'), {
           method: 'POST',

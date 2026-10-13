@@ -1,5 +1,5 @@
 -- =============================================================================
--- DrinkHub Kenya Multi-Tenant SaaS Database Schema Migration
+-- OrderUp Kenya Multi-Tenant SaaS Database Schema Migration
 -- Standard: 3NF Normalized, UUID Primary Keys (gen_random_uuid()), Strict Tenant Isolation
 -- =============================================================================
 

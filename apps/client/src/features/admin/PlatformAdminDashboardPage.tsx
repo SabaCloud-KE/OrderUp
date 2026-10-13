@@ -125,7 +125,7 @@ export const PlatformAdminDashboardPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-white">Super Admin Analytics</h1>
-          <p className="text-xs text-slate-400">DrinkHub SaaS Platform Telemetry & Multi-Tenant Database</p>
+          <p className="text-xs text-slate-400">OrderUp SaaS Platform Telemetry & Multi-Tenant Database</p>
         </div>
         <div className="flex items-center gap-3">
           <button

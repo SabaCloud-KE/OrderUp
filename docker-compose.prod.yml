@@ -3,10 +3,10 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: drinkhub_postgres_prod
+    container_name: orderup_postgres_prod
     restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-drinkhub_db}
+      POSTGRES_DB: ${POSTGRES_DB:-orderup_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Secr3tP@ssw0rd!}
     volumes:
@@ -19,7 +19,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: drinkhub_redis_prod
+    container_name: orderup_redis_prod
     restart: always
     command: redis-server --requirepass ${REDIS_PASSWORD:-Secr3tRedis!}
     healthcheck:
@@ -32,14 +32,14 @@ services:
     build:
       context: .
       dockerfile: apps/server/Dockerfile
-    container_name: drinkhub_server_prod
+    container_name: orderup_server_prod
     restart: always
     environment:
       NODE_ENV: production
       PORT: 5000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-Secr3tP@ssw0rd!}@postgres:5432/${POSTGRES_DB:-drinkhub_db}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-Secr3tP@ssw0rd!}@postgres:5432/${POSTGRES_DB:-orderup_db}?schema=public
       REDIS_URL: redis://:${REDIS_PASSWORD:-Secr3tRedis!}@redis:6379
-      JWT_SECRET: ${JWT_SECRET:-prod_jwt_secret_key_drinkhub_kenya_2026}
+      JWT_SECRET: ${JWT_SECRET:-prod_jwt_secret_key_orderup_kenya_2026}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-prod_jwt_refresh_secret_key_2026}
     depends_on:
       postgres:
@@ -56,14 +56,14 @@ services:
     build:
       context: .
       dockerfile: apps/client/Dockerfile
-    container_name: drinkhub_client_prod
+    container_name: orderup_client_prod
     restart: always
     depends_on:
       - server
 
   nginx:
     image: nginx:alpine
-    container_name: drinkhub_nginx_prod
+    container_name: orderup_nginx_prod
     restart: always
     ports:
       - "80:80"

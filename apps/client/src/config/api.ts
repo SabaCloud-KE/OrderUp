@@ -12,11 +12,14 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token =
     localStorage.getItem('accessToken') ||
+    localStorage.getItem('orderup_token') ||
+    localStorage.getItem('orderup_admin_token') ||
     localStorage.getItem('drinkhub_token') ||
     localStorage.getItem('drinkhub_admin_token');
   const tenantId =
     localStorage.getItem('tenantId') ||
     localStorage.getItem('businessUuid') ||
+    localStorage.getItem('orderup_business_uuid') ||
     localStorage.getItem('drinkhub_business_uuid');
 
   if (token) {
@@ -37,6 +40,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('orderup:unauthorized'));
         window.dispatchEvent(new CustomEvent('drinkhub:unauthorized'));
       }
     }

@@ -20,7 +20,7 @@ import {
   NotFoundError,
   ConflictError,
 } from '../../common/errors/app-error';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 import { ManagerRepository } from './manager.repository';
 import {
   CreateManagerInput,

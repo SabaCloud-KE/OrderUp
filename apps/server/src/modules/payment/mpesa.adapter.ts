@@ -98,7 +98,7 @@ export class MpesaAdapter {
 
     const shortcode = env.MPESA_SHORTCODE || '174379';
     const passkey = env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
-    const callbackUrl = env.MPESA_CALLBACK_URL || 'https://drinkhub-ke.onrender.com/api/v1/payments/mpesa/callback';
+    const callbackUrl = env.MPESA_CALLBACK_URL || 'https://orderup-ke.onrender.com/api/v1/payments/mpesa/callback';
 
     // Format timestamp in Africa/Nairobi (EAT = UTC+3) YYYYMMDDHHmmss
     const now = new Date();
@@ -120,9 +120,9 @@ export class MpesaAdapter {
     }
 
     // Sanitize AccountReference (alphanumeric, max 12 chars per Safaricom spec)
-    const cleanAccountRef = (params.accountReference || 'DrinkHub')
+    const cleanAccountRef = (params.accountReference || 'OrderUp')
       .replace(/[^a-zA-Z0-9_-]/g, '')
-      .slice(0, 12) || 'DrinkHub';
+      .slice(0, 12) || 'OrderUp';
 
     // Sanitize TransactionDesc (max 13 chars)
     const cleanDesc = (params.transactionDesc || 'Order')

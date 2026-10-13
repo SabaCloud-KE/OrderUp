@@ -1,5 +1,5 @@
 {
-  "name": "@drinkhub/shared",
+  "name": "@orderup/shared",
   "version": "1.0.0",
   "private": true,
   "main": "dist/index.js",

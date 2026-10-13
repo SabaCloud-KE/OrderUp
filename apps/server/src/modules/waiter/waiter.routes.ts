@@ -11,7 +11,7 @@
  */
 
 import { Router } from 'express';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 import {
   authenticate,
   authorize,

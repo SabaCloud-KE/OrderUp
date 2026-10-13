@@ -1,4 +1,4 @@
-name: DrinkHub Kenya CI/CD Pipeline
+name: OrderUp Kenya CI/CD Pipeline
 
 on:
   push:
@@ -29,12 +29,12 @@ jobs:
 
       - name: Generate Prisma Client
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/drinkhub_test?sslmode=disable
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/orderup_test?sslmode=disable
         run: npx prisma generate --schema=apps/server/prisma/schema.prisma
 
       - name: Run TypeScript Type Check
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/drinkhub_test?sslmode=disable
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/orderup_test?sslmode=disable
         run: npm run type-check --if-present
 
   unit-and-integration-tests:
@@ -60,13 +60,13 @@ jobs:
 
       - name: Generate Prisma Client
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/drinkhub_test?sslmode=disable
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/orderup_test?sslmode=disable
         run: npx prisma generate --schema=apps/server/prisma/schema.prisma
 
       - name: Execute Vitest Suite
         env:
           NODE_ENV: test
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/drinkhub_test?sslmode=disable
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/orderup_test?sslmode=disable
           JWT_ACCESS_SECRET: ci_test_access_secret_32_bytes_long_key
           JWT_REFRESH_SECRET: ci_test_refresh_secret_32_bytes_long_key
         run: npm run test --workspace=apps/server --if-present
@@ -138,7 +138,7 @@ jobs:
           context: .
           file: ./apps/server/Dockerfile
           push: false
-          tags: drinkhub-server:latest
+          tags: orderup-server:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -148,6 +148,6 @@ jobs:
           context: .
           file: ./apps/client/Dockerfile
           push: false
-          tags: drinkhub-client:latest
+          tags: orderup-client:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

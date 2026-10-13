@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { validateRequest } from '../../common/middlewares/validate.middleware';
 import { authenticate, authorize } from '../../common/middlewares/auth.middleware';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 import {
   loginSchema,
   registerSchema,

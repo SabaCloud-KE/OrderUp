@@ -3,7 +3,10 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@orderup/shared": ["../shared/src"]
+    }
   },
   "include": ["src"]
 }

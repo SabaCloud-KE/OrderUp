@@ -1,5 +1,5 @@
 {
-  "name": "@drinkhub/client",
+  "name": "@orderup/client",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -12,8 +12,8 @@
     "test:e2e:ci": "playwright test --reporter=github"
   },
   "dependencies": {
-    "@drinkhub/shared": "*",
-    "@drinkhub/ui": "*",
+    "@orderup/shared": "*",
+    "@orderup/ui": "*",
     "@tanstack/react-query": "^5.50.0",
     "axios": "^1.7.2",
     "clsx": "^2.1.1",

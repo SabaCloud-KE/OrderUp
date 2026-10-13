@@ -14,8 +14,8 @@ import {
   MAX_SESSION_MS,
   AUTH_STORAGE_KEYS,
   clearAllAuthData,
-} from '@drinkhub/shared';
-import { useSessionTimeout, SessionTimeoutBanner } from '@drinkhub/ui';
+} from '@orderup/shared';
+import { useSessionTimeout, SessionTimeoutBanner } from '@orderup/ui';
 import { getApiUrl } from './config/api';
 
 type StaffRole = 'waiter' | 'manager' | 'admin';

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from './auth.service';
-import { UserRole, normalizeRole } from '@drinkhub/shared';
+import { UserRole, normalizeRole } from '@orderup/shared';
 
 export class AuthController {
 

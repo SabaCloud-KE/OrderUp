@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ThemeToggle } from '@drinkhub/ui';
+import { ThemeToggle } from '@orderup/ui';
 import {
   LayoutDashboard, Building2, Users, CreditCard, TrendingUp, Settings,
   Bell, LogOut, ChevronDown, ArrowUpRight, ArrowDownRight, Server,
@@ -160,6 +160,8 @@ const resolveImageUrl = (url?: string | null): string => {
 
 const authHeaders = (): Record<string, string> => {
   const token =
+    localStorage.getItem('orderup_token') ||
+    localStorage.getItem('orderup_admin_token') ||
     localStorage.getItem('drinkhub_token') ||
     localStorage.getItem('drinkhub_admin_token') ||
     localStorage.getItem('accessToken');
@@ -180,6 +182,8 @@ const onRefreshed = (token: string) => {
 
 const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const getToken = () =>
+    localStorage.getItem('orderup_token') ||
+    localStorage.getItem('orderup_admin_token') ||
     localStorage.getItem('drinkhub_token') ||
     localStorage.getItem('drinkhub_admin_token') ||
     localStorage.getItem('accessToken');
@@ -196,6 +200,7 @@ const apiFetch = async (url: string, options: RequestInit = {}): Promise<Respons
 
   if (response.status === 401) {
     const refreshToken =
+      localStorage.getItem('orderup_refresh_token') ||
       localStorage.getItem('drinkhub_refresh_token') ||
       localStorage.getItem('refreshToken');
 
@@ -211,9 +216,9 @@ const apiFetch = async (url: string, options: RequestInit = {}): Promise<Respons
           const refreshData = await refreshRes.json().catch(() => ({}));
           if (refreshRes.ok && refreshData.success && refreshData.data?.accessToken) {
             const newToken = refreshData.data.accessToken;
-            localStorage.setItem('drinkhub_token', newToken);
+            localStorage.setItem('orderup_token', newToken);
             if (refreshData.data.refreshToken) {
-              localStorage.setItem('drinkhub_refresh_token', refreshData.data.refreshToken);
+              localStorage.setItem('orderup_refresh_token', refreshData.data.refreshToken);
             }
             isRefreshing = false;
             onRefreshed(newToken);
@@ -247,6 +252,7 @@ const apiFetch = async (url: string, options: RequestInit = {}): Promise<Respons
     }
 
     if (token === 'demo-platform-admin-token') {
+      localStorage.removeItem('orderup_token');
       localStorage.removeItem('drinkhub_token');
     }
   }
@@ -518,7 +524,7 @@ const PrivacyPolicyModal = ({ open, onClose }: { open: boolean; onClose: () => v
           <div>
             <div className="font-bold text-slate-900 dark:text-white">Kenya Data Protection Act, 2019 Compliance</div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              This policy governs data collection, processing, and merchant obligations for establishments operating on OrderUp (DrinkHub Kenya).
+              This policy governs data collection, processing, and merchant obligations for establishments operating on OrderUp (OrderUp Kenya).
             </div>
           </div>
         </div>
@@ -569,7 +575,7 @@ const PrivacyPolicyModal = ({ open, onClose }: { open: boolean; onClose: () => v
         <div>
           <h4 className="font-bold text-slate-900 dark:text-white mb-1 text-sm">6. Contact & Data Protection Officer</h4>
           <p>
-            For privacy queries, data subject access requests, or regulatory compliance verification, contact the Data Protection Office via <strong>compliance@drinkhub.co.ke</strong> or <strong>+254 700 000 000</strong>.
+            For privacy queries, data subject access requests, or regulatory compliance verification, contact the Data Protection Office via <strong>compliance@orderup.co.ke</strong> or <strong>+254 700 000 000</strong>.
           </p>
         </div>
 
@@ -604,7 +610,7 @@ const TermsAndConditionsModal = ({ open, onClose }: { open: boolean; onClose: ()
         <div>
           <h4 className="font-bold text-slate-900 dark:text-white mb-1 text-sm">1. Acceptance of Terms</h4>
           <p>
-            By onboarding an establishment to OrderUp (DrinkHub Kenya), the Business Administrator confirms they possess full legal authority to bind the establishment to these Terms and Conditions. This agreement takes effect immediately upon account creation.
+            By onboarding an establishment to OrderUp (OrderUp Kenya), the Business Administrator confirms they possess full legal authority to bind the establishment to these Terms and Conditions. This agreement takes effect immediately upon account creation.
           </p>
         </div>
 
@@ -3348,10 +3354,10 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   /* User Info */
   const currentUser = useMemo(() => {
     try {
-      const u = localStorage.getItem('drinkhub_user');
-      return u ? JSON.parse(u) : { fullName: 'Super Admin', email: 'superadmin@drinkhub.co.ke' };
+      const u = localStorage.getItem('orderup_user') || localStorage.getItem('drinkhub_user');
+      return u ? JSON.parse(u) : { fullName: 'Super Admin', email: 'superadmin@orderup.co.ke' };
     } catch {
-      return { fullName: 'Super Admin', email: 'superadmin@drinkhub.co.ke' };
+      return { fullName: 'Super Admin', email: 'superadmin@orderup.co.ke' };
     }
   }, []);
 

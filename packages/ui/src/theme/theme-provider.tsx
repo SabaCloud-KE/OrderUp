@@ -3,7 +3,7 @@ import { ThemeContext } from './theme-context';
 import type { ThemeMode, ResolvedTheme, ClubBranding } from './theme-context';
 import { applyClubBrandingVars, clearClubBrandingVars } from './css-variables';
 
-const STORAGE_KEY = 'drinkhub-theme-preference';
+const STORAGE_KEY = 'orderup-theme-preference';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const getSystemPreference = (): ResolvedTheme =>
@@ -24,7 +24,7 @@ const applyThemeToDOM = (resolved: ResolvedTheme): void => {
 
 const readStoredTheme = (): ThemeMode => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('drinkhub-theme-preference');
     if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
   } catch { /* ignore */ }
   return 'system';

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { UnauthorizedError, ForbiddenError } from '../errors/app-error';
 import { verifyAccessToken, JwtPayload } from '../utils/jwt';
 import { prisma } from '../../config/prisma';
-import { Permission, UserRole, hasPermission, normalizeRole } from '@drinkhub/shared';
+import { Permission, UserRole, hasPermission, normalizeRole } from '@orderup/shared';
 
 declare global {
   namespace Express {

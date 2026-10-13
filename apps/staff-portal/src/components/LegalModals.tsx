@@ -37,7 +37,7 @@ export const PrivacyPolicyModal: React.FC<{ open: boolean; onClose: () => void }
             <div>
               <div className="font-bold text-slate-900 dark:text-white">Kenya Data Protection Act, 2019 Compliance</div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                This policy governs data collection, lawful processing, and merchant fiduciary obligations for establishments operating on OrderUp (DrinkHub Kenya).
+                This policy governs data collection, lawful processing, and merchant fiduciary obligations for establishments operating on OrderUp (OrderUp Kenya).
               </div>
             </div>
           </div>
@@ -86,7 +86,7 @@ export const PrivacyPolicyModal: React.FC<{ open: boolean; onClose: () => void }
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white mb-1 text-sm">6. Contact & Data Protection Officer</h4>
             <p>
-              For privacy queries, data subject access requests, or regulatory compliance verification, contact the Data Protection Office via <strong>compliance@drinkhub.co.ke</strong> or <strong>+254 700 000 000</strong>.
+              For privacy queries, data subject access requests, or regulatory compliance verification, contact the Data Protection Office via <strong>compliance@orderup.co.ke</strong> or <strong>+254 700 000 000</strong>.
             </p>
           </div>
         </div>
@@ -149,7 +149,7 @@ export const TermsAndConditionsModal: React.FC<{ open: boolean; onClose: () => v
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white mb-1 text-sm">1. Acceptance of Terms</h4>
             <p>
-              By onboarding an establishment to OrderUp (DrinkHub Kenya), the Business Administrator confirms they possess full legal authority to bind the establishment to these Terms and Conditions. This agreement takes effect immediately upon account creation.
+              By onboarding an establishment to OrderUp (OrderUp Kenya), the Business Administrator confirms they possess full legal authority to bind the establishment to these Terms and Conditions. This agreement takes effect immediately upon account creation.
             </p>
           </div>
 

@@ -5,7 +5,7 @@ import { TenantController } from './tenant.controller';
 import { validateRequest } from '../../common/middlewares/validate.middleware';
 import { authenticate, authorize } from '../../common/middlewares/auth.middleware';
 import { uploadImage } from '../../common/middlewares/upload.middleware';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 import {
   createBusinessSchema,
   createBusinessWithAdminSchema,

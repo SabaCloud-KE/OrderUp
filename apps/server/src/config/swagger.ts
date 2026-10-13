@@ -9,7 +9,7 @@ const options: swaggerJSDoc.Options = {
       description: 'API documentation for OrderUp multi-tenant PWA platform',
       contact: {
         name: 'OrderUp Architecture Team',
-        email: 'support@drinkhub.co.ke',
+        email: 'support@orderup.co.ke',
       },
     },
     servers: [

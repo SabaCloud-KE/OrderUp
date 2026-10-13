@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { ThemeToggle, useTheme } from '@drinkhub/ui';
+import { ThemeToggle, useTheme } from '@orderup/ui';
 import {
   LayoutDashboard,
   Building2,
@@ -401,7 +401,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 let refreshPromise: Promise<string | null> | null = null;
 
 const doRefreshToken = async (): Promise<string | null> => {
-  const refreshToken = localStorage.getItem('drinkhub_refresh_token');
+  const refreshToken = localStorage.getItem('orderup_refresh_token') || localStorage.getItem('drinkhub_refresh_token');
   if (!refreshToken) return null;
   try {
     const res = await fetch(getApiUrl('/auth/refresh'), {
@@ -411,9 +411,9 @@ const doRefreshToken = async (): Promise<string | null> => {
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.success && data.data?.accessToken) {
-      localStorage.setItem('drinkhub_token', data.data.accessToken);
+      localStorage.setItem('orderup_token', data.data.accessToken);
       if (data.data.refreshToken) {
-        localStorage.setItem('drinkhub_refresh_token', data.data.refreshToken);
+        localStorage.setItem('orderup_refresh_token', data.data.refreshToken);
       }
       return data.data.accessToken as string;
     }
@@ -424,7 +424,7 @@ const doRefreshToken = async (): Promise<string | null> => {
 };
 
 const authFetch = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
-  let token = localStorage.getItem('drinkhub_token');
+  let token = localStorage.getItem('orderup_token') || localStorage.getItem('drinkhub_token');
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const buildHeaders = (authToken: string | null) => ({
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
@@ -472,7 +472,11 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   /* Auth User Data */
   const user = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem('drinkhub_user') || '{}');
+      return JSON.parse(
+        localStorage.getItem('orderup_user') ||
+        localStorage.getItem('drinkhub_user') ||
+        '{}'
+      );
     } catch {
       return {};
     }
@@ -486,7 +490,10 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const [policyAccepted, setPolicyAccepted] = useState<boolean>(() => {
     try {
       const key = user.userUuid || user.id || user.email || 'admin';
-      return !!localStorage.getItem('drinkhub_policy_accepted_' + key);
+      return !!(
+        localStorage.getItem('orderup_policy_accepted_' + key) ||
+        localStorage.getItem('drinkhub_policy_accepted_' + key)
+      );
     } catch {
       return false;
     }
@@ -498,7 +505,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const handleAcceptPolicy = useCallback(() => {
     try {
       const key = user.userUuid || user.id || user.email || 'admin';
-      localStorage.setItem('drinkhub_policy_accepted_' + key, new Date().toISOString());
+      localStorage.setItem('orderup_policy_accepted_' + key, new Date().toISOString());
       setPolicyAccepted(true);
       showToast('Compliance agreements accepted. Welcome to your Business Dashboard!', 'success');
     } catch {
@@ -4617,7 +4624,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     try {
       const qs = buildReportQuery();
       const exportType = EXPORT_TYPE_MAP[reportTab];
-      const token = localStorage.getItem('drinkhub_token');
+      const token = localStorage.getItem('orderup_token') || localStorage.getItem('drinkhub_token');
       const url = getApiUrl(`/reports/admin/export?${qs}&reportType=${exportType}`);
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },

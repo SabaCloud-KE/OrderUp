@@ -5,7 +5,7 @@
  * Client-provided business identifiers are strictly prohibited.
  */
 
-import { BusinessType } from '@drinkhub/shared';
+import { BusinessType } from '@orderup/shared';
 
 export interface DayOperatingHours {
   isOpen: boolean;

@@ -3,18 +3,18 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: drinkhub-postgres
+    container_name: orderup-postgres
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-drinkhub_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-drinkhub_pass_2026}
-      POSTGRES_DB: ${POSTGRES_DB:-drinkhub_db}
+      POSTGRES_USER: ${POSTGRES_USER:-orderup_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orderup_pass_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-orderup_db}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-drinkhub_user} -d ${POSTGRES_DB:-drinkhub_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-orderup_user} -d ${POSTGRES_DB:-orderup_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,12 +23,12 @@ services:
     build:
       context: .
       dockerfile: apps/server/Dockerfile
-    container_name: drinkhub-server
+    container_name: orderup-server
     restart: always
     environment:
       NODE_ENV: production
       PORT: 5000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-drinkhub_user}:${POSTGRES_PASSWORD:-drinkhub_pass_2026}@postgres:5432/${POSTGRES_DB:-drinkhub_db}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-orderup_user}:${POSTGRES_PASSWORD:-orderup_pass_2026}@postgres:5432/${POSTGRES_DB:-orderup_db}?schema=public
     ports:
       - "5000:5000"
     depends_on:
@@ -39,14 +39,14 @@ services:
     build:
       context: .
       dockerfile: apps/client/Dockerfile
-    container_name: drinkhub-client
+    container_name: orderup-client
     restart: always
     ports:
       - "8080:80"
 
   nginx:
     image: nginx:alpine
-    container_name: drinkhub-nginx-proxy
+    container_name: orderup-nginx-proxy
     restart: always
     ports:
       - "80:80"

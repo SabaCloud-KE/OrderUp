@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { IAuthRepository } from './auth.interface';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../common/utils/jwt';
 import { UnauthorizedError, BadRequestError, NotFoundError } from '../../common/errors/app-error';
-import { normalizeRole, UserRole } from '@drinkhub/shared';
+import { normalizeRole, UserRole } from '@orderup/shared';
 import { prisma } from '../../config/prisma';
 
 // OWASP: bcrypt cost factor ≥ 12
@@ -75,7 +75,9 @@ export class AuthService {
     if (!isMatch && user && user.email) {
       const emailLower = user.email.toLowerCase();
       const devPasswords: Record<string, string[]> = {
+        'superadmin@orderup.co.ke': ['Password123!', 'admin', 'admin123', 'superadmin123'],
         'superadmin@drinkhub.co.ke': ['Password123!', 'admin', 'admin123', 'superadmin123'],
+        'admin@orderup.co.ke': ['Password123!', 'admin', 'admin123'],
         'admin@drinkhub.co.ke': ['Password123!', 'admin', 'admin123'],
         'tonny@gmail.com': ['tonny123', 'Password123!', 'Admin123!'],
         'lionellangat2000@gmail.com': ['lionel123', 'Password123!', 'Admin123!'],
@@ -86,7 +88,9 @@ export class AuthService {
         'jane@gmail.com': ['jane123', 'Password123!', 'Admin123!'],
       };
 
-      const isDemoSuperAdmin = emailLower === 'superadmin@drinkhub.co.ke' && (password === 'Password123!' || password === 'admin123');
+      const isDemoSuperAdmin =
+        (emailLower === 'superadmin@orderup.co.ke' || emailLower === 'superadmin@drinkhub.co.ke') &&
+        (password === 'Password123!' || password === 'admin123');
       const isDevEnv = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
       const allowed = devPasswords[emailLower];
 

@@ -1,12 +1,12 @@
 -- =============================================================================
--- DrinkHub Kenya Seed Data
+-- OrderUp Kenya Seed Data
 -- Demo Venues: The Alchemist (Westlands), B-Club (Kilimani)
 -- =============================================================================
 
 -- 1. SEED CLUBS (TENANTS)
 INSERT INTO clubs (club_uuid, name, slug, business_type, logo_url, phone, email, city, address) VALUES
-('11111111-1111-1111-1111-111111111111', 'The Alchemist Westlands', 'alchemist-westlands', 'LOUNGE', 'https://drinkhub.co.ke/logos/alchemist.png', '+254712345678', 'info@alchemist.co.ke', 'Nairobi', 'Parklands Road, Westlands'),
-('22222222-2222-2222-2222-222222222222', 'B-Club Kilimani', 'bclub-kilimani', 'CLUB', 'https://drinkhub.co.ke/logos/bclub.png', '+254722998877', 'vip@bclub.co.ke', 'Nairobi', 'Galana Plaza, Kilimani')
+('11111111-1111-1111-1111-111111111111', 'The Alchemist Westlands', 'alchemist-westlands', 'LOUNGE', 'https://orderup.co.ke/logos/alchemist.png', '+254712345678', 'info@alchemist.co.ke', 'Nairobi', 'Parklands Road, Westlands'),
+('22222222-2222-2222-2222-222222222222', 'B-Club Kilimani', 'bclub-kilimani', 'CLUB', 'https://orderup.co.ke/logos/bclub.png', '+254722998877', 'vip@bclub.co.ke', 'Nairobi', 'Galana Plaza, Kilimani')
 ON CONFLICT (club_uuid) DO UPDATE SET
   name = EXCLUDED.name,
   business_type = EXCLUDED.business_type,
@@ -16,7 +16,7 @@ ON CONFLICT (club_uuid) DO UPDATE SET
 -- Password Hash corresponds to 'Password123!' hashed with bcrypt (cost factor 12)
 -- Hash verified: bcrypt.compare('Password123!', hash) === true
 INSERT INTO users (user_uuid, club_uuid, email, password_hash, full_name, phone, role) VALUES
-('00000000-0000-0000-0000-000000000001', NULL, 'superadmin@drinkhub.co.ke', '$2b$12$h2/AMEDIxKjdwx6YNdjzgeWV/.JfQ6/pVMEW2Fc2Q2g4U57gcm9Em', 'Super Admin', '+254700000000', 'SUPER_ADMIN'),
+('00000000-0000-0000-0000-000000000001', NULL, 'superadmin@orderup.co.ke', '$2b$12$h2/AMEDIxKjdwx6YNdjzgeWV/.JfQ6/pVMEW2Fc2Q2g4U57gcm9Em', 'Super Admin', '+254700000000', 'SUPER_ADMIN'),
 ('11111111-1111-1111-1111-000000000001', '11111111-1111-1111-1111-111111111111', 'admin@alchemist.co.ke', '$2b$12$h2/AMEDIxKjdwx6YNdjzgeWV/.JfQ6/pVMEW2Fc2Q2g4U57gcm9Em', 'John Alchemist Admin', '+254711111111', 'ADMIN'),
 ('11111111-1111-1111-1111-000000000002', '11111111-1111-1111-1111-111111111111', 'manager@alchemist.co.ke', '$2b$12$h2/AMEDIxKjdwx6YNdjzgeWV/.JfQ6/pVMEW2Fc2Q2g4U57gcm9Em', 'Alex Alchemist Manager', '+254711222333', 'MANAGER'),
 ('11111111-1111-1111-1111-000000000003', '11111111-1111-1111-1111-111111111111', 'waiter.kamau@alchemist.co.ke', '$2b$12$h2/AMEDIxKjdwx6YNdjzgeWV/.JfQ6/pVMEW2Fc2Q2g4U57gcm9Em', 'Kamau Njoroge', '+254711223344', 'WAITER'),
@@ -39,8 +39,8 @@ ON CONFLICT (club_uuid, table_number) DO UPDATE SET
 
 -- 4. SEED QR CODES
 INSERT INTO qr_codes (qr_uuid, club_uuid, table_uuid, qr_code_payload, image_url, scan_count) VALUES
-('11111111-0001-0000-0001-000000000001', '11111111-1111-1111-1111-111111111111', '11111111-0001-0000-0000-000000000001', 'https://drinkhub.co.ke/v/alchemist-westlands/t/1', 'https://drinkhub.co.ke/qr/alc_t1.png', 42),
-('11111111-0002-0000-0001-000000000002', '11111111-1111-1111-1111-111111111111', '11111111-0002-0000-0000-000000000002', 'https://drinkhub.co.ke/v/alchemist-westlands/t/2', 'https://drinkhub.co.ke/qr/alc_t2.png', 108)
+('11111111-0001-0000-0001-000000000001', '11111111-1111-1111-1111-111111111111', '11111111-0001-0000-0000-000000000001', 'https://orderup.co.ke/v/alchemist-westlands/t/1', 'https://orderup.co.ke/qr/alc_t1.png', 42),
+('11111111-0002-0000-0001-000000000002', '11111111-1111-1111-1111-111111111111', '11111111-0002-0000-0000-000000000002', 'https://orderup.co.ke/v/alchemist-westlands/t/2', 'https://orderup.co.ke/qr/alc_t2.png', 108)
 ON CONFLICT (table_uuid) DO NOTHING;
 
 -- 5. SEED MENU CATEGORIES

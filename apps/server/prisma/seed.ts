@@ -30,7 +30,7 @@ async function main() {
       name: 'The Alchemist Westlands',
       slug: 'alchemist-westlands',
       businessType: BusinessType.LOUNGE,
-      logoUrl: 'https://drinkhub.co.ke/logos/alchemist.png',
+      logoUrl: 'https://orderup.co.ke/logos/alchemist.png',
       phone: '+254712345678',
       email: 'info@alchemist.co.ke',
       city: 'Nairobi',
@@ -53,7 +53,7 @@ async function main() {
       name: 'B-Club Kilimani',
       slug: 'bclub-kilimani',
       businessType: BusinessType.CLUB,
-      logoUrl: 'https://drinkhub.co.ke/logos/bclub.png',
+      logoUrl: 'https://orderup.co.ke/logos/bclub.png',
       phone: '+254722998877',
       email: 'vip@bclub.co.ke',
       city: 'Nairobi',
@@ -96,11 +96,11 @@ async function main() {
   // 2. Seed Users across the Role Hierarchy
   // Super Admin (businessUuid: NULL)
   await prisma.user.upsert({
-    where: { email: 'superadmin@drinkhub.co.ke' },
+    where: { email: 'superadmin@orderup.co.ke' },
     update: { passwordHash, role: UserRole.SUPER_ADMIN },
     create: {
       userUuid: '00000000-0000-0000-0000-000000000001',
-      email: 'superadmin@drinkhub.co.ke',
+      email: 'superadmin@orderup.co.ke',
       passwordHash,
       fullName: 'Super Administrator',
       phone: '+254700000000',

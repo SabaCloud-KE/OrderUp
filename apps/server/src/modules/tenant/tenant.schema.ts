@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BusinessType } from '@drinkhub/shared';
+import { BusinessType } from '@orderup/shared';
 
 const businessTypeEnum = z.nativeEnum(BusinessType).optional().default(BusinessType.RESTAURANT);
 

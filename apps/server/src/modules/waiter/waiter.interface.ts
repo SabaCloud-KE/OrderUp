@@ -9,7 +9,7 @@
  * ordersClaimed, ordersCompleted, and activeOrders are computed from live DB queries.
  */
 
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 
 export interface WaiterActivitySummary {
   lastLoginAt: string | null;

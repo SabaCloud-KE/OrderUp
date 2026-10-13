@@ -13,7 +13,7 @@ import {
   UnauthorizedError,
   ForbiddenError,
 } from '../../common/errors/app-error';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 import { BusinessRepository } from './business.repository';
 import {
   BusinessProfileDTO,

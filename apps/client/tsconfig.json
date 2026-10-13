@@ -16,8 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@drinkhub/shared": ["../../packages/shared/src/index.ts"],
-      "@drinkhub/ui": ["../../packages/ui/src/index.ts"]
+      "@orderup/shared": ["../../packages/shared/src/index.ts"],
+      "@orderup/ui": ["../../packages/ui/src/index.ts"]
     }
   },
   "include": ["src"]

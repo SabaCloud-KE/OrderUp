@@ -11,7 +11,7 @@ import {
   isSessionExpired,
   getTokenRemainingTime,
   isJwtExpired,
-} from '@drinkhub/shared';
+} from '@orderup/shared';
 
 export interface UseSessionTimeoutOptions {
   /** Whether the user is currently authenticated */

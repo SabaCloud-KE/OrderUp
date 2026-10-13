@@ -1,5 +1,5 @@
 {
-  "name": "@drinkhub/server",
+  "name": "@orderup/server",
   "version": "1.0.0",
   "private": true,
   "main": "dist/server.js",
@@ -18,7 +18,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@drinkhub/shared": "*",
+    "@orderup/shared": "*",
     "@prisma/client": "^5.18.0",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",

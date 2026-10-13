@@ -7,7 +7,7 @@ import {
   User, Check, RefreshCw, Flame, Gift, Tag, Copy, Zap,
   Wine, ShieldCheck, ChevronDown, Info, MessageSquare, BellRing,
 } from 'lucide-react';
-import { ThemeToggleSimple } from '@drinkhub/ui';
+import { ThemeToggleSimple } from '@orderup/ui';
 
 /* ─────────────────────────────────────────────
    API CONFIG
@@ -131,7 +131,7 @@ const resolveImageUrl = (url?: string | null): string => {
   }
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
   const envUrl = (import.meta as any).env?.VITE_API_URL || '';
-  const base = envUrl.includes('onrender.com') ? 'https://drinkhub-ke.onrender.com' : 'http://localhost:5000';
+  const base = envUrl.includes('onrender.com') ? 'https://orderup-ke.onrender.com' : 'http://localhost:5000';
   return `${base}${cleanPath}`;
 };
 
@@ -223,12 +223,16 @@ export const DigitalStorefrontPage: React.FC = () => {
       '';
     if (raw) {
       try {
-        sessionStorage.setItem(`drinkhub_table_${venueSlug || 'venue'}`, raw);
+        sessionStorage.setItem(`orderup_table_${venueSlug || 'venue'}`, raw);
       } catch {}
       return raw;
     }
     try {
-      return sessionStorage.getItem(`drinkhub_table_${venueSlug || 'venue'}`) || '';
+      return (
+        sessionStorage.getItem(`orderup_table_${venueSlug || 'venue'}`) ||
+        sessionStorage.getItem(`drinkhub_table_${venueSlug || 'venue'}`) ||
+        ''
+      );
     } catch {
       return '';
     }
@@ -249,8 +253,8 @@ export const DigitalStorefrontPage: React.FC = () => {
   // ── sessionStorage keys scoped to this venue + table ──
   // Computed once here (not inside useState lazily) so they can be used
   // in the useState initializer closures that run synchronously on mount.
-  const CART_KEY   = `drinkhub_cart_${venueSlug || 'venue'}_${table || '0'}`;
-  const SCREEN_KEY = `drinkhub_screen_${venueSlug || 'venue'}_${table || '0'}`;
+  const CART_KEY   = `orderup_cart_${venueSlug || 'venue'}_${table || '0'}`;
+  const SCREEN_KEY = `orderup_screen_${venueSlug || 'venue'}_${table || '0'}`;
 
   // Cart persisted in sessionStorage — restored on refresh
   const [cart, setCart] = useState<CartMap>(() => {
@@ -302,7 +306,11 @@ export const DigitalStorefrontPage: React.FC = () => {
   const [payment, setPayment] = useState<'mpesa' | 'card' | 'cash'>('mpesa');
   const [phone, setPhone] = useState(() => {
     try {
-      return localStorage.getItem('drinkhub_customer_phone') || '';
+      return (
+        localStorage.getItem('orderup_customer_phone') ||
+        localStorage.getItem('drinkhub_customer_phone') ||
+        ''
+      );
     } catch {
       return '';
     }
@@ -366,7 +374,11 @@ export const DigitalStorefrontPage: React.FC = () => {
 
   // Active Order Live Tracking
   const [activeOrderUuid, setActiveOrderUuid] = useState<string | null>(() => {
-    return localStorage.getItem('drinkhub_active_order_uuid') || null;
+    return (
+      localStorage.getItem('orderup_active_order_uuid') ||
+      localStorage.getItem('drinkhub_active_order_uuid') ||
+      null
+    );
   });
   const [activeOrder, setActiveOrder] = useState<any | null>(null);
 
@@ -390,6 +402,7 @@ export const DigitalStorefrontPage: React.FC = () => {
               if (isMounted) {
                 setActiveOrder(null);
                 setActiveOrderUuid(null);
+                localStorage.removeItem('orderup_active_order_uuid');
                 localStorage.removeItem('drinkhub_active_order_uuid');
                 setScreen('menu');
               }
@@ -935,12 +948,12 @@ export const DigitalStorefrontPage: React.FC = () => {
       const resolvedUuid = placedOrder.orderUuid ?? placedOrder.uuid ?? placedOrder.id;
       setActiveOrderUuid(resolvedUuid);
       setActiveOrder(placedOrder);
-      localStorage.setItem('drinkhub_active_order_uuid', resolvedUuid);
+      localStorage.setItem('orderup_active_order_uuid', resolvedUuid);
 
       // 2. If M-Pesa STK Push selected, trigger Daraja STK Push & show prompt modal
       if (payment === 'mpesa') {
         try {
-          localStorage.setItem('drinkhub_customer_phone', phone);
+          localStorage.setItem('orderup_customer_phone', phone);
         } catch {}
 
         setStkPromptModal({
@@ -1338,6 +1351,7 @@ export const DigitalStorefrontPage: React.FC = () => {
             {stepIndex === 4 && (
               <button
                 onClick={() => {
+                  localStorage.removeItem('orderup_active_order_uuid');
                   localStorage.removeItem('drinkhub_active_order_uuid');
                   setActiveOrderUuid(null);
                   setActiveOrder(null);

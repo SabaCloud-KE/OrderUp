@@ -11,14 +11,14 @@ export const DEFAULT_SESSION_EXPIRED_MSG =
   'Your session has expired due to 20 minutes of inactivity. Please log in again.';
 
 export const AUTH_STORAGE_KEYS = {
-  TOKEN: 'drinkhub_token',
-  ADMIN_TOKEN: 'drinkhub_admin_token',
-  REFRESH_TOKEN: 'drinkhub_refresh_token',
-  USER: 'drinkhub_user',
-  LOGIN_TIME: 'drinkhub_login_time',
-  LAST_ACTIVITY: 'drinkhub_last_activity',
-  LOGOUT_EVENT: 'drinkhub_logout_event',
-  SESSION_EXPIRED: 'drinkhub_session_expired',
+  TOKEN: 'orderup_token',
+  ADMIN_TOKEN: 'orderup_admin_token',
+  REFRESH_TOKEN: 'orderup_refresh_token',
+  USER: 'orderup_user',
+  LOGIN_TIME: 'orderup_login_time',
+  LAST_ACTIVITY: 'orderup_last_activity',
+  LOGOUT_EVENT: 'orderup_logout_event',
+  SESSION_EXPIRED: 'orderup_session_expired',
   CLIENT_ACCESS_TOKEN: 'accessToken',
   CLIENT_USER: 'user',
 } as const;
@@ -102,7 +102,7 @@ export function recordUserActivity(customTimestamp?: number): void {
 export function getLastActivityTime(defaultToNow = true): number {
   if (typeof window === 'undefined' || !window.localStorage) return defaultToNow ? Date.now() : 0;
   try {
-    const stored = window.localStorage.getItem(AUTH_STORAGE_KEYS.LAST_ACTIVITY);
+    const stored = window.localStorage.getItem(AUTH_STORAGE_KEYS.LAST_ACTIVITY) || window.localStorage.getItem('drinkhub_last_activity');
     if (stored) {
       const parsed = parseInt(stored, 10);
       if (!isNaN(parsed) && parsed > 0) return parsed;
@@ -134,9 +134,12 @@ export function getSessionExpiredNotice(): string | null {
   if (typeof window === 'undefined') return null;
   try {
     if (window.sessionStorage) {
-      const notice = window.sessionStorage.getItem(AUTH_STORAGE_KEYS.SESSION_EXPIRED);
+      const notice =
+        window.sessionStorage.getItem(AUTH_STORAGE_KEYS.SESSION_EXPIRED) ||
+        window.sessionStorage.getItem('drinkhub_session_expired');
       if (notice) {
         window.sessionStorage.removeItem(AUTH_STORAGE_KEYS.SESSION_EXPIRED);
+        window.sessionStorage.removeItem('drinkhub_session_expired');
         return notice;
       }
     }
@@ -161,6 +164,14 @@ export function clearAllAuthData(): void {
       window.localStorage.removeItem(AUTH_STORAGE_KEYS.LAST_ACTIVITY);
       window.localStorage.removeItem(AUTH_STORAGE_KEYS.CLIENT_ACCESS_TOKEN);
       window.localStorage.removeItem(AUTH_STORAGE_KEYS.CLIENT_USER);
+
+      // Clean up any legacy keys
+      window.localStorage.removeItem('drinkhub_token');
+      window.localStorage.removeItem('drinkhub_admin_token');
+      window.localStorage.removeItem('drinkhub_refresh_token');
+      window.localStorage.removeItem('drinkhub_user');
+      window.localStorage.removeItem('drinkhub_login_time');
+      window.localStorage.removeItem('drinkhub_last_activity');
     }
   } catch {
     /* ignore */

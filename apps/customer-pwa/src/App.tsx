@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import { DigitalStorefrontPage } from './pages/DigitalStorefrontPage';
-import { useTheme } from '@drinkhub/ui';
-import type { ClubBranding } from '@drinkhub/ui';
+import { useTheme } from '@orderup/ui';
+import type { ClubBranding } from '@orderup/ui';
 
 // ─── Mock Club Registry ──────────────────────────────────────────────────────
 // In production this would come from GET /api/v1/clubs/:slug/branding

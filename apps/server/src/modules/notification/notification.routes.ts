@@ -3,7 +3,7 @@ import { NotificationRepository } from './notification.repository';
 import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
 import { authenticate, authorize } from '../../common/middlewares/auth.middleware';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 
 const notificationRepository = new NotificationRepository();
 const notificationService = new NotificationService(notificationRepository);

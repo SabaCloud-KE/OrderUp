@@ -1,4 +1,4 @@
-const CACHE_NAME = 'drinkhub-app-shell-v1';
+const CACHE_NAME = 'orderup-app-shell-v1';
 
 // Static App Shell Assets to Pre-cache
 const APP_SHELL_ASSETS = [

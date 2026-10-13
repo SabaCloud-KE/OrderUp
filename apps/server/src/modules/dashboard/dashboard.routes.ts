@@ -18,7 +18,7 @@
  */
 
 import { Router } from 'express';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 import { authenticate, authorize, requireTenantScope } from '../../common/middlewares/auth.middleware';
 import { DashboardService } from './dashboard.service';
 import { DashboardController } from './dashboard.controller';

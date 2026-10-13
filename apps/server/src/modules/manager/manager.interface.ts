@@ -5,7 +5,7 @@
  * Role is strictly enforced as MANAGER server-side.
  */
 
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 
 export interface ManagerActivitySummary {
   lastLoginAt: string | null;

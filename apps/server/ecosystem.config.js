@@ -1,7 +1,7 @@
 module = {
   apps: [
     {
-      name: 'drinkhub-server',
+      name: 'orderup-server',
       script: './dist/server.js',
       instances: 'max',
       exec_mode: 'cluster',

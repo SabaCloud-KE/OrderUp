@@ -1,5 +1,5 @@
 {
-  "name": "@drinkhub/admin-portal",
+  "name": "@orderup/admin-portal",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@drinkhub/shared": "*",
-    "@drinkhub/ui": "*",
+    "@orderup/shared": "*",
+    "@orderup/ui": "*",
     "@tanstack/react-query": "^5.50.0",
     "axios": "^1.7.2",
     "clsx": "^2.1.1",

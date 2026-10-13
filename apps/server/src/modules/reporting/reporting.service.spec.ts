@@ -22,7 +22,7 @@ import { ReportingService } from './reporting.service';
 import { ReportingRepository } from './reporting.repository';
 import { prisma } from '../../config/prisma';
 import { ForbiddenError, UnauthorizedError, BadRequestError } from '../../common/errors/app-error';
-import { UserRole } from '@drinkhub/shared';
+import { UserRole } from '@orderup/shared';
 import { PaymentStatus, OrderStatus } from '@prisma/client';
 
 vi.mock('../../config/prisma', () => ({

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { ThemeToggle, useTheme } from '@drinkhub/ui';
+import { ThemeToggle, useTheme } from '@orderup/ui';
 import {
   Wine, LayoutDashboard, ClipboardList, BookOpen, Users, TrendingUp,
   Settings, Bell, LogOut, ChevronDown, ChevronLeft, ChevronRight, Search, Plus, Download,
@@ -272,7 +272,7 @@ const getSocketUrl = (): string => {
 
 const getClubUuid = (): string | null => {
   try {
-    const userStr = localStorage.getItem('drinkhub_user');
+    const userStr = localStorage.getItem('orderup_user') || localStorage.getItem('drinkhub_user');
     if (!userStr) return null;
     const u = JSON.parse(userStr);
     return (
@@ -290,7 +290,7 @@ const getClubUuid = (): string | null => {
 };
 
 const authHeaders = (): Record<string, string> => {
-  const token = localStorage.getItem('drinkhub_token');
+  const token = localStorage.getItem('orderup_token') || localStorage.getItem('drinkhub_token');
   const clubUuid = getClubUuid();
   return {
     'Content-Type': 'application/json',
@@ -2649,7 +2649,7 @@ const ReportsPage = ({ showToast }: { showToast: (m: string, type?: 'success' | 
 const ManagerSettingsPage = ({ showToast }: { showToast: (m: string, type?: 'success' | 'error') => void; user?: any; onSettingsSaved?: (oh: string, ch: string) => void }) => {
   const [orderNotifs, setOrderNotifs] = React.useState(() => {
     try {
-      const saved = localStorage.getItem('drinkhub_manager_notifs');
+      const saved = localStorage.getItem('orderup_manager_notifs') || localStorage.getItem('drinkhub_manager_notifs');
       return saved ? JSON.parse(saved).orderNotifs ?? true : true;
     } catch {
       return true;
@@ -2657,7 +2657,7 @@ const ManagerSettingsPage = ({ showToast }: { showToast: (m: string, type?: 'suc
   });
   const [soundAlerts, setSoundAlerts] = React.useState(() => {
     try {
-      const saved = localStorage.getItem('drinkhub_manager_notifs');
+      const saved = localStorage.getItem('orderup_manager_notifs') || localStorage.getItem('drinkhub_manager_notifs');
       return saved ? JSON.parse(saved).soundAlerts ?? true : true;
     } catch {
       return true;
@@ -2668,7 +2668,7 @@ const ManagerSettingsPage = ({ showToast }: { showToast: (m: string, type?: 'suc
   const handleSave = async () => {
     setSaving(true);
     try {
-      localStorage.setItem('drinkhub_manager_notifs', JSON.stringify({ orderNotifs, soundAlerts }));
+      localStorage.setItem('orderup_manager_notifs', JSON.stringify({ orderNotifs, soundAlerts }));
       showToast('✅ Settings saved successfully!', 'success');
     } catch (e: any) {
       showToast(e.message || 'Failed to save settings', 'error');
@@ -2728,11 +2728,12 @@ const QrCodesPage = ({
   const clubThemeColor = propClubThemeColor || user.club?.themeColor || user.business?.themeColor || '#2563EB';
   const clubLogoUrl = propClubLogoUrl ?? (user.club?.logoUrl || user.business?.logoUrl || null);
   const clubUuid = user.club?.clubUuid || user.club?.uuid || user.business?.uuid || user.businessUuid || user.clubUuid || user.tenantId || '';
-  const pwaBase = (import.meta as any).env?.VITE_CUSTOMER_PWA_URL || 'https://drink-hub-ke-customer-pwa.vercel.app';
+  const pwaBase = (import.meta as any).env?.VITE_CUSTOMER_PWA_URL || 'https://orderup-ke-customer-pwa.vercel.app';
   const cleanPwaBase = pwaBase.endsWith('/') ? pwaBase.slice(0, -1) : pwaBase;
   const fullBaseUrl = `${cleanPwaBase}/v/${clubSlug}`;
 
-  const storageKey = `drinkhub_qr_tables_${clubSlug}`;
+  const storageKey = `orderup_qr_tables_${clubSlug}`;
+  const legacyStorageKey = `drinkhub_qr_tables_${clubSlug}`;
 
   const [tableCount, setTableCount] = useState<string>('10');
   const [startTable, setStartTable] = useState<string>('1');
@@ -2763,7 +2764,7 @@ const QrCodesPage = ({
 
   const [tables, setTables] = useState<{ id: number; section: string }[]>(() => {
     try {
-      const saved = localStorage.getItem(storageKey);
+      const saved = localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -4058,7 +4059,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
 
   /* Read logged-in manager & venue from localStorage */
   const user = React.useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('drinkhub_user') || '{}'); }
+    try { return JSON.parse(localStorage.getItem('orderup_user') || localStorage.getItem('drinkhub_user') || '{}'); }
     catch { return {}; }
   }, []);
 
@@ -4140,7 +4141,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
   const lastName = nameParts.slice(1).join(' ');
   const displayName = `${firstName} ${lastName ? lastName.charAt(0) + '.' : ''}`;
   const initials = `${firstName[0] || 'M'}${lastName[0] ? lastName[0] : ''}`;
-  const userEmail = user.email || 'manager@drinkhub.co.ke';
+  const userEmail = user.email || 'manager@orderup.co.ke';
   const userRoleDisplay = 'Manager';
 
   /* Dropdowns */

@@ -175,7 +175,11 @@ export const QrMenuPage: React.FC = () => {
   // M-Pesa & Customer Contact State
   const [phoneNumber, setPhoneNumber] = useState(() => {
     try {
-      return localStorage.getItem('drinkhub_customer_phone') || '';
+      return (
+        localStorage.getItem('orderup_customer_phone') ||
+        localStorage.getItem('drinkhub_customer_phone') ||
+        ''
+      );
     } catch {
       return '';
     }
@@ -331,7 +335,7 @@ export const QrMenuPage: React.FC = () => {
     const cleanPhone = phoneNumber.trim().replace(/[^0-9]/g, '');
     if (cleanPhone) {
       try {
-        localStorage.setItem('drinkhub_customer_phone', cleanPhone);
+        localStorage.setItem('orderup_customer_phone', cleanPhone);
       } catch {}
     }
 

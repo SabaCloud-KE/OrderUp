@@ -1,7 +1,7 @@
 services:
   # ─── Express API Server ───────────────────────────────────────────────────
   - type: web
-    name: drinkhub-server
+    name: orderup-server
     runtime: node
     region: oregon
     plan: starter
@@ -26,7 +26,7 @@ services:
 
   # ─── React Client (Static Site) ───────────────────────────────────────────
   - type: web
-    name: drinkhub-client
+    name: orderup-client
     runtime: static
     branch: main
     rootDir: apps/client

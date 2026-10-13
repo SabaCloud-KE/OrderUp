@@ -7,7 +7,7 @@ This guide details the step-by-step production deployment process for **OrderUp*
 ## Prerequisites & Infrastructure Setup
 
 1. **Linux Server**: Ubuntu 22.04 LTS or 24.04 LTS (min 2 vCPU, 4GB RAM).
-2. **Domain & DNS**: Point `drinkhub.co.ke` and `*.drinkhub.co.ke` (A Records) to your server IP.
+2. **Domain & DNS**: Point `orderup.co.ke` and `*.orderup.co.ke` (A Records) to your server IP.
 3. **Software Installed**:
    - Docker & Docker Compose
    - Certbot (`sudo apt install certbot`)
@@ -17,8 +17,8 @@ This guide details the step-by-step production deployment process for **OrderUp*
 ## Step 1: Clone Repository & Configure Environment
 
 ```bash
-git clone https://github.com/your-org/drinkhub-kenya.git
-cd drinkhub-kenya
+git clone https://github.com/your-org/orderup-kenya.git
+cd orderup-kenya
 
 # Copy production environment variables
 cp .env.production.example .env
@@ -29,15 +29,15 @@ cp .env.production.example .env
 ## Step 2: SSL Certificate Generation (Let's Encrypt)
 
 ```bash
-sudo certbot certonly --standalone -d drinkhub.co.ke -d *.drinkhub.co.ke
+sudo certbot certonly --standalone -d orderup.co.ke -d *.orderup.co.ke
 ```
 
 Copy certificates into Nginx ssl volume directory:
 
 ```bash
-mkdir -p docker/nginx/ssl/live/drinkhub.co.ke/
-sudo cp /etc/letsencrypt/live/drinkhub.co.ke/fullchain.pem docker/nginx/ssl/live/drinkhub.co.ke/
-sudo cp /etc/letsencrypt/live/drinkhub.co.ke/privkey.pem docker/nginx/ssl/live/drinkhub.co.ke/
+mkdir -p docker/nginx/ssl/live/orderup.co.ke/
+sudo cp /etc/letsencrypt/live/orderup.co.ke/fullchain.pem docker/nginx/ssl/live/orderup.co.ke/
+sudo cp /etc/letsencrypt/live/orderup.co.ke/privkey.pem docker/nginx/ssl/live/orderup.co.ke/
 ```
 
 ---
@@ -78,13 +78,13 @@ Add cron job to run `./scripts/backup-db.sh` daily at midnight:
 ```bash
 crontab -e
 # Add:
-0 0 * * * /bin/bash /path/to/drinkhub-kenya/scripts/backup-db.sh >> /var/log/drinkhub_backup.log 2>&1
+0 0 * * * /bin/bash /path/to/orderup-kenya/scripts/backup-db.sh >> /var/log/orderup_backup.log 2>&1
 ```
 
 ---
 
 ## Production Health Checks & Monitoring
 
-- **API Gateway Health**: `https://api.drinkhub.co.ke/health`
-- **Swagger Documentation**: `https://api.drinkhub.co.ke/api-docs`
-- **Client PWA**: `https://drinkhub.co.ke`
+- **API Gateway Health**: `https://api.orderup.co.ke/health`
+- **Swagger Documentation**: `https://api.orderup.co.ke/api-docs`
+- **Client PWA**: `https://orderup.co.ke`

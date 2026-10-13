@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Wine, Eye, EyeOff, ChevronRight, Loader2, ShieldCheck, Timer } from 'lucide-react';
 import { getApiUrl } from '../config/api';
-import { getSessionExpiredNotice } from '@drinkhub/shared';
+import { getSessionExpiredNotice } from '@orderup/shared';
 
 interface AdminLoginPageProps {
   onLogin: () => void;
@@ -26,8 +26,10 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
     setIsLoading(true);
 
     const isDemoAdmin = (
-      (cleanUser.toLowerCase() === 'superadmin@drinkhub.co.ke' ||
+      (cleanUser.toLowerCase() === 'superadmin@orderup.co.ke' ||
+       cleanUser.toLowerCase() === 'superadmin@drinkhub.co.ke' ||
        cleanUser.toLowerCase() === 'superadmin' ||
+       cleanUser.toLowerCase() === 'admin@orderup.co.ke' ||
        cleanUser.toLowerCase() === 'admin@drinkhub.co.ke') &&
       (password === 'Password123!' || password === 'admin' || password === 'admin123')
     );
@@ -54,12 +56,13 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
       }
 
       if (data.data?.accessToken) {
-        localStorage.setItem('drinkhub_token', data.data.accessToken);
+        localStorage.setItem('orderup_token', data.data.accessToken);
+        localStorage.setItem('orderup_admin_token', data.data.accessToken);
         if (data.data.refreshToken) {
-          localStorage.setItem('drinkhub_refresh_token', data.data.refreshToken);
+          localStorage.setItem('orderup_refresh_token', data.data.refreshToken);
         }
-        localStorage.setItem('drinkhub_user', JSON.stringify(data.data.user));
-        localStorage.setItem('drinkhub_login_time', Date.now().toString());
+        localStorage.setItem('orderup_user', JSON.stringify(data.data.user));
+        localStorage.setItem('orderup_login_time', Date.now().toString());
       }
       onLogin();
     } catch (err: any) {
@@ -115,12 +118,12 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
             <button
               type="button"
               onClick={() => {
-                setUsername('superadmin@drinkhub.co.ke');
+                setUsername('superadmin@orderup.co.ke');
                 setPassword('Password123!');
               }}
               className="mt-1 text-[11px] underline text-blue-600 hover:text-blue-800 font-medium"
             >
-              Click to fill: superadmin@drinkhub.co.ke / Password123!
+              Click to fill: superadmin@orderup.co.ke / Password123!
             </button>
           </div>
         </div>

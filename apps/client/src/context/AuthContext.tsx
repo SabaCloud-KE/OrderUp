@@ -6,8 +6,8 @@ import {
   AUTH_STORAGE_KEYS,
   clearAllAuthData,
   isValidRole,
-} from '@drinkhub/shared';
-import { useSessionTimeout, SessionTimeoutBanner } from '@drinkhub/ui';
+} from '@orderup/shared';
+import { useSessionTimeout, SessionTimeoutBanner } from '@orderup/ui';
 
 interface User {
   id: string;

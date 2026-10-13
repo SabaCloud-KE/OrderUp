@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Wine, Eye, EyeOff, ChevronRight, Loader2, User, Briefcase, Shield, Timer } from 'lucide-react';
 import { getApiUrl } from '../config/api';
-import { getSessionExpiredNotice } from '@drinkhub/shared';
+import { getSessionExpiredNotice } from '@orderup/shared';
 import { PrivacyPolicyModal, TermsAndConditionsModal, BusinessAdminOnboardingModal } from '../components/LegalModals';
 
 type StaffRole = 'waiter' | 'manager' | 'admin';
@@ -72,12 +72,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       setRole(targetRole);
 
       if (data.data?.accessToken) {
-        localStorage.setItem('drinkhub_token', data.data.accessToken);
+        localStorage.setItem('orderup_token', data.data.accessToken);
         if (data.data.refreshToken) {
-          localStorage.setItem('drinkhub_refresh_token', data.data.refreshToken);
+          localStorage.setItem('orderup_refresh_token', data.data.refreshToken);
         }
-        localStorage.setItem('drinkhub_user', JSON.stringify(data.data.user));
-        localStorage.setItem('drinkhub_login_time', Date.now().toString());
+        localStorage.setItem('orderup_user', JSON.stringify(data.data.user));
+        localStorage.setItem('orderup_login_time', Date.now().toString());
       }
 
       const mustChange = data.data?.mustChangePassword || data.data?.user?.mustChangePassword;
@@ -91,7 +91,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       if (targetRole === 'admin') {
         const userObj = data.data?.user || {};
         const userKey = userObj.userUuid || userObj.id || userObj.email || 'admin';
-        const isPolicyAccepted = !!localStorage.getItem('drinkhub_policy_accepted_' + userKey);
+        const isPolicyAccepted = !!(
+          localStorage.getItem('orderup_policy_accepted_' + userKey) ||
+          localStorage.getItem('drinkhub_policy_accepted_' + userKey)
+        );
         if (!isPolicyAccepted) {
           setPendingRole(targetRole);
           setOnboardingSubtitle(`Welcome${userObj.business?.name ? ` to ${userObj.business.name}` : ''}! Before accessing your Business Admin portal, statutory compliance requires your formal review and acceptance of our service agreements.`);
@@ -137,7 +140,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('drinkhub_token');
+      const token = localStorage.getItem('orderup_token') || localStorage.getItem('drinkhub_token');
       const res = await fetch(getApiUrl('/auth/change-first-password'), {
         method: 'POST',
         headers: {
@@ -162,9 +165,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       // After password change, if user is Business Admin, prompt them to accept the policy
       if (role === 'admin') {
         try {
-          const userObj = JSON.parse(localStorage.getItem('drinkhub_user') || '{}');
+          const userObj = JSON.parse(
+            localStorage.getItem('orderup_user') ||
+            localStorage.getItem('drinkhub_user') ||
+            '{}'
+          );
           const userKey = userObj.userUuid || userObj.id || userObj.email || 'admin';
-          const isPolicyAccepted = !!localStorage.getItem('drinkhub_policy_accepted_' + userKey);
+          const isPolicyAccepted = !!(
+            localStorage.getItem('orderup_policy_accepted_' + userKey) ||
+            localStorage.getItem('drinkhub_policy_accepted_' + userKey)
+          );
           if (!isPolicyAccepted) {
             setPendingRole(role);
             setOnboardingSubtitle('Your temporary password has been successfully updated! Before accessing your Business Admin portal, statutory compliance requires your formal review and acceptance of our service agreements.');
@@ -186,11 +196,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   const handleAcceptPolicy = () => {
     try {
-      const userObj = JSON.parse(localStorage.getItem('drinkhub_user') || '{}');
+      const userObj = JSON.parse(
+        localStorage.getItem('orderup_user') ||
+        localStorage.getItem('drinkhub_user') ||
+        '{}'
+      );
       const userKey = userObj.userUuid || userObj.id || userObj.email || 'admin';
-      localStorage.setItem('drinkhub_policy_accepted_' + userKey, new Date().toISOString());
+      localStorage.setItem('orderup_policy_accepted_' + userKey, new Date().toISOString());
     } catch {
-      localStorage.setItem('drinkhub_policy_accepted_admin', new Date().toISOString());
+      localStorage.setItem('orderup_policy_accepted_admin', new Date().toISOString());
     }
     setShowOnboardingModal(false);
     onLogin(pendingRole || role);
@@ -457,7 +471,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         open={showOnboardingModal}
         businessName={(() => {
           try {
-            const userObj = JSON.parse(localStorage.getItem('drinkhub_user') || '{}');
+            const userObj = JSON.parse(
+              localStorage.getItem('orderup_user') ||
+              localStorage.getItem('drinkhub_user') ||
+              '{}'
+            );
             return userObj.business?.name || userObj.club?.name || '';
           } catch {
             return '';
