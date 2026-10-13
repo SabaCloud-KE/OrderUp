@@ -871,6 +871,10 @@ export const DigitalStorefrontPage: React.FC = () => {
         setPlaceError('Please enter a valid 10-digit Safaricom phone number (e.g. 0712 345 678).');
         return;
       }
+      if (!phoneInfo.isSafaricom) {
+        setPlaceError('M-Pesa STK Push requires a Safaricom number (070, 071, 072, 074, 079, 0110-0115). For Airtel or Telkom, please select Cash or Card.');
+        return;
+      }
       // Play authentic SIM Toolkit notification chime & trigger mobile vibration
       playSimToolkitChime();
       try {
@@ -985,6 +989,20 @@ export const DigitalStorefrontPage: React.FC = () => {
             }),
           });
           const stkData = await stkRes.json();
+
+          if (!stkRes.ok || !stkData.success) {
+            const errorMsg =
+              stkData?.error?.message ||
+              stkData?.message ||
+              'Failed to dispatch M-Pesa prompt. Please verify your phone number and try again.';
+            setStkPromptModal((prev) => ({
+              ...prev,
+              status: 'FAILED',
+              errorMessage: errorMsg,
+            }));
+            return;
+          }
+
           const paymentUuid = stkData?.data?.paymentUuid;
           const isSimulated = stkData?.data?.isSimulated ?? false;
 
@@ -1046,8 +1064,8 @@ export const DigitalStorefrontPage: React.FC = () => {
           console.warn('STK Push dispatch error:', stkErr);
           setStkPromptModal((prev) => ({
             ...prev,
-            isSimulated: true,
-            status: 'WAITING_PIN',
+            status: 'FAILED',
+            errorMessage: stkErr.message || 'Unable to connect to M-Pesa payment service.',
           }));
         }
       } else {

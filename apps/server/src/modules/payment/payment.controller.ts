@@ -219,4 +219,17 @@ export class PaymentController {
       next(error);
     }
   };
+
+  getMpesaDiagnostics = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const result = await this.paymentService.getMpesaDiagnostics();
+      res.json({
+        success: true,
+        data: result,
+        meta: { timestamp: new Date().toISOString(), version: 'v1' },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

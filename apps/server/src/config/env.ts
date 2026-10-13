@@ -14,8 +14,11 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('8h'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
   MPESA_ENVIRONMENT: z.enum(['sandbox', 'production']).default(
-    (process.env.MPESA_ENVIRONMENT as 'sandbox' | 'production') ||
-    (process.env.NODE_ENV === 'production' ? 'production' : 'sandbox')
+    ((process.env.MPESA_ENVIRONMENT || process.env.MPESA_ENV || '').toLowerCase() === 'production'
+      ? 'production'
+      : (process.env.MPESA_ENVIRONMENT || process.env.MPESA_ENV || '').toLowerCase() === 'sandbox'
+      ? 'sandbox'
+      : (process.env.NODE_ENV === 'production' ? 'production' : 'sandbox')) as 'sandbox' | 'production'
   ),
   MPESA_CONSUMER_KEY: z.string().optional(),
   MPESA_CONSUMER_SECRET: z.string().optional(),
@@ -24,7 +27,9 @@ const envSchema = z.object({
   MPESA_TRANSACTION_TYPE: z.enum(['CustomerPayBillOnline', 'CustomerBuyGoodsOnline']).default(
     (process.env.MPESA_TRANSACTION_TYPE as 'CustomerPayBillOnline' | 'CustomerBuyGoodsOnline') || 'CustomerPayBillOnline'
   ),
-  MPESA_CALLBACK_URL: z.string().optional(),
+  MPESA_CALLBACK_URL: z.string().default(
+    process.env.MPESA_CALLBACK_URL || process.env.MPESA_CALLBACK_URI || ''
+  ),
   RESEND_API_KEY: z.string().optional(),
 });
 

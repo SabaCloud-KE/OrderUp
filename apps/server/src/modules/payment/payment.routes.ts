@@ -50,6 +50,7 @@ paymentRouter.get(
  *         description: STK push prompt dispatched (status PROCESSING)
  */
 paymentRouter.post('/mpesa/stkpush', validateRequest(initiateMpesaSchema), paymentController.initiateMpesa);
+paymentRouter.get('/mpesa/diagnostics', paymentController.getMpesaDiagnostics);
 
 /**
  * @openapi

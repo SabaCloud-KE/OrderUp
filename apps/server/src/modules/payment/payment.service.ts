@@ -386,4 +386,8 @@ export class PaymentService {
       orderUuid: updated.orderUuid,
     };
   }
+
+  async getMpesaDiagnostics() {
+    return this.mpesaAdapter.checkDiagnostics();
+  }
 }

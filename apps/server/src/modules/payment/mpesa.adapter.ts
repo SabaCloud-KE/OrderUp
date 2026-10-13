@@ -38,7 +38,7 @@ export class MpesaAdapter {
     return phone;
   }
 
-  private async getOAuthToken(): Promise<{ token: string; simulated: boolean }> {
+  public async getOAuthToken(): Promise<{ token: string; simulated: boolean }> {
     const consumerKey = env.MPESA_CONSUMER_KEY;
     const consumerSecret = env.MPESA_CONSUMER_SECRET;
     const isProduction = env.MPESA_ENVIRONMENT === 'production';
@@ -59,7 +59,7 @@ export class MpesaAdapter {
       return { token: 'simulated_access_token_12345', simulated: true };
     }
 
-    const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
+    const auth = Buffer.from(`${consumerKey.trim()}:${consumerSecret.trim()}`).toString('base64');
 
     try {
       logger.info(`[M-Pesa OAuth] Requesting token from ${this.baseUrl} (${isProduction ? 'PRODUCTION' : 'SANDBOX'})...`);
@@ -69,18 +69,19 @@ export class MpesaAdapter {
           headers: {
             Authorization: `Basic ${auth}`,
           },
-          timeout: 12000,
+          timeout: 15000,
         },
       );
       return { token: response.data.access_token, simulated: false };
     } catch (error: any) {
-      const errMsg = error.response?.data?.errorMessage || error.response?.data?.error || error.message;
-      if (isProduction) {
-        logger.error(`[M-Pesa OAuth Error] Production authentication failed: ${errMsg}`);
-        throw new Error(`Safaricom M-Pesa OAuth authentication failed: ${errMsg}`);
-      }
-      logger.warn(`[M-Pesa OAuth Warning] Failed to fetch token: ${errMsg}. Falling back to simulated mode.`);
-      return { token: 'simulated_access_token_12345', simulated: true };
+      const errMsg =
+        error.response?.data?.errorMessage ||
+        error.response?.data?.error ||
+        error.message;
+      logger.error(`[M-Pesa OAuth Error] Authentication failed on ${this.baseUrl}: ${errMsg}`, error.response?.data);
+      throw new Error(
+        `Safaricom M-Pesa OAuth authentication failed (${isProduction ? 'Production' : 'Sandbox'}): ${errMsg}. Please verify MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET.`
+      );
     }
   }
 
@@ -88,10 +89,24 @@ export class MpesaAdapter {
     const isProduction = env.MPESA_ENVIRONMENT === 'production';
     const { token, simulated } = await this.getOAuthToken();
 
-    const shortcode = params.venueConfig?.shortcode?.trim() || env.MPESA_SHORTCODE || '174379';
-    const passkey = params.venueConfig?.passkey?.trim() || env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
-    const transactionType = params.venueConfig?.transactionType || env.MPESA_TRANSACTION_TYPE;
-    const callbackUrl = env.MPESA_CALLBACK_URL || '';
+    let shortcode = params.venueConfig?.shortcode?.trim() || env.MPESA_SHORTCODE || '174379';
+    let passkey = params.venueConfig?.passkey?.trim() || env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
+    let transactionType = params.venueConfig?.transactionType || env.MPESA_TRANSACTION_TYPE;
+    
+    // Fallback callback URL if not explicitly set
+    const callbackUrl = (env.MPESA_CALLBACK_URL || '').trim() || 'https://orderup-ke.onrender.com/api/v1/payments/mpesa/callback';
+
+    // In Sandbox: Safaricom Sandbox ONLY supports shortcode 174379
+    if (!isProduction) {
+      if (params.venueConfig?.shortcode && params.venueConfig.shortcode !== '174379') {
+        logger.warn(
+          `[M-Pesa Sandbox Notice] Venue custom shortcode ${params.venueConfig.shortcode} detected, but Safaricom Sandbox only routes test shortcode 174379. Routing through 174379 for Sandbox.`
+        );
+        shortcode = '174379';
+        passkey = 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
+        transactionType = 'CustomerPayBillOnline';
+      }
+    }
 
     // Production credential validation
     if (isProduction) {
@@ -175,7 +190,7 @@ export class MpesaAdapter {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          timeout: 20000,
+          timeout: 25000,
         },
       );
 
@@ -194,21 +209,58 @@ export class MpesaAdapter {
         error.response?.data?.error ||
         error.message;
 
-      if (isProduction) {
-        logger.error(`[M-Pesa STK Push Error] Production Daraja request failed: ${errMsg}`, error.response?.data);
-        throw new Error(`Safaricom M-Pesa error: ${errMsg}`);
-      }
-
-      logger.warn(`[M-Pesa STK Push] Safaricom Daraja request failed: ${errMsg}. Falling back to simulated prompt for sandbox.`);
-      return {
-        MerchantRequestID: `29115-${Date.now()}`,
-        CheckoutRequestID: `ws_CO_${Date.now()}`,
-        ResponseCode: '0',
-        ResponseDescription: `Simulated (Safaricom returned: ${errMsg})`,
-        CustomerMessage: 'Simulation: Check on-screen prompt to enter test PIN.',
-        isSimulated: true,
-        simulationReason: errMsg,
-      };
+      logger.error(`[M-Pesa STK Push Error] Safaricom request failed: ${errMsg}`, error.response?.data);
+      throw new Error(`Safaricom M-Pesa error: ${errMsg}`);
     }
+  }
+
+  public async checkDiagnostics(): Promise<{
+    environment: 'sandbox' | 'production';
+    baseUrl: string;
+    hasConsumerKey: boolean;
+    hasConsumerSecret: boolean;
+    hasPasskey: boolean;
+    hasShortcode: boolean;
+    callbackUrl: string;
+    oauthSuccess: boolean;
+    oauthError?: string;
+  }> {
+    const consumerKey = env.MPESA_CONSUMER_KEY;
+    const consumerSecret = env.MPESA_CONSUMER_SECRET;
+    const hasConsumerKey = !!(consumerKey && !consumerKey.startsWith('your_') && consumerKey !== 'sandbox_key');
+    const hasConsumerSecret = !!(consumerSecret && !consumerSecret.startsWith('your_'));
+
+    let oauthSuccess = false;
+    let oauthError: string | undefined;
+
+    if (hasConsumerKey && hasConsumerSecret) {
+      try {
+        const auth = Buffer.from(`${consumerKey.trim()}:${consumerSecret.trim()}`).toString('base64');
+        const res = await axios.get(
+          `${this.baseUrl}/oauth/v1/generate?grant_type=client_credentials`,
+          {
+            headers: { Authorization: `Basic ${auth}` },
+            timeout: 10000,
+          }
+        );
+        oauthSuccess = !!res.data?.access_token;
+      } catch (err: any) {
+        oauthError = err.response?.data?.errorMessage || err.response?.data?.error || err.message;
+      }
+    } else {
+      oauthError = 'MPESA_CONSUMER_KEY or MPESA_CONSUMER_SECRET not provided';
+    }
+
+    return {
+      environment: env.MPESA_ENVIRONMENT,
+      baseUrl: this.baseUrl,
+      hasConsumerKey,
+      hasConsumerSecret,
+      hasPasskey: !!env.MPESA_PASSKEY,
+      hasShortcode: !!env.MPESA_SHORTCODE,
+      callbackUrl: env.MPESA_CALLBACK_URL || '',
+      oauthSuccess,
+      oauthError,
+    };
   }
 }
