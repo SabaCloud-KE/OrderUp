@@ -23,7 +23,7 @@ export const setApiTarget = (target: ApiTarget): void => {
 };
 
 export const getApiBaseUrl = (): string => {
-  const envUrl = ((import.meta as any).env?.VITE_API_URL || '').trim();
+  const envUrl = ((import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL) || '').trim();
   if (envUrl) {
     return envUrl;
   }
@@ -35,7 +35,7 @@ export const getApiBaseUrl = (): string => {
 };
 
 export const getSocketUrl = (): string => {
-  const envUrl = ((import.meta as any).env?.VITE_SOCKET_URL || '').trim();
+  const envUrl = ((import.meta.env?.VITE_SOCKET_URL || (import.meta as any).env?.VITE_SOCKET_URL) || '').trim();
   if (envUrl) {
     return envUrl;
   }

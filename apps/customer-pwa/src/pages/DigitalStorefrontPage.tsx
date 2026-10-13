@@ -13,7 +13,7 @@ import { ThemeToggleSimple } from '@orderup/ui';
    API CONFIG
 ───────────────────────────────────────────── */
 const getApiUrl = (path: string): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  const envUrl = import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL;
   let base = envUrl ? envUrl.trim() : 'http://localhost:5000/api/v1';
   if (base.endsWith('/')) base = base.slice(0, -1);
   if (!base.includes('/api/v1')) base = `${base}/api/v1`;
@@ -130,7 +130,7 @@ const resolveImageUrl = (url?: string | null): string => {
     return url;
   }
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  const envUrl = ((import.meta as any).env?.VITE_API_URL || '').trim();
+  const envUrl = ((import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL) || '').trim();
   const base = envUrl
     ? envUrl.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '')
     : 'http://localhost:5000';

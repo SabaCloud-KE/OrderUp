@@ -1,5 +1,5 @@
 export const getApiUrl = (endpoint: string = ''): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  const envUrl = import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL;
   let baseUrl = envUrl ? envUrl.trim() : 'http://localhost:5000/api/v1';
   if (baseUrl.endsWith('/')) {
     baseUrl = baseUrl.slice(0, -1);
@@ -17,7 +17,7 @@ export const resolveImageUrl = (url?: string | null): string => {
     return url;
   }
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  const envUrl = import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL;
   let base = envUrl ? envUrl.trim() : 'http://localhost:5000';
   base = base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
   return `${base}${cleanPath}`;

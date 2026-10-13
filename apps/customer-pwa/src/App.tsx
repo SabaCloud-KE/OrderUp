@@ -53,7 +53,7 @@ const DEFAULT_BRANDING: ClubBranding = CLUB_REGISTRY['quiver-kilimani'];
  * Falls back to the default Quiver Lounge branding.
  */
 const getApiUrl = (path: string): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  const envUrl = import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL;
   let base = envUrl ? envUrl.trim() : 'http://localhost:5000/api/v1';
   if (base.endsWith('/')) base = base.slice(0, -1);
   if (!base.includes('/api/v1')) base = `${base}/api/v1`;
