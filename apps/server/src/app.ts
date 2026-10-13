@@ -29,15 +29,16 @@ export const createApp = (): Application => {
   app.set('trust proxy', 1);
 
   // ── CORS: allow all registered frontend origins ──────────────────────────
-  const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim());
+  const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim().replace(/\/+$/, ''));
 
   app.use(
     cors({
       origin: (origin, callback) => {
         // Allow requests with no origin (e.g. mobile apps, curl, server-to-server, health checks)
         if (!origin) return callback(null, true);
+        const cleanOrigin = origin.replace(/\/+$/, '');
         // Support wildcard '*' or exact origin match
-        if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        if (allowedOrigins.includes('*') || allowedOrigins.includes(cleanOrigin)) {
           return callback(null, true);
         }
         callback(new Error(`CORS: origin '${origin}' is not allowed`));

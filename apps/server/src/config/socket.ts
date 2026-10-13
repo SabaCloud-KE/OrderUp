@@ -6,9 +6,19 @@ import { logger } from './logger';
 let io: SocketIOServer | null = null;
 
 export const initSocket = (httpServer: HttpServer): SocketIOServer => {
+  const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map((o) => o.trim().replace(/\/+$/, ''));
+  const clientOrigin = env.CLIENT_URL ? env.CLIENT_URL.trim().replace(/\/+$/, '') : '';
+
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: env.CLIENT_URL,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const cleanOrigin = origin.replace(/\/+$/, '');
+        if (allowedOrigins.includes('*') || allowedOrigins.includes(cleanOrigin) || cleanOrigin === clientOrigin) {
+          return callback(null, true);
+        }
+        return callback(new Error(`CORS: origin '${origin}' is not allowed`), false);
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },
