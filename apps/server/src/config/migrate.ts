@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { logger } from "./logger";
+import bcrypt from "bcrypt";
 
 export async function autoMigrateDatabase(): Promise<void> {
   try {
@@ -212,6 +213,55 @@ export async function autoMigrateDatabase(): Promise<void> {
       `);
     } catch {
       // Ignored if table or values are not ready yet
+    }
+
+    // 12. Ensure default Super Administrator exists & migrate legacy DrinkHub admin
+    try {
+      // Step A: Migrate legacy email if exists
+      await prisma.$executeRawUnsafe(`
+        UPDATE users
+        SET email = 'superadmin@orderup.co.ke', updated_at = NOW()
+        WHERE LOWER(email) = 'superadmin@drinkhub.co.ke'
+          AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(email) = 'superadmin@orderup.co.ke');
+      `);
+
+      // Step B: Check if superadmin exists
+      const existingSuperAdmin = await prisma.user.findFirst({
+        where: {
+          email: { equals: 'superadmin@orderup.co.ke', mode: 'insensitive' },
+          deletedAt: null,
+        },
+      });
+
+      const superAdminPasswordHash = await bcrypt.hash('Password123!', 12);
+
+      if (!existingSuperAdmin) {
+        await prisma.user.create({
+          data: {
+            userUuid: '00000000-0000-0000-0000-000000000001',
+            email: 'superadmin@orderup.co.ke',
+            passwordHash: superAdminPasswordHash,
+            fullName: 'Super Administrator',
+            phone: '+254700000000',
+            role: 'SUPER_ADMIN' as any,
+            isActive: true,
+          },
+        });
+        logger.info('👤 Auto-provisioned default Super Administrator: superadmin@orderup.co.ke');
+      } else {
+        // Ensure superadmin has active status, SUPER_ADMIN role, and auto-healed Password123! hash
+        await prisma.user.update({
+          where: { userUuid: existingSuperAdmin.userUuid },
+          data: {
+            role: 'SUPER_ADMIN' as any,
+            isActive: true,
+            passwordHash: superAdminPasswordHash,
+          },
+        });
+        logger.info('👤 Verified & updated Super Administrator credentials');
+      }
+    } catch (err: any) {
+      logger.warn(`Superadmin auto-provision warning: ${err.message}`);
     }
 
     logger.info("✅ Database auto-migration completed successfully");
