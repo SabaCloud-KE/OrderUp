@@ -23,11 +23,24 @@ export const setApiTarget = (target: ApiTarget): void => {
 };
 
 export const getApiBaseUrl = (): string => {
+  const envUrl = ((import.meta as any).env?.VITE_API_URL || '').trim();
+  if (envUrl) {
+    return envUrl;
+  }
   const target = getApiTarget();
   if (target === 'cloud') {
     return CLOUD_API_URL;
   }
   return LOCAL_API_URL;
+};
+
+export const getSocketUrl = (): string => {
+  const envUrl = ((import.meta as any).env?.VITE_SOCKET_URL || '').trim();
+  if (envUrl) {
+    return envUrl;
+  }
+  const base = getApiBaseUrl();
+  return base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
 };
 
 export const getApiUrl = (endpoint: string = ''): string => {

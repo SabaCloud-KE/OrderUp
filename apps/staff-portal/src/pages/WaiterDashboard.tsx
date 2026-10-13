@@ -6,25 +6,8 @@ import {
   Banknote, CreditCard, Smartphone, ArrowRight, LayoutDashboard, History,
   Loader2, RefreshCcw, WifiOff, Lock, Key, Eye, EyeOff, X, Check,
 } from 'lucide-react';
-import { resolveImageUrl } from '../config/api';
+import { resolveImageUrl, getApiUrl, getSocketUrl } from '../config/api';
 import { useTheme, ThemeToggle } from '@orderup/ui';
-
-/* ─── API config ─── */
-const getApiUrl = (path: string): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  let base = envUrl ? envUrl.trim() : 'http://localhost:5000/api/v1';
-  if (base.endsWith('/')) base = base.slice(0, -1);
-  if (!base.includes('/api/v1')) base = `${base}/api/v1`;
-  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
-};
-
-const getSocketUrl = (): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  let base = envUrl ? envUrl.trim() : 'http://localhost:5000';
-  if (base.endsWith('/')) base = base.slice(0, -1);
-  base = base.replace(/\/api\/v1\/?$/, '');
-  return base;
-};
 
 const authHeaders = (): Record<string, string> => {
   const token = localStorage.getItem('orderup_token') || localStorage.getItem('drinkhub_token');

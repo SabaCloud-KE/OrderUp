@@ -10,7 +10,7 @@ import {
   Tag, Layers, FolderPlus, Camera, Image, Upload, Printer, Sparkles, Flame, Gift, Percent, Zap,
   Menu, Grid, List, Smartphone, Check, ChevronUp, Maximize2, ZoomIn,
 } from 'lucide-react';
-import { resolveImageUrl } from '../config/api';
+import { resolveImageUrl, getApiUrl, getSocketUrl } from '../config/api';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
@@ -251,23 +251,6 @@ const generatePassword = (): string => {
   for (let i = 0; i < 8; i++) pwd.push(all[Math.floor(Math.random() * all.length)]);
   for (let i = pwd.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pwd[i], pwd[j]] = [pwd[j], pwd[i]]; }
   return pwd.join('');
-};
-
-/* --- API config --- */
-const getApiUrl = (path: string): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  let base = envUrl ? envUrl.trim() : 'http://localhost:5000/api/v1';
-  if (base.endsWith('/')) base = base.slice(0, -1);
-  if (!base.includes('/api/v1')) base = `${base}/api/v1`;
-  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
-};
-
-const getSocketUrl = (): string => {
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  let base = envUrl ? envUrl.trim() : 'http://localhost:5000';
-  if (base.endsWith('/')) base = base.slice(0, -1);
-  base = base.replace(/\/api\/v1\/?$/, '');
-  return base;
 };
 
 const getClubUuid = (): string | null => {
