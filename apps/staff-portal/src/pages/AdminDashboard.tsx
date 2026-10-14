@@ -1180,7 +1180,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
               </div>
             </div>
 
-            {/* 2. Consolidated Orders KPI (Pending, In Progress, Completed & Cancelled) */}
+            {/* 2. Consolidated Orders KPI (Pending, In Progress, Completed) */}
             <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
               <div>
                 <div className="flex items-center justify-between">
@@ -1226,13 +1226,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                     </span>
                     <span className="text-xs font-black text-emerald-600 dark:text-emerald-300">{summary.completedOrders}</span>
                   </div>
-
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20">
-                    <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
-                      <X className="h-3 w-3 text-rose-500" /> Cancelled
-                    </span>
-                    <span className="text-xs font-black text-rose-600 dark:text-rose-300">{summary.cancelledOrders}</span>
-                  </div>
                 </div>
               </div>
 
@@ -1246,7 +1239,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                       <div style={{ width: `${pendingPct}%` }} className="bg-amber-500 transition-all duration-300" title={`Pending: ${summary.pendingOrders} (${pendingPct}%)`} />
                       <div style={{ width: `${inProgressPct}%` }} className="bg-indigo-500 transition-all duration-300" title={`In Progress: ${summary.inProgressOrders} (${inProgressPct}%)`} />
                       <div style={{ width: `${completedPct}%` }} className="bg-emerald-500 transition-all duration-300" title={`Completed: ${summary.completedOrders} (${completedPct}%)`} />
-                      <div style={{ width: `${cancelledPct}%` }} className="bg-rose-500 transition-all duration-300" title={`Cancelled: ${summary.cancelledOrders} (${cancelledPct}%)`} />
                     </>
                   )}
                 </div>
@@ -1337,10 +1329,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 Completed: {summary.completedOrders} ({completedPct}%)
               </span>
-              <span className="flex items-center gap-1.5 text-rose-600">
-                <span className="h-2 w-2 rounded-full bg-rose-500" />
-                Cancelled: {summary.cancelledOrders} ({cancelledPct}%)
-              </span>
             </div>
           </div>
 
@@ -1353,14 +1341,13 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                 <div style={{ width: `${pendingPct}%` }} className="bg-amber-500 transition-all duration-500" />
                 <div style={{ width: `${inProgressPct}%` }} className="bg-indigo-500 transition-all duration-500" />
                 <div style={{ width: `${completedPct}%` }} className="bg-emerald-500 transition-all duration-500" />
-                <div style={{ width: `${cancelledPct}%` }} className="bg-rose-500 transition-all duration-500" />
               </>
             )}
           </div>
         </div>
 
-        {/* ── Additional KPI Row: Avg Order Value, Cancellation Rate, Table Utilization, Pending Alert ── */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        {/* ── Additional KPI Row: Avg Order Value, Table Utilization, Pending Alert ── */}
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
           {/* Avg Order Value */}
           <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
             <div>
@@ -1378,27 +1365,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
             </div>
             <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
               <span className="text-[11px] text-amber-600 font-semibold">Per completed order</span>
-              <span className="text-[10px] text-slate-400 font-medium">Today</span>
-            </div>
-          </div>
-
-          {/* Cancellation Rate */}
-          <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: cancelRate >= 20 ? 'rgba(239,68,68,0.4)' : 'var(--border)' }}>
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500">Cancellation Rate</span>
-                <div className="h-8 w-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 flex items-center justify-center">
-                  <X className="h-4 w-4 text-rose-500" />
-                </div>
-              </div>
-              <div className="my-2.5">
-                <div className={`text-2xl font-black ${cancelRate >= 20 ? 'text-rose-600' : cancelRate >= 10 ? 'text-orange-500' : 'text-emerald-600'}`}>
-                  {cancelRate}%
-                </div>
-              </div>
-            </div>
-            <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
-              <span className="text-[11px] text-rose-500 font-semibold">{summary.cancelledOrders} cancelled</span>
               <span className="text-[10px] text-slate-400 font-medium">Today</span>
             </div>
           </div>
