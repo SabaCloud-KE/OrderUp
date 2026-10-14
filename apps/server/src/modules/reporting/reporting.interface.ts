@@ -215,3 +215,22 @@ export type ReportExportType =
 export interface AdminExportQueryParams extends AdminReportQueryParams {
   reportType: ReportExportType;
 }
+
+// ─── Discount Impact ───────────────────────────────────────────────────────────
+
+export interface DiscountImpactDTO {
+  /** Number of orders that had an offer (offerUuid IS NOT NULL) */
+  ordersWithOffers: number;
+  /** Sum of discountAmount across all orders in the period */
+  totalDiscountGiven: number;
+  /** totalDiscountGiven / ordersWithOffers, or 0 if no offer orders */
+  averageDiscountPerOrder: number;
+  /** totalDiscountGiven / (totalRevenue + totalDiscountGiven) * 100, or 0 */
+  discountPercentageOfGrossRevenue: number;
+}
+
+export interface ManagerReportQueryParams {
+  range?: ReportDateRangeType;
+  startDate?: string;
+  endDate?: string;
+}

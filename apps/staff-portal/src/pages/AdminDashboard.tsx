@@ -53,6 +53,7 @@ import {
   HelpCircle,
   Lock,
   Menu,
+  LayoutGrid,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -287,6 +288,17 @@ export interface AdminDashboardOverview {
   recentOrders: DashboardRecentOrder[];
   topMenuItems: DashboardTopMenuItem[];
   salesTrend: DashboardSalesTrendDay[];
+  tableUtilization?: {
+    activeTables: number;
+    tablesUsedToday: number;
+    utilizationRate: number;
+  };
+  pendingOrderAge?: {
+    totalPending: number;
+    oldestAgeMinutes: number;
+    ordersOver5Min: number;
+    ordersOver10Min: number;
+  };
 }
 
 
@@ -534,6 +546,10 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const [overviewLoading, setOverviewLoading] = useState<boolean>(true);
   const [overviewError, setOverviewError] = useState<string | null>(null);
 
+  /* Admin Waiter Performance KPI */
+  const [adminWaiters, setAdminWaiters] = useState<any[]>([]);
+  const [adminWaitersLoading, setAdminWaitersLoading] = useState(false);
+
   /* Reports & Analytics — Feature 6 state */
   type ReportRangeType =
     | 'TODAY'
@@ -692,6 +708,18 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     }
   }, []);
 
+  const loadAdminWaiters = useCallback(async () => {
+    setAdminWaitersLoading(true);
+    try {
+      const res = await authFetch('/reports/admin/waiters?range=LAST_7_DAYS');
+      if (res.success && res.data?.waiters) {
+        setAdminWaiters(res.data.waiters);
+      }
+    } catch { /* silent */ } finally {
+      setAdminWaitersLoading(false);
+    }
+  }, []);
+
   /* Fetch all core business data */
 
   const loadDashboardData = useCallback(async () => {
@@ -743,7 +771,8 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
 
   useEffect(() => {
     loadOverviewData();
-  }, [loadOverviewData]);
+    loadAdminWaiters();
+  }, [loadOverviewData, loadAdminWaiters]);
 
   const loadAuditLogsData = useCallback(async () => {
     setAuditLogsLoading(true);
@@ -1067,6 +1096,16 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     const completedPct = totalStatusOrders > 0 ? Math.round((summary.completedOrders / totalStatusOrders) * 100) : 0;
     const cancelledPct = totalStatusOrders > 0 ? Math.round((summary.cancelledOrders / totalStatusOrders) * 100) : 0;
 
+    // Derived KPI metrics
+    const cancelRate = totalStatusOrders > 0
+      ? Math.round((summary.cancelledOrders / totalStatusOrders) * 1000) / 10
+      : 0;
+    const avgOrderValue = summary.completedOrders > 0
+      ? Math.round(summary.todayRevenue / summary.completedOrders)
+      : 0;
+    const tableUtil = overview?.tableUtilization;
+    const pendingAge = overview?.pendingOrderAge;
+
     return (
       <div className="space-y-6">
         {/* ── Top Header & Live Status ── */}
@@ -1090,6 +1129,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
               onClick={() => {
                 loadOverviewData();
                 loadDashboardData();
+                loadAdminWaiters();
               }}
               disabled={overviewLoading || refreshing}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border hover:bg-slate-500/10 transition-colors"
@@ -1296,6 +1336,184 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
               </>
             )}
           </div>
+        </div>
+
+        {/* ── Additional KPI Row: Avg Order Value, Cancellation Rate, Table Utilization, Pending Alert ── */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* Avg Order Value */}
+          <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Avg Order Value</span>
+                <div className="h-8 w-8 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-amber-500" />
+                </div>
+              </div>
+              <div className="my-2.5">
+                <div className="text-2xl font-black text-amber-600">
+                  {formatKsh(avgOrderValue)}
+                </div>
+              </div>
+            </div>
+            <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
+              <span className="text-[11px] text-amber-600 font-semibold">Per completed order</span>
+              <span className="text-[10px] text-slate-400 font-medium">Today</span>
+            </div>
+          </div>
+
+          {/* Cancellation Rate */}
+          <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: cancelRate >= 20 ? 'rgba(239,68,68,0.4)' : 'var(--border)' }}>
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Cancellation Rate</span>
+                <div className="h-8 w-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 flex items-center justify-center">
+                  <X className="h-4 w-4 text-rose-500" />
+                </div>
+              </div>
+              <div className="my-2.5">
+                <div className={`text-2xl font-black ${cancelRate >= 20 ? 'text-rose-600' : cancelRate >= 10 ? 'text-orange-500' : 'text-emerald-600'}`}>
+                  {cancelRate}%
+                </div>
+              </div>
+            </div>
+            <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
+              <span className="text-[11px] text-rose-500 font-semibold">{summary.cancelledOrders} cancelled</span>
+              <span className="text-[10px] text-slate-400 font-medium">Today</span>
+            </div>
+          </div>
+
+          {/* Table Utilization */}
+          <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Table Utilization</span>
+                <div className="h-8 w-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center">
+                  <LayoutGrid className="h-4 w-4 text-indigo-500" />
+                </div>
+              </div>
+              <div className="my-2.5">
+                <div className="text-2xl font-black text-indigo-600">
+                  {tableUtil ? `${tableUtil.utilizationRate}%` : '—'}
+                </div>
+              </div>
+            </div>
+            <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
+              <span className="text-[11px] text-indigo-600 font-semibold">
+                {tableUtil ? `${tableUtil.tablesUsedToday}/${tableUtil.activeTables} tables` : 'No data'}
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium">Today</span>
+            </div>
+          </div>
+
+          {/* Pending Order Age Alert */}
+          <div
+            className="p-4 rounded-2xl border flex flex-col justify-between"
+            style={{
+              background: 'var(--bg-card)',
+              borderColor: pendingAge && pendingAge.ordersOver10Min > 0 ? 'rgba(239,68,68,0.4)'
+                : pendingAge && pendingAge.ordersOver5Min > 0 ? 'rgba(245,158,11,0.4)'
+                : 'var(--border)',
+            }}
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500">Pending Age Alert</span>
+                <div className="h-8 w-8 rounded-xl bg-orange-50 dark:bg-orange-950/50 flex items-center justify-center">
+                  <Clock className="h-4 w-4 text-orange-500" />
+                </div>
+              </div>
+              <div className="my-2.5">
+                <div className={`text-2xl font-black ${
+                  pendingAge && pendingAge.ordersOver10Min > 0 ? 'text-rose-600'
+                  : pendingAge && pendingAge.ordersOver5Min > 0 ? 'text-amber-600'
+                  : 'text-emerald-600'
+                }`}>
+                  {pendingAge ? `${pendingAge.oldestAgeMinutes}m` : '—'}
+                </div>
+              </div>
+            </div>
+            <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
+              <span className="text-[11px] text-orange-500 font-semibold">
+                {pendingAge
+                  ? pendingAge.ordersOver10Min > 0
+                    ? `${pendingAge.ordersOver10Min} urgent (>10m)`
+                    : pendingAge.ordersOver5Min > 0
+                    ? `${pendingAge.ordersOver5Min} late (>5m)`
+                    : `${pendingAge.totalPending} pending`
+                  : 'No pending'}
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium">Oldest</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Staff Performance (7-Day Waiter Leaderboard) ── */}
+        <div className="rounded-2xl border p-5" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h4 className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>Staff Performance (Last 7 Days)</h4>
+              <p className="text-xs text-slate-500">Waiter completion rates and revenue handled</p>
+            </div>
+            <button
+              onClick={loadAdminWaiters}
+              disabled={adminWaitersLoading}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium hover:bg-slate-500/10 transition-colors disabled:opacity-50"
+              style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+            >
+              <RefreshCcw className={`h-3 w-3 ${adminWaitersLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
+          {adminWaitersLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200" style={{ borderTopColor: '#2563EB' }} />
+            </div>
+          ) : adminWaiters.length === 0 ? (
+            <div className="py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+              No waiter activity in the last 7 days
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {adminWaiters.slice(0, 8).map((w, idx) => (
+                <div
+                  key={w.waiterUuid}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                  style={{ background: idx === 0 ? 'rgba(37,99,235,0.06)' : 'var(--bg-secondary)' }}
+                >
+                  <span
+                    className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-black"
+                    style={{
+                      background: idx === 0 ? '#2563EB' : idx === 1 ? '#94A3B8' : idx === 2 ? '#CD7F32' : 'var(--border)',
+                      color: idx <= 2 ? '#fff' : 'var(--text-secondary)',
+                    }}
+                  >
+                    {idx === 0 ? '🏆' : idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{w.fullName}</p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                        {w.ordersCompleted} completed
+                      </span>
+                      <span
+                        className={`text-[11px] font-bold ${w.completionRate >= 80 ? 'text-emerald-600' : w.completionRate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}
+                      >
+                        {w.completionRate}% rate
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {formatKsh(Number(w.revenueHandled || 0))}
+                    </p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                      {w.averageCompletionTimeMinutes > 0 ? `~${w.averageCompletionTimeMinutes}m avg` : `${w.ordersClaimed} claimed`}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── 7-Day Revenue Trend & Top Selling Menu Items ── */}

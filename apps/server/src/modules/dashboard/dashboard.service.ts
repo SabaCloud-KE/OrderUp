@@ -24,6 +24,8 @@ import {
   getRecentOrders,
   getTopMenuItems,
   getSalesTrend,
+  getTableUtilization,
+  getPendingOrderAges,
 } from './dashboard.repository';
 
 export class DashboardService {
@@ -96,6 +98,8 @@ export class DashboardService {
       recentOrders,
       topMenuItems,
       salesTrend,
+      tableUtilization,
+      pendingOrderAge,
     ] = await Promise.all([
       getDayRevenue(businessUuid, todayRange),
       getDayRevenue(businessUuid, yesterdayRange),
@@ -106,6 +110,8 @@ export class DashboardService {
       getRecentOrders(businessUuid),
       getTopMenuItems(businessUuid),
       getSalesTrend(businessUuid),
+      getTableUtilization(businessUuid, todayRange),
+      getPendingOrderAges(businessUuid),
     ]);
 
     // 4. Build trend comparisons with safe percentage calculation
@@ -137,6 +143,8 @@ export class DashboardService {
       recentOrders,
       topMenuItems,
       salesTrend,
+      tableUtilization,
+      pendingOrderAge,
     };
   }
 }

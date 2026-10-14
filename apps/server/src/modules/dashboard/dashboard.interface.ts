@@ -100,6 +100,8 @@ export interface AdminDashboardOverview {
   recentOrders: DashboardRecentOrder[];
   topMenuItems: DashboardTopMenuItem[];
   salesTrend: DashboardSalesTrendDay[];
+  tableUtilization?: DashboardTableUtilization;
+  pendingOrderAge?: DashboardPendingOrderAge;
 }
 
 // ─── Internal Repository Types ────────────────────────────────────────────────
@@ -115,4 +117,28 @@ export interface DashboardStatusCounts {
   completed: number;
   cancelled: number;
   total: number;
+}
+
+// ─── Table Utilization KPI ────────────────────────────────────────────────────
+
+export interface DashboardTableUtilization {
+  /** Total active (isActive=true) VenueTable records for the business */
+  activeTables: number;
+  /** Distinct tables that had at least 1 order created today */
+  tablesUsedToday: number;
+  /** (tablesUsedToday / activeTables) * 100, or 0 if activeTables = 0 */
+  utilizationRate: number;
+}
+
+// ─── Pending Order Age KPI ────────────────────────────────────────────────────
+
+export interface DashboardPendingOrderAge {
+  /** Total orders currently in PENDING status */
+  totalPending: number;
+  /** Age in minutes of the oldest currently-pending order; 0 if none */
+  oldestAgeMinutes: number;
+  /** Count of pending orders that have been waiting more than 5 minutes */
+  ordersOver5Min: number;
+  /** Count of pending orders that have been waiting more than 10 minutes */
+  ordersOver10Min: number;
 }

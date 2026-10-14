@@ -20,6 +20,7 @@ import {
   AdminExportQueryParams,
   AdminReportQueryParams,
   CategoryPerformanceReportDTO,
+  ManagerReportQueryParams,
   OrderReportDTO,
   PaymentReportDTO,
   ProductPerformanceReportDTO,
@@ -89,6 +90,65 @@ export class ReportingService {
     return {
       businessUuid: user.businessUuid,
       adminUserUuid: user.userUuid,
+    };
+  }
+
+  /**
+   * Validate that the acting user is a live, active MANAGER assigned to an active business.
+   */
+  private async validateActingManager(managerUserId: string): Promise<{
+    businessUuid: string;
+    managerUserUuid: string;
+  }> {
+    const user = await prisma.user.findFirst({
+      where: { userUuid: managerUserId, deletedAt: null },
+      select: {
+        userUuid: true,
+        role: true,
+        isActive: true,
+        businessUuid: true,
+        business: {
+          select: {
+            businessUuid: true,
+            isActive: true,
+            deletedAt: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedError(
+        'User account not found or has been deleted. Please log in again.',
+      );
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedError(
+        'Your account has been deactivated. Please contact support.',
+      );
+    }
+
+    if (user.role !== UserRole.MANAGER) {
+      throw new ForbiddenError(
+        'Insufficient permissions: Only Managers can access this report.',
+      );
+    }
+
+    if (
+      !user.businessUuid ||
+      !user.business ||
+      !user.business.isActive ||
+      user.business.deletedAt !== null
+    ) {
+      throw new ForbiddenError(
+        'Your account is not associated with an active business. Please contact your platform administrator.',
+      );
+    }
+
+    return {
+      businessUuid: user.businessUuid,
+      managerUserUuid: user.userUuid,
     };
   }
 
@@ -834,6 +894,143 @@ export class ReportingService {
     });
 
     waiterList.sort((a, b) => b.ordersCompleted - a.ordersCompleted || b.revenueHandled - a.revenueHandled);
+
+    const overallCompletionRate =
+      totalOrdersClaimed > 0
+        ? Math.round((totalOrdersCompleted / totalOrdersClaimed) * 1000) / 10
+        : 0;
+
+    return {
+      waiters: waiterList,
+      totalOrdersClaimed,
+      totalOrdersCompleted,
+      overallCompletionRate,
+      dateRange: {
+        range: query.range || 'LAST_7_DAYS',
+        startDate: range.start.toISOString(),
+        endDate: range.end.toISOString(),
+      },
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 7b. MANAGER WAITER PERFORMANCE (Manager-accessible)
+  // ─────────────────────────────────────────────────────────────
+
+  async getManagerWaiters(
+    managerUserId: string,
+    query: ManagerReportQueryParams,
+  ): Promise<WaiterPerformanceReportDTO> {
+    const { businessUuid } = await this.validateActingManager(managerUserId);
+    const range = this.resolveDateRange(query.range, query.startDate, query.endDate);
+
+    const { waiters, orders } = await this.reportingRepository.getWaiterPerformanceData(
+      businessUuid,
+      range.start,
+      range.end,
+    );
+
+    const waiterStatsMap: Record<
+      string,
+      {
+        waiterUuid: string;
+        fullName: string;
+        email: string;
+        ordersClaimed: number;
+        ordersCompleted: number;
+        ordersCancelled: number;
+        activeOrders: number;
+        revenueHandled: number;
+        totalFulfillMs: number;
+      }
+    > = {};
+
+    for (const w of waiters) {
+      waiterStatsMap[w.userUuid] = {
+        waiterUuid: w.userUuid,
+        fullName: w.fullName,
+        email: w.email,
+        ordersClaimed: 0,
+        ordersCompleted: 0,
+        ordersCancelled: 0,
+        activeOrders: 0,
+        revenueHandled: 0,
+        totalFulfillMs: 0,
+      };
+    }
+
+    let totalOrdersClaimed = 0;
+    let totalOrdersCompleted = 0;
+
+    for (const o of orders) {
+      if (!o.waiterUuid) continue;
+
+      if (!waiterStatsMap[o.waiterUuid]) {
+        waiterStatsMap[o.waiterUuid] = {
+          waiterUuid: o.waiterUuid,
+          fullName: 'Staff Member',
+          email: '',
+          ordersClaimed: 0,
+          ordersCompleted: 0,
+          ordersCancelled: 0,
+          activeOrders: 0,
+          revenueHandled: 0,
+          totalFulfillMs: 0,
+        };
+      }
+
+      const st = waiterStatsMap[o.waiterUuid];
+      st.ordersClaimed += 1;
+      totalOrdersClaimed += 1;
+
+      if (o.status === OrderStatus.COMPLETED || o.status === OrderStatus.DELIVERED) {
+        st.ordersCompleted += 1;
+        totalOrdersCompleted += 1;
+        st.revenueHandled += Number(o.totalAmount || 0);
+
+        if (o.createdAt && o.updatedAt) {
+          const diff = Math.max(0, o.updatedAt.getTime() - o.createdAt.getTime());
+          st.totalFulfillMs += diff;
+        }
+      } else if (o.status === OrderStatus.CANCELLED) {
+        st.ordersCancelled += 1;
+      } else if (
+        o.status === OrderStatus.CLAIMED ||
+        o.status === OrderStatus.PREPARING ||
+        o.status === OrderStatus.READY
+      ) {
+        st.activeOrders += 1;
+      }
+    }
+
+    const waiterList = Object.values(waiterStatsMap).map((w) => {
+      const completionRate =
+        w.ordersClaimed > 0
+          ? Math.round((w.ordersCompleted / w.ordersClaimed) * 1000) / 10
+          : 0;
+
+      const averageCompletionTimeMinutes =
+        w.ordersCompleted > 0
+          ? Math.round((w.totalFulfillMs / (w.ordersCompleted * 60 * 1000)) * 10) / 10
+          : 0;
+
+      return {
+        waiterUuid: w.waiterUuid,
+        fullName: w.fullName,
+        email: w.email,
+        ordersClaimed: w.ordersClaimed,
+        ordersCompleted: w.ordersCompleted,
+        ordersCancelled: w.ordersCancelled,
+        activeOrders: w.activeOrders,
+        completionRate,
+        revenueHandled: Math.round(w.revenueHandled * 100) / 100,
+        averageCompletionTimeMinutes,
+      };
+    });
+
+    waiterList.sort(
+      (a, b) => b.ordersCompleted - a.ordersCompleted || b.revenueHandled - a.revenueHandled,
+    );
 
     const overallCompletionRate =
       totalOrdersClaimed > 0

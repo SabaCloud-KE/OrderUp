@@ -119,6 +119,19 @@ reportingRouter.get(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Manager-accessible reporting endpoints (MANAGER role, live tenant scope)
+// ─────────────────────────────────────────────────────────────────────────────
+
+reportingRouter.get(
+  '/manager/waiters',
+  authenticate,
+  authorize([UserRole.MANAGER]),
+  requireTenantScope,
+  validateRequest(adminReportQuerySchema),
+  reportingController.getManagerWaiters,
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Legacy analytics endpoint (preserved for backward compatibility)
 // ─────────────────────────────────────────────────────────────────────────────
 

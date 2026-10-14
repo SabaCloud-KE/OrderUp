@@ -14,9 +14,11 @@
 import { prisma } from '../../config/prisma';
 import {
   DashboardDateRange,
+  DashboardPendingOrderAge,
   DashboardRecentOrder,
   DashboardSalesTrendDay,
   DashboardStatusCounts,
+  DashboardTableUtilization,
   DashboardTopMenuItem,
 } from './dashboard.interface';
 
@@ -356,4 +358,70 @@ export async function getSalesTrend(businessUuid: string): Promise<DashboardSale
   }
 
   return result;
+}
+
+// ─── Table Utilization Query ──────────────────────────────────────────────────
+
+/**
+ * Compute table utilization for today.
+ * Returns the count of active tables and how many had at least 1 order today.
+ * All aggregation done at the database level — no in-memory filtering.
+ */
+export async function getTableUtilization(
+  businessUuid: string,
+  todayRange: DashboardDateRange,
+): Promise<DashboardTableUtilization> {
+  const [activeTables, tablesWithOrders] = await Promise.all([
+    prisma.venueTable.count({
+      where: { businessUuid, isActive: true, deletedAt: null },
+    }),
+    prisma.order.groupBy({
+      by: ['tableUuid'],
+      where: {
+        businessUuid,
+        tableUuid: { not: null },
+        createdAt: { gte: todayRange.start, lte: todayRange.end },
+      },
+    }),
+  ]);
+
+  const tablesUsedToday = tablesWithOrders.length;
+  const utilizationRate =
+    activeTables > 0 ? Math.round((tablesUsedToday / activeTables) * 1000) / 10 : 0;
+
+  return { activeTables, tablesUsedToday, utilizationRate };
+}
+
+// ─── Pending Order Age Query ──────────────────────────────────────────────────
+
+/**
+ * Return real-time pending order age metrics.
+ * Fetches all currently-PENDING orders for the business and computes age from createdAt.
+ * Lightweight query — only selects createdAt, no joins.
+ */
+export async function getPendingOrderAges(
+  businessUuid: string,
+): Promise<DashboardPendingOrderAge> {
+  const pendingOrders = await prisma.order.findMany({
+    where: { businessUuid, status: 'PENDING' },
+    select: { createdAt: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const now = Date.now();
+  const totalPending = pendingOrders.length;
+
+  if (totalPending === 0) {
+    return { totalPending: 0, oldestAgeMinutes: 0, ordersOver5Min: 0, ordersOver10Min: 0 };
+  }
+
+  const ageMinutes = pendingOrders.map(
+    (o) => Math.floor((now - o.createdAt.getTime()) / 60000),
+  );
+
+  const oldestAgeMinutes = ageMinutes[0]; // Sorted ascending — first is oldest
+  const ordersOver5Min = ageMinutes.filter((m) => m > 5).length;
+  const ordersOver10Min = ageMinutes.filter((m) => m > 10).length;
+
+  return { totalPending, oldestAgeMinutes, ordersOver5Min, ordersOver10Min };
 }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ThemeToggle, useTheme } from '@orderup/ui';
 import {
@@ -14,7 +14,7 @@ import { resolveImageUrl, getApiUrl, getSocketUrl } from '../config/api';
 import { validateStrongPassword, STRONG_PASSWORD_MESSAGE, generateStrongPassword } from '@orderup/shared';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer,
+  CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 
 /*           Toast           */
@@ -403,7 +403,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
       setErrors({});
       onClose();
     } catch {
-      setErrors({ api: 'Network error — please try again' });
+      setErrors({ api: 'Network error â€” please try again' });
     } finally {
       setSaving(false);
     }
@@ -495,7 +495,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
         <div className="flex gap-3 pt-2 border-t" style={{ borderColor: '#E2E8F0' }}>
           <button onClick={onClose} disabled={saving} className="flex-1 rounded-xl border py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50" style={{ borderColor: '#E2E8F0' }}>Cancel</button>
           <button onClick={handleSubmit} disabled={saving} className="flex-1 rounded-xl py-2.5 text-sm font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: '#2563EB' }}>
-            {saving ? 'Creating…' : <><Users className="h-4 w-4 inline mr-1.5" />Add Waiter</>}
+            {saving ? 'Creatingâ€¦' : <><Users className="h-4 w-4 inline mr-1.5" />Add Waiter</>}
           </button>
         </div>
       </div>
@@ -622,7 +622,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
     <div className="flex-1 min-h-0 flex flex-col space-y-4">
       {/* Top section: Title, KPIs, Filters */}
       <div className="flex-shrink-0 space-y-4">
-        <SectionHeader title="Staff Management" subtitle="Manage waiters for your venue — only managers can create staff" action={
+        <SectionHeader title="Staff Management" subtitle="Manage waiters for your venue â€” only managers can create staff" action={
           <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold text-white hover:opacity-90 transition-opacity" style={{ background: '#2563EB' }}>
             <Plus className="h-3.5 w-3.5" /> Add Waiter
           </button>
@@ -640,7 +640,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
         <div className="flex items-center gap-3">
           <div className="flex-1 flex items-center gap-2 rounded-lg border px-3.5 py-2" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
             <Search className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or phone…" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or phoneâ€¦" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
           </div>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
             {['All', 'Active', 'Inactive', 'On Leave'].map(s => <option key={s}>{s}</option>)}
@@ -690,7 +690,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-xs border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>{w.shift || '—'}</td>
+                  <td className="px-4 py-3.5 text-xs border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>{w.shift || 'â€”'}</td>
                   <td className="px-4 py-3.5 text-xs border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>{w.lastLogin}</td>
                   <td className="px-4 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>
                     <div className="flex items-center gap-1.5">
@@ -832,11 +832,11 @@ const OrdersPage = ({ showToast }: { showToast: (m: string) => void }) => {
               </span>
             </div>
           }
-          subtitle="Real-time order feed for your venue — auto updates instantly on status changes"
+          subtitle="Real-time order feed for your venue â€” auto updates instantly on status changes"
           action={
           <div className="flex items-center gap-2">
             <button onClick={doRefresh} disabled={refreshing} className="flex items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-medium hover:bg-slate-50 transition-colors disabled:opacity-50" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
-              <RefreshCcw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />{refreshing ? 'Refreshing…' : 'Refresh'}
+              <RefreshCcw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />{refreshing ? 'Refreshingâ€¦' : 'Refresh'}
             </button>
             <button onClick={() => { csvExport(['Order', 'Table', 'Item', 'Waiter', 'Amount (KES)', 'Status', 'Time'], filtered.map(o => [o.id, o.table, o.item, o.waiter, o.amount, o.status, o.time]), 'orders-export.csv'); showToast('Orders exported'); }}
               className="flex items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-medium hover:bg-slate-50 transition-colors" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
@@ -847,7 +847,7 @@ const OrdersPage = ({ showToast }: { showToast: (m: string) => void }) => {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex-1 min-w-48 flex items-center gap-2 rounded-lg border px-3.5 py-2" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
             <Search className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search order, table, waiter…" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search order, table, waiterâ€¦" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
           </div>
           <div className="flex gap-1.5 flex-wrap items-center">
             {statuses.map(s => {
@@ -931,7 +931,7 @@ interface ManagerOffer {
   isActive: boolean;
 }
 
-/* Module-level cache — survives re-renders and tab navigation */
+/* Module-level cache â€” survives re-renders and tab navigation */
 let _menuCache: { categories: CategoryItem[]; items: MenuItem[]; offers: ManagerOffer[] } | null = null;
 
 const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
@@ -962,7 +962,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
     discountValue: '20',
     promoCode: '',
     offerType: 'PERCENTAGE_DISCOUNT',
-    badge: '🔥 TODAY\'S SPECIAL',
+    badge: 'ðŸ”¥ TODAY\'S SPECIAL',
     imageUrl: '',
     originalPrice: '',
     dealPrice: '',
@@ -973,7 +973,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
   // True only on first load when there's no cached data yet
   const [fetching, setFetching] = React.useState(_menuCache === null);
 
-  /* ── Offer Image Upload & Compression ── */
+  /* â”€â”€ Offer Image Upload & Compression â”€â”€ */
   const handleOfferImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1023,7 +1023,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
     reader.readAsDataURL(file);
   };
 
-  /* ── Image Upload & Canvas Compression ── */
+  /* â”€â”€ Image Upload & Canvas Compression â”€â”€ */
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1169,7 +1169,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
       const richDesc = JSON.stringify({
         desc: offerForm.description.trim(),
         imageUrl: offerForm.imageUrl || undefined,
-        badge: offerForm.badge || '🔥 TODAY\'S SPECIAL',
+        badge: offerForm.badge || 'ðŸ”¥ TODAY\'S SPECIAL',
         originalPrice: offerForm.originalPrice ? Number(offerForm.originalPrice) : undefined,
         dealPrice: offerForm.dealPrice ? Number(offerForm.dealPrice) : undefined,
         productId: offerForm.selectedProductId || undefined,
@@ -1195,7 +1195,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         discountValue: '20',
         promoCode: '',
         offerType: 'PERCENTAGE_DISCOUNT',
-        badge: '🔥 TODAY\'S SPECIAL',
+        badge: 'ðŸ”¥ TODAY\'S SPECIAL',
         imageUrl: '',
         originalPrice: '',
         dealPrice: '',
@@ -1404,7 +1404,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         ...categories.map(c => ({ v: c.name, l: c.name }))
       ];
     }
-    return [{ v: '', l: 'No categories yet — click + New Category' }];
+    return [{ v: '', l: 'No categories yet â€” click + New Category' }];
   }, [categories]);
 
   const filteredItems = React.useMemo(() => {
@@ -1488,7 +1488,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       } />
 
-      {/* ── Deals & Daily Offers Preview Strip ── */}
+      {/* â”€â”€ Deals & Daily Offers Preview Strip â”€â”€ */}
       {offers.length > 0 && (
         <div className="rounded-2xl border p-4 transition-all" style={{ background: 'var(--bg-card)', borderColor: 'rgba(245,158,11,0.3)' }}>
           <div className="flex items-center justify-between gap-3 mb-2.5">
@@ -1522,7 +1522,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                   <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{offer.title}</p>
                   <p className="text-[11px] text-slate-500 truncate">
                     {offer.offerType === 'BUY_ONE_GET_ONE' ? 'Buy 1 Get 1' : `${offer.discountValue}% Discount`}
-                    {offer.promoCode ? ` · Code: ${offer.promoCode}` : ''}
+                    {offer.promoCode ? ` Â· Code: ${offer.promoCode}` : ''}
                   </p>
                 </div>
                 <button
@@ -1632,7 +1632,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                           <img src={item.imageUrl} alt={item.name} className="h-10 w-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm" />
                         ) : (
                           <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base flex-shrink-0 text-slate-400">
-                            🍸
+                            ðŸ¸
                           </div>
                         )}
                         <div>
@@ -1668,7 +1668,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </div>
 
-      {/* ── Modal: Manage Categories ── */}
+      {/* â”€â”€ Modal: Manage Categories â”€â”€ */}
       <Modal open={showCategoriesModal} onClose={() => setShowCategoriesModal(false)} title="Manage Menu Categories" size="md">
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
@@ -1728,7 +1728,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* ── Modal: Add Category ── */}
+      {/* â”€â”€ Modal: Add Category â”€â”€ */}
       <Modal open={showAddCatModal} onClose={() => setShowAddCatModal(false)} title="Create New Category" size="sm" zIndex="z-[60]">
         <div className="space-y-4">
           <div><FL required>Category Name</FL><SI value={newCatForm.name} onChange={e => setNewCatForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Starters, Main Dishes, Hot Beverages, Desserts" /></div>
@@ -1742,7 +1742,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* ── Modal: Edit Category ── */}
+      {/* â”€â”€ Modal: Edit Category â”€â”€ */}
       <Modal open={showEditCatModal} onClose={() => setShowEditCatModal(false)} title="Edit Category" size="sm" zIndex="z-[60]">
         <div className="space-y-4">
           <div><FL required>Category Name</FL><SI value={editCatForm.name} onChange={e => setEditCatForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Starters, Main Course, Beverages" /></div>
@@ -1756,7 +1756,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* ── Modal: Add Menu Item ── */}
+      {/* â”€â”€ Modal: Add Menu Item â”€â”€ */}
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add Menu Item">
         <div className="space-y-4">
           {/* Item Photo Upload */}
@@ -1844,7 +1844,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* ── Modal: Edit Menu Item ── */}
+      {/* â”€â”€ Modal: Edit Menu Item â”€â”€ */}
       <Modal open={showEditItemModal} onClose={() => setShowEditItemModal(false)} title="Edit Menu Item">
         <div className="space-y-4">
           {/* Item Photo Upload */}
@@ -1898,7 +1898,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* ── Modal: Manage Daily Deals & Offers ── */}
+      {/* â”€â”€ Modal: Manage Daily Deals & Offers â”€â”€ */}
       <Modal open={showOffersModal} onClose={() => setShowOffersModal(false)} title="Manage Special Deals & Offers of the Day" size="lg">
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
@@ -1913,7 +1913,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                   discountValue: '20',
                   promoCode: '',
                   offerType: 'PERCENTAGE_DISCOUNT',
-                  badge: '🔥 TODAY\'S SPECIAL',
+                  badge: 'ðŸ”¥ TODAY\'S SPECIAL',
                   imageUrl: '',
                   originalPrice: '',
                   dealPrice: '',
@@ -1937,7 +1937,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                   onClick={() => setShowAddOfferModal(true)}
                   className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline"
                 >
-                  Create your first Special Deal or Daily Offer →
+                  Create your first Special Deal or Daily Offer â†’
                 </button>
               </div>
             ) : (
@@ -1950,7 +1950,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                   <div className="space-y-1 min-w-0 flex-1 pr-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                        {offer.offerType === 'BUY_ONE_GET_ONE' ? '🎁 BUY 1 GET 1' : `${offer.discountValue}% OFF`}
+                        {offer.offerType === 'BUY_ONE_GET_ONE' ? 'ðŸŽ BUY 1 GET 1' : `${offer.discountValue}% OFF`}
                       </span>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                         {offer.title}
@@ -1997,7 +1997,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* ── Modal: Create Special Deal / Offer of the Day ── */}
+      {/* â”€â”€ Modal: Create Special Deal / Offer of the Day â”€â”€ */}
       <Modal open={showAddOfferModal} onClose={() => setShowAddOfferModal(false)} title="Create Special Deal of the Day" size="lg">
         <div className="space-y-4">
           {/* Quick presets */}
@@ -2005,11 +2005,11 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Quick Presets (For Any Business)</p>
             <div className="flex gap-1.5 flex-wrap">
               {[
-                { label: '🎁 Buy 1 Get 1 Free', title: 'Buy 1 Get 1 Free Special', type: 'BUY_ONE_GET_ONE', val: '1', code: 'BOGO', badge: '🎁 BUY 1 GET 1', desc: 'Order any qualifying item and get an extra one on the house!' },
-                { label: '🔥 20% Off Featured', title: '20% Off Today\'s Featured Specials', type: 'PERCENTAGE_DISCOUNT', val: '20', code: 'SAVE20', badge: '🔥 20% OFF', desc: 'Enjoy a 20% discount on selected menu specials.' },
-                { label: '⚡ KES 300 Off Combo', title: 'Combo Deal: KES 300 Off Order', type: 'FIXED_AMOUNT_DISCOUNT', val: '300', code: 'DEAL300', badge: '⚡ FLASH DEAL', desc: 'Save KES 300 on meals and combo orders.' },
-                { label: '✨ 15% House Pick', title: 'House Special: 15% Off Favorites', type: 'PERCENTAGE_DISCOUNT', val: '15', code: 'HOUSE15', badge: '✨ HOUSE SPECIAL', desc: 'Handcrafted favorites at a special 15% promotional discount.' },
-                { label: '🎉 Happy Hour 25%', title: 'Happy Hour: 25% Off Refreshments & Bites', type: 'PERCENTAGE_DISCOUNT', val: '25', code: 'HAPPY25', badge: '🎉 HAPPY HOUR', desc: 'Special discount during promotional hours.' },
+                { label: 'ðŸŽ Buy 1 Get 1 Free', title: 'Buy 1 Get 1 Free Special', type: 'BUY_ONE_GET_ONE', val: '1', code: 'BOGO', badge: 'ðŸŽ BUY 1 GET 1', desc: 'Order any qualifying item and get an extra one on the house!' },
+                { label: 'ðŸ”¥ 20% Off Featured', title: '20% Off Today\'s Featured Specials', type: 'PERCENTAGE_DISCOUNT', val: '20', code: 'SAVE20', badge: 'ðŸ”¥ 20% OFF', desc: 'Enjoy a 20% discount on selected menu specials.' },
+                { label: 'âš¡ KES 300 Off Combo', title: 'Combo Deal: KES 300 Off Order', type: 'FIXED_AMOUNT_DISCOUNT', val: '300', code: 'DEAL300', badge: 'âš¡ FLASH DEAL', desc: 'Save KES 300 on meals and combo orders.' },
+                { label: 'âœ¨ 15% House Pick', title: 'House Special: 15% Off Favorites', type: 'PERCENTAGE_DISCOUNT', val: '15', code: 'HOUSE15', badge: 'âœ¨ HOUSE SPECIAL', desc: 'Handcrafted favorites at a special 15% promotional discount.' },
+                { label: 'ðŸŽ‰ Happy Hour 25%', title: 'Happy Hour: 25% Off Refreshments & Bites', type: 'PERCENTAGE_DISCOUNT', val: '25', code: 'HAPPY25', badge: 'ðŸŽ‰ HAPPY HOUR', desc: 'Special discount during promotional hours.' },
               ].map(preset => (
                 <button
                   key={preset.title}
@@ -2063,7 +2063,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
               <option value="">-- Choose an item to link photo & price --</option>
               {items.map(it => (
                 <option key={it.id} value={it.id}>
-                  {it.name} ({it.category}) — KES {it.price.toLocaleString()}
+                  {it.name} ({it.category}) â€” KES {it.price.toLocaleString()}
                 </option>
               ))}
             </select>
@@ -2119,17 +2119,17 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                 value={offerForm.badge}
                 onChange={e => setOfferForm(p => ({ ...p, badge: e.target.value }))}
                 options={[
-                  { v: '🔥 TODAY\'S SPECIAL', l: '🔥 TODAY\'S SPECIAL' },
-                  { v: '⚡ FLASH DEAL', l: '⚡ FLASH DEAL' },
-                  { v: '🎁 BUY 1 GET 1', l: '🎁 BUY 1 GET 1' },
-                  { v: '✨ HOUSE SPECIAL', l: '✨ HOUSE SPECIAL' },
-                  { v: '👨‍🍳 CHEF\'S PICK', l: '👨‍🍳 CHEF\'S PICK' },
-                  { v: '🎉 LIMITED TIME OFFER', l: '🎉 LIMITED TIME OFFER' },
-                  { v: '💰 SPECIAL DISCOUNT', l: '💰 SPECIAL DISCOUNT' },
-                  { v: '☕ MORNING SPECIAL', l: '☕ MORNING SPECIAL' },
-                  { v: '🍽️ COMBO SPECIAL', l: '🍽️ COMBO SPECIAL' },
-                  { v: '🌟 VIP DEAL', l: '🌟 VIP DEAL' },
-                  { v: '🍹 HAPPY HOUR', l: '🍹 HAPPY HOUR' },
+                  { v: 'ðŸ”¥ TODAY\'S SPECIAL', l: 'ðŸ”¥ TODAY\'S SPECIAL' },
+                  { v: 'âš¡ FLASH DEAL', l: 'âš¡ FLASH DEAL' },
+                  { v: 'ðŸŽ BUY 1 GET 1', l: 'ðŸŽ BUY 1 GET 1' },
+                  { v: 'âœ¨ HOUSE SPECIAL', l: 'âœ¨ HOUSE SPECIAL' },
+                  { v: 'ðŸ‘¨â€ðŸ³ CHEF\'S PICK', l: 'ðŸ‘¨â€ðŸ³ CHEF\'S PICK' },
+                  { v: 'ðŸŽ‰ LIMITED TIME OFFER', l: 'ðŸŽ‰ LIMITED TIME OFFER' },
+                  { v: 'ðŸ’° SPECIAL DISCOUNT', l: 'ðŸ’° SPECIAL DISCOUNT' },
+                  { v: 'â˜• MORNING SPECIAL', l: 'â˜• MORNING SPECIAL' },
+                  { v: 'ðŸ½ï¸ COMBO SPECIAL', l: 'ðŸ½ï¸ COMBO SPECIAL' },
+                  { v: 'ðŸŒŸ VIP DEAL', l: 'ðŸŒŸ VIP DEAL' },
+                  { v: 'ðŸ¹ HAPPY HOUR', l: 'ðŸ¹ HAPPY HOUR' },
                 ]}
               />
             </div>
@@ -2197,7 +2197,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1 min-w-0 flex-1">
                 <span className="text-[9px] font-black px-2 py-0.5 rounded bg-amber-500 text-white uppercase tracking-wider">
-                  {offerForm.badge || '🔥 TODAY\'S SPECIAL'}
+                  {offerForm.badge || 'ðŸ”¥ TODAY\'S SPECIAL'}
                 </span>
                 <p className="text-xs font-black truncate">{offerForm.title || 'Deal Title Preview'}</p>
                 <p className="text-[11px] text-slate-300 truncate">{offerForm.description || 'Special limited-time deal for our guests.'}</p>
@@ -2216,7 +2216,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                 {offerForm.imageUrl ? (
                   <img src={offerForm.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-2xl">✨</span>
+                  <span className="text-2xl">âœ¨</span>
                 )}
               </div>
             </div>
@@ -2250,23 +2250,62 @@ const DashboardPage = ({
   businessType?: string;
 }) => {
   const [refreshing, setRefreshing] = React.useState(false);
+
+  // â”€â”€ Core 7-day KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [kpis, setKpis] = React.useState({
     revenue: 'KES 0',
     orders: '0',
     waiters: '0',
     avgOrder: 'KES 0',
     completedCount: 0,
+    cancelledCount: 0,
+    totalCount: 0,
   });
+
+  // â”€â”€ Today's Revenue (separate DAILY fetch) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [todayRevenue, setTodayRevenue] = React.useState('KES 0');
+
+  // â”€â”€ Pending Alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [pendingCount, setPendingCount] = React.useState(0);
+  const [oldestPendingMins, setOldestPendingMins] = React.useState(0);
+
+  // â”€â”€ Charts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [revChart, setRevChart] = React.useState<{ day: string; rev: number }[]>([]);
   const [hourChart, setHourChart] = React.useState<{ h: number; n: number }[]>([]);
+
+  // â”€â”€ Waiter Leaderboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const [waiterLeaderboard, setWaiterLeaderboard] = React.useState<any[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = React.useState(false);
+
+  const fetchWaiterLeaderboard = React.useCallback(async () => {
+    setLeaderboardLoading(true);
+    try {
+      const res = await fetch(getApiUrl('/reports/manager/waiters?range=TODAY'), { headers: authHeaders() });
+      if (res.ok) {
+        const d = await res.json();
+        setWaiterLeaderboard(d.data?.waiters ?? []);
+      }
+    } catch { /* silent */ } finally {
+      setLeaderboardLoading(false);
+    }
+  }, []);
 
   const fetchDashboard = React.useCallback(async (isBackground = false) => {
     if (!isBackground) setRefreshing(true);
     try {
-      const [analyticsRes, ordersRes] = await Promise.all([
+      const [analyticsRes, todayRes, ordersRes] = await Promise.all([
         fetch(getApiUrl('/reports/analytics?period=WEEKLY'), { headers: authHeaders() }),
+        fetch(getApiUrl('/reports/analytics?period=DAILY'), { headers: authHeaders() }),
         fetch(getApiUrl('/orders'), { headers: authHeaders() }),
       ]);
+
+      // â”€â”€ Today revenue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      if (todayRes.ok) {
+        const td = await todayRes.json();
+        const todayData = td.data?.report ?? td.data ?? {};
+        const todayRev = Number(todayData?.kpis?.totalRevenue || 0);
+        setTodayRevenue(`KES ${todayRev.toLocaleString()}`);
+      }
 
       let reportData: any = null;
       if (analyticsRes.ok) {
@@ -2278,10 +2317,16 @@ const DashboardPage = ({
         const od = await ordersRes.json();
         const raw: any[] = od.data?.orders ?? od.data ?? [];
 
-        // 1. Calculate Real KPIs
-        const paidOrCompletedOrders = raw.filter(o => o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.paymentStatus === 'PAID');
-        const totalRev = paidOrCompletedOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0) || Number(reportData?.kpis?.totalRevenue || 0);
-        const completedCount = paidOrCompletedOrders.length;
+        // â”€â”€ KPI calculations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        const paidOrCompleted = raw.filter(o =>
+          o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.paymentStatus === 'PAID'
+        );
+        const cancelledOrders = raw.filter(o => o.status === 'CANCELLED');
+        const pendingOrders   = raw.filter(o => o.status === 'PENDING');
+        const totalRev = paidOrCompleted.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0)
+          || Number(reportData?.kpis?.totalRevenue || 0);
+        const completedCount  = paidOrCompleted.length;
+        const cancelledCount  = cancelledOrders.length;
         const avgVal = completedCount > 0 ? Math.round(totalRev / completedCount) : (reportData?.kpis?.averageOrderValue || 0);
         const activeWaitersSet = new Set(raw.map(o => o.waiterUuid || o.waiterId || o.waiter?.userUuid).filter(Boolean));
 
@@ -2291,36 +2336,43 @@ const DashboardPage = ({
           waiters: String(activeWaitersSet.size > 0 ? activeWaitersSet.size : (reportData?.kpis?.activeWaitersCount ?? 0)),
           avgOrder: `KES ${avgVal.toLocaleString()}`,
           completedCount,
+          cancelledCount,
+          totalCount: raw.length,
         });
 
-        // 2. Calculate Weekly Revenue (Mon-Sun)
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        // â”€â”€ Pending alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        setPendingCount(pendingOrders.length);
+        if (pendingOrders.length > 0) {
+          const oldest = pendingOrders
+            .map(o => o.createdAt ? Math.floor((Date.now() - new Date(o.createdAt).getTime()) / 60000) : 0)
+            .sort((a, b) => b - a)[0];
+          setOldestPendingMins(oldest);
+        } else {
+          setOldestPendingMins(0);
+        }
+
+        // â”€â”€ Weekly Revenue chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        const dayNames  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const daysOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const dayRevMap: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
 
-        paidOrCompletedOrders.forEach((o: any) => {
+        paidOrCompleted.forEach((o: any) => {
           if (o.createdAt) {
             const day = dayNames[new Date(o.createdAt).getDay()];
-            if (dayRevMap[day] !== undefined) {
-              dayRevMap[day] += Number(o.totalAmount || 0);
-            }
+            if (dayRevMap[day] !== undefined) dayRevMap[day] += Number(o.totalAmount || 0);
           }
         });
 
-        // Use report dailyRevenue if populated, or fallback to real calculated dayRevMap
         if (reportData?.dailyRevenue?.some((d: any) => Number(d.revenue || d.rev || 0) > 0)) {
           setRevChart(reportData.dailyRevenue.map((d: any) => ({
             day: d.day ?? d.date,
             rev: Number(d.revenue ?? d.rev ?? 0),
           })));
         } else {
-          setRevChart(daysOrder.map(day => ({
-            day,
-            rev: dayRevMap[day] || 0,
-          })));
+          setRevChart(daysOrder.map(day => ({ day, rev: dayRevMap[day] || 0 })));
         }
 
-        // 3. Calculate Hourly Orders (00:00 - 23:00)
+        // â”€â”€ Hourly Orders chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const hourMap: Record<number, number> = {};
         for (let i = 0; i < 24; i++) hourMap[i] = 0;
 
@@ -2337,26 +2389,22 @@ const DashboardPage = ({
             n: Number(h.count ?? h.n ?? 0),
           })));
         } else {
-          setHourChart(Object.keys(hourMap).map(h => ({
-            h: Number(h),
-            n: hourMap[Number(h)] || 0,
-          })));
+          setHourChart(Object.keys(hourMap).map(h => ({ h: Number(h), n: hourMap[Number(h)] || 0 })));
         }
-
       }
-    } catch {
-      /* keep current state on error */
-    } finally {
+    } catch { /* keep current state on error */ }
+    finally {
       if (!isBackground) setRefreshing(false);
     }
   }, []);
 
-  // Initial load
+  // â”€â”€ Initial load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   React.useEffect(() => {
     fetchDashboard(false);
-  }, [fetchDashboard]);
+    fetchWaiterLeaderboard();
+  }, [fetchDashboard, fetchWaiterLeaderboard]);
 
-  // Real-time Socket.IO Connection + 3-Second Background Auto-refresher
+  // â”€â”€ Real-time Socket.IO + 30s background poll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   React.useEffect(() => {
     const clubUuid = getClubUuid();
     let socket: Socket | null = null;
@@ -2370,13 +2418,12 @@ const DashboardPage = ({
       });
 
       socket.on('connect', () => {
-        if (clubUuid) {
-          socket?.emit('join_tenant', clubUuid);
-        }
+        if (clubUuid) socket?.emit('join_tenant', clubUuid);
       });
 
       const handleRealtimeUpdate = () => {
         fetchDashboard(true);
+        fetchWaiterLeaderboard();
       };
 
       socket.on('new_order', handleRealtimeUpdate);
@@ -2385,24 +2432,29 @@ const DashboardPage = ({
       socket.on('notification', handleRealtimeUpdate);
     } catch {}
 
-    // Real-time Socket.IO handles instant updates; 30s poll acts as gentle fallback
     const pollInterval = setInterval(() => {
       fetchDashboard(true);
+      fetchWaiterLeaderboard();
     }, 30000);
 
     return () => {
       clearInterval(pollInterval);
       if (socket) socket.disconnect();
     };
-  }, [fetchDashboard]);
+  }, [fetchDashboard, fetchWaiterLeaderboard]);
 
   const doRefresh = async () => {
-    await fetchDashboard(false);
+    await Promise.all([fetchDashboard(false), fetchWaiterLeaderboard()]);
     showToast('Dashboard refreshed');
   };
 
   const isClub = (businessType || '').toUpperCase() === 'CLUB';
   const overviewTitle = isClub ? 'Club Overview' : 'Business Overview';
+
+  // â”€â”€ Derived metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const totalOrdersNum   = Number(kpis.totalCount) || 0;
+  const cancelRate       = totalOrdersNum > 0 ? Math.round((kpis.cancelledCount / totalOrdersNum) * 1000) / 10 : 0;
+  const peakHour         = hourChart.length > 0 ? hourChart.reduce((mx, d) => d.n > mx.n ? d : mx, hourChart[0]) : null;
 
   return (
     <div className="space-y-5">
@@ -2417,30 +2469,24 @@ const DashboardPage = ({
             style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
           >
             <RefreshCcw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing…' : 'Refresh'}
+            {refreshing ? 'Refreshingâ€¦' : 'Refresh'}
           </button>
         }
       />
 
-      {/* KPI Cards */}
+      {/* â”€â”€ ROW 1: Revenue KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KPI
-          label="Revenue (Period)"
-          value={kpis.revenue}
-          sub={`From ${kpis.completedCount} completed order${kpis.completedCount === 1 ? '' : 's'}`}
+          label="Today's Revenue"
+          value={todayRevenue}
+          sub="Paid orders today"
           icon={<TrendingUp className="h-5 w-5 text-emerald-500" />}
         />
         <KPI
-          label="Total Orders"
-          value={kpis.orders}
-          sub="All active & past orders"
-          icon={<ClipboardList className="h-5 w-5 text-blue-500" />}
-        />
-        <KPI
-          label="Active Waiters"
-          value={kpis.waiters}
-          sub="Staff taking orders"
-          icon={<Users className="h-5 w-5 text-purple-500" />}
+          label="Revenue (7-Day)"
+          value={kpis.revenue}
+          sub={`From ${kpis.completedCount} completed order${kpis.completedCount === 1 ? '' : 's'}`}
+          icon={<TrendingUp className="h-5 w-5 text-blue-500" />}
         />
         <KPI
           label="Avg Order Value"
@@ -2448,9 +2494,62 @@ const DashboardPage = ({
           sub="Per completed order"
           icon={<ArrowUpRight className="h-5 w-5 text-amber-500" />}
         />
+        <KPI
+          label="Active Waiters"
+          value={kpis.waiters}
+          sub="Staff handling orders"
+          icon={<Users className="h-5 w-5 text-purple-500" />}
+        />
       </div>
 
-      {/* Charts Grid */}
+      {/* â”€â”€ ROW 2: Orders KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+        <KPI
+          label="Total Orders"
+          value={kpis.orders}
+          sub="All active & past orders"
+          icon={<ClipboardList className="h-5 w-5 text-blue-500" />}
+        />
+        <KPI
+          label="Cancellation Rate"
+          value={`${cancelRate}%`}
+          sub={`${kpis.cancelledCount} cancelled order${kpis.cancelledCount === 1 ? '' : 's'}`}
+          icon={<X className="h-5 w-5 text-rose-500" />}
+        />
+        <KPI
+          label="Completed Orders"
+          value={String(kpis.completedCount)}
+          sub="Paid & delivered"
+          icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+        />
+      </div>
+
+      {/* â”€â”€ Pending Alert (only visible when â‰¥1 pending) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {pendingCount > 0 && (
+        <div
+          className="flex items-start gap-3 rounded-xl border px-4 py-3"
+          style={{
+            background: oldestPendingMins >= 10 ? 'rgba(239,68,68,0.07)' : 'rgba(245,158,11,0.07)',
+            borderColor: oldestPendingMins >= 10 ? '#EF4444' : '#F59E0B',
+          }}
+        >
+          <AlertCircle
+            className="h-5 w-5 mt-0.5 flex-shrink-0"
+            style={{ color: oldestPendingMins >= 10 ? '#EF4444' : '#F59E0B' }}
+          />
+          <div>
+            <p className="text-sm font-bold" style={{ color: oldestPendingMins >= 10 ? '#EF4444' : '#F59E0B' }}>
+              {pendingCount} Pending Order{pendingCount === 1 ? '' : 's'}
+              {oldestPendingMins >= 10 ? ' â€” Urgent!' : oldestPendingMins >= 5 ? ' â€” Getting late' : ''}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              Oldest pending order is {oldestPendingMins} minute{oldestPendingMins === 1 ? '' : 's'} old
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* â”€â”€ Charts Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Weekly Revenue Area Chart */}
         <div className="rounded-xl border p-5" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
@@ -2464,8 +2563,8 @@ const DashboardPage = ({
             <AreaChart data={revChart}>
               <defs>
                 <linearGradient id="revG" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563EB" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#2563EB" stopOpacity={0.0} />
+                  <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#2563EB" stopOpacity={0.0}  />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -2486,12 +2585,19 @@ const DashboardPage = ({
           </ResponsiveContainer>
         </div>
 
-        {/* Orders by Hour Bar Chart */}
+        {/* Orders by Hour Bar Chart with peak-hour highlight */}
         <div className="rounded-xl border p-5" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>Orders by Hour</h3>
-              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Order volume distributed across the day</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                Order volume distributed across the day
+                {peakHour && peakHour.n > 0 && (
+                  <span className="ml-2 font-semibold" style={{ color: '#F59E0B' }}>
+                    Â· Peak: {String(peakHour.h).padStart(2, '0')}:00 ({peakHour.n} orders)
+                  </span>
+                )}
+              </p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={200}>
@@ -2516,10 +2622,85 @@ const DashboardPage = ({
                 labelFormatter={(label) => `Time: ${String(label).padStart(2, '0')}:00`}
                 formatter={(v: any) => [`${v} order${v === 1 ? '' : 's'}`, 'Order Count']}
               />
-              <Bar dataKey="n" name="Orders" fill="#10B981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="n" name="Orders" radius={[4, 4, 0, 0]}>
+                {hourChart.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={peakHour && entry.h === peakHour.h && peakHour.n > 0 ? '#F59E0B' : '#10B981'}
+                  />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* â”€â”€ Waiter Leaderboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <div className="rounded-xl border p-5" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>Today's Waiter Leaderboard</h3>
+            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Staff performance ranking for today</p>
+          </div>
+          <button
+            onClick={fetchWaiterLeaderboard}
+            disabled={leaderboardLoading}
+            className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium hover:bg-slate-50 transition-colors disabled:opacity-50"
+            style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+          >
+            <RefreshCcw className={`h-3 w-3 ${leaderboardLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+
+        {leaderboardLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200" style={{ borderTopColor: '#F59E0B' }} />
+          </div>
+        ) : waiterLeaderboard.length === 0 ? (
+          <div className="py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+            No waiter activity recorded today
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {waiterLeaderboard.slice(0, 8).map((w, idx) => (
+              <div
+                key={w.waiterUuid}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+                style={{ background: idx === 0 ? 'rgba(245,158,11,0.08)' : 'var(--bg-secondary)' }}
+              >
+                {/* Rank badge */}
+                <span
+                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-black"
+                  style={{
+                    background: idx === 0 ? '#F59E0B' : idx === 1 ? '#94A3B8' : idx === 2 ? '#CD7F32' : 'var(--border)',
+                    color: idx <= 2 ? '#fff' : 'var(--text-secondary)',
+                  }}
+                >
+                  {idx === 0 ? 'ðŸ†' : idx + 1}
+                </span>
+
+                {/* Name */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{w.fullName}</p>
+                  <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    {w.ordersCompleted} completed Â· {w.completionRate}% rate
+                  </p>
+                </div>
+
+                {/* Revenue */}
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                    KES {Number(w.revenueHandled || 0).toLocaleString()}
+                  </p>
+                  <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    {w.ordersClaimed} claimed
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2667,7 +2848,7 @@ const ManagerSettingsPage = ({
     setSaving(true);
     try {
       localStorage.setItem('orderup_manager_notifs', JSON.stringify({ orderNotifs, soundAlerts }));
-      showToast('✅ Settings saved successfully!', 'success');
+      showToast('âœ… Settings saved successfully!', 'success');
     } catch (e: any) {
       showToast(e.message || 'Failed to save settings', 'error');
     } finally {
@@ -2697,7 +2878,7 @@ const ManagerSettingsPage = ({
         className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center gap-2"
         style={{ background: '#2563EB' }}
       >
-        {saving ? <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" /></svg> Saving…</> : 'Save Changes'}
+        {saving ? <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" /></svg> Savingâ€¦</> : 'Save Changes'}
       </button>
     </div>
   );
@@ -2843,7 +3024,7 @@ const QrCodesPage = ({
       }).catch(() => {});
     }
 
-    showToast(`Generated ${count} QR codes for ${sectionName} (Tables ${start}–${start + count - 1})`);
+    showToast(`Generated ${count} QR codes for ${sectionName} (Tables ${start}â€“${start + count - 1})`);
     setShowGenerator(false);
   };
 
@@ -3077,7 +3258,7 @@ const QrCodesPage = ({
                 type="button"
                 onClick={() =>
                   setZoomModalData({
-                    title: `${clubName} — Master Menu`,
+                    title: `${clubName} â€” Master Menu`,
                     subtitle: 'Official Venue-Wide Menu QR Code (for bar counters, entrance & flyers)',
                     url: fullBaseUrl,
                   })
@@ -3410,7 +3591,7 @@ const QrCodesPage = ({
                   }`}
                   title="Large QR Codes (Maximum visibility & scan ease)"
                 >
-                  Large ⚡
+                  Large âš¡
                 </button>
               </div>
             )}
@@ -3490,7 +3671,7 @@ const QrCodesPage = ({
             )}
           </div>
         ) : viewMode === 'grid' ? (
-          /* Cards Grid View — Scrollable container calibrated so at least 2 full rows show at a go */
+          /* Cards Grid View â€” Scrollable container calibrated so at least 2 full rows show at a go */
           <div
             className="overflow-y-auto max-h-[calc(100vh-235px)] min-h-[480px] pr-1 pb-4"
             style={{ scrollbarWidth: 'thin' }}
@@ -3544,7 +3725,7 @@ const QrCodesPage = ({
                       <div
                         onClick={() =>
                           setZoomModalData({
-                            title: `Table ${t.id} • ${t.section}`,
+                            title: `Table ${t.id} â€¢ ${t.section}`,
                             subtitle: `Direct Table Ordering QR Code for Table ${t.id}`,
                             url: tableUrl,
                             tableId: t.id,
@@ -3582,7 +3763,7 @@ const QrCodesPage = ({
                       {/* Table Details */}
                       <div className="text-center my-1.5">
                         <div className="text-xs font-black truncate" style={{ color: 'var(--text-primary)' }}>
-                          Table {t.id} · {t.section}
+                          Table {t.id} Â· {t.section}
                         </div>
                       </div>
                     </div>
@@ -3676,7 +3857,7 @@ const QrCodesPage = ({
                           <div
                             onClick={() =>
                               setZoomModalData({
-                                title: `Table ${t.id} • ${t.section}`,
+                                title: `Table ${t.id} â€¢ ${t.section}`,
                                 subtitle: `Direct Table Ordering QR Code for Table ${t.id}`,
                                 url: tableUrl,
                                 tableId: t.id,
@@ -3870,7 +4051,7 @@ const QrCodesPage = ({
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Ready to add</p>
-                    <p className="text-base font-black" style={{ color: 'var(--text-primary)' }}>Table {singleTableNum} · {singleTableSection}</p>
+                    <p className="text-base font-black" style={{ color: 'var(--text-primary)' }}>Table {singleTableNum} Â· {singleTableSection}</p>
                   </div>
                 </div>
               )}
@@ -3892,7 +4073,7 @@ const QrCodesPage = ({
                   disabled={!singleTableSection.trim() || !singleTableNum}
                   className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm font-black shadow-lg shadow-blue-500/30 transition-all"
                 >
-                  Add Table →
+                  Add Table â†’
                 </button>
               </div>
             </form>
@@ -3976,7 +4157,7 @@ const QrCodesPage = ({
       <div className="hidden print:block printable-qr-area">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-black">{clubName}</h2>
-          <p className="text-xs text-slate-500">Official Table QR Ordering Cards • Fold in half or cut to stand</p>
+          <p className="text-xs text-slate-500">Official Table QR Ordering Cards â€¢ Fold in half or cut to stand</p>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
@@ -4021,9 +4202,9 @@ const QrCodesPage = ({
 
                 {/* Instructions */}
                 <div className="w-full space-y-1 text-xs text-slate-600 border-t pt-2 mt-1">
-                  <p className="font-bold text-slate-800">1. Open Camera  •  2. Scan QR  •  3. Order & Pay</p>
+                  <p className="font-bold text-slate-800">1. Open Camera  â€¢  2. Scan QR  â€¢  3. Order & Pay</p>
                   <p className="text-[10px] text-slate-400 font-mono truncate">{tableUrl}</p>
-                  <p className="text-[9px] text-slate-400 font-medium">No app download required • Orders delivered to Table {t.id}</p>
+                  <p className="text-[9px] text-slate-400 font-medium">No app download required â€¢ Orders delivered to Table {t.id}</p>
                 </div>
               </div>
             );
@@ -4124,7 +4305,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
       const nowMins = now.getHours() * 60 + now.getMinutes();
       const openMins = oH * 60 + oM;
       const closeMins = cH * 60 + cM;
-      // Handle overnight (e.g. 18:00 – 02:00)
+      // Handle overnight (e.g. 18:00 â€“ 02:00)
       if (closeMins <= openMins) {
         return nowMins >= openMins || nowMins < closeMins;
       }
@@ -4185,7 +4366,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
   return (
     <div className="h-screen flex overflow-hidden" style={{ background: 'var(--bg-body)' }}>
       {toast && <Toast msg={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
-      {/* ── Mobile Sidebar Backdrop ── */}
+      {/* â”€â”€ Mobile Sidebar Backdrop â”€â”€ */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
@@ -4277,7 +4458,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="sticky top-0 z-20 flex-shrink-0 border-b px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between backdrop-blur-md" style={{ background: 'var(--bg-body)', borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2 min-w-0">
-            {/* Hamburger — only on mobile */}
+            {/* Hamburger â€” only on mobile */}
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
@@ -4295,7 +4476,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
           <div className="flex items-center gap-2">
             <div className={`hidden sm:flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold ${isOpenNow ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
               <div className={`h-1.5 w-1.5 rounded-full ${isOpenNow ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-              {isOpenNow ? 'Open' : 'Closed'} | {openingHours} – {closingHours}
+              {isOpenNow ? 'Open' : 'Closed'} | {openingHours} â€“ {closingHours}
             </div>
             <ThemeToggle />
 

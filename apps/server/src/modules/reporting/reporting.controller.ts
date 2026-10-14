@@ -178,6 +178,26 @@ export class ReportingController {
   };
 
   // ─────────────────────────────────────────────────────────────
+  // GET /api/v1/reports/manager/waiters
+  // ─────────────────────────────────────────────────────────────
+  getManagerWaiters = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const managerUserId = req.user!.userId;
+      const query = req.query as unknown as { range?: string; startDate?: string; endDate?: string };
+
+      const data = await this.reportingService.getManagerWaiters(managerUserId, query as any);
+
+      res.json({
+        success: true,
+        data,
+        meta: { timestamp: new Date().toISOString() },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────
   // LEGACY: GET /reports/analytics
   // ─────────────────────────────────────────────────────────────
   getAnalytics = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
