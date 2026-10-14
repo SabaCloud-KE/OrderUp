@@ -16,18 +16,18 @@ export class OrderService {
     return order;
   }
 
-  async getOrdersForBusiness(businessUuid?: string, status?: OrderStatus, waiterUuid?: string): Promise<Order[]> {
+  async getOrdersForBusiness(businessUuid?: string, status?: OrderStatus, waiterUuid?: string, limit?: number): Promise<Order[]> {
     let targetUuid = businessUuid;
     if (targetUuid === 'default-club' || targetUuid === 'default-business') {
       const firstBiz = await prisma.business.findFirst({ where: { deletedAt: null } });
       if (firstBiz) targetUuid = firstBiz.businessUuid;
     }
-    return this.orderRepository.findOrdersByBusiness(targetUuid, status, waiterUuid);
+    return this.orderRepository.findOrdersByBusiness(targetUuid, status, waiterUuid, limit);
   }
 
   // Backward compatibility alias
-  async getOrdersForClub(clubUuid?: string, status?: OrderStatus, waiterUuid?: string): Promise<Order[]> {
-    return this.getOrdersForBusiness(clubUuid, status, waiterUuid);
+  async getOrdersForClub(clubUuid?: string, status?: OrderStatus, waiterUuid?: string, limit?: number): Promise<Order[]> {
+    return this.getOrdersForBusiness(clubUuid, status, waiterUuid, limit);
   }
 
   async getActiveClaimedOrderByWaiter(waiterUuid: string): Promise<Order | null> {

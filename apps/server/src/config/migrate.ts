@@ -2,9 +2,13 @@ import { prisma } from "./prisma";
 import { logger } from "./logger";
 import bcrypt from "bcrypt";
 
+let migrationAlreadyCompleted = false;
+
 export async function autoMigrateDatabase(): Promise<void> {
+  if (migrationAlreadyCompleted) return;
+
   try {
-    logger.info("🔄 Running database auto-migration and schema synchronization...");
+    logger.info("🔄 Running database schema check and synchronization...");
 
     // 1. Ensure required PostgreSQL extensions
     try {
@@ -45,7 +49,7 @@ export async function autoMigrateDatabase(): Promise<void> {
       }
     }
 
-    // 4. Ensure clubs table and all columns
+    // 4. Ensure clubs table and columns in batched block
     try {
       await prisma.$executeRawUnsafe(`
         CREATE TABLE IF NOT EXISTS clubs (
@@ -55,45 +59,36 @@ export async function autoMigrateDatabase(): Promise<void> {
           created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
         );
+
+        ALTER TABLE clubs
+          ADD COLUMN IF NOT EXISTS business_type business_type_enum NOT NULL DEFAULT 'RESTAURANT',
+          ADD COLUMN IF NOT EXISTS logo_url TEXT,
+          ADD COLUMN IF NOT EXISTS banner_url TEXT,
+          ADD COLUMN IF NOT EXISTS brand_color VARCHAR(50) DEFAULT '#e11d48',
+          ADD COLUMN IF NOT EXISTS phone VARCHAR(20),
+          ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+          ADD COLUMN IF NOT EXISTS city VARCHAR(100) DEFAULT 'Nairobi',
+          ADD COLUMN IF NOT EXISTS county VARCHAR(100) DEFAULT 'Nairobi',
+          ADD COLUMN IF NOT EXISTS address TEXT,
+          ADD COLUMN IF NOT EXISTS gps_coordinates VARCHAR(100),
+          ADD COLUMN IF NOT EXISTS description TEXT,
+          ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Kenya',
+          ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'KES',
+          ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) DEFAULT 'Africa/Nairobi',
+          ADD COLUMN IF NOT EXISTS opening_hours VARCHAR(10) DEFAULT '08:00',
+          ADD COLUMN IF NOT EXISTS closing_hours VARCHAR(10) DEFAULT '23:00',
+          ADD COLUMN IF NOT EXISTS operating_schedule JSONB,
+          ADD COLUMN IF NOT EXISTS business_status business_status_enum NOT NULL DEFAULT 'ACTIVE',
+          ADD COLUMN IF NOT EXISTS subscription_status subscription_status_enum NOT NULL DEFAULT 'ACTIVE',
+          ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
+          ADD COLUMN IF NOT EXISTS mpesa_shortcode VARCHAR(20),
+          ADD COLUMN IF NOT EXISTS mpesa_passkey TEXT,
+          ADD COLUMN IF NOT EXISTS mpesa_transaction_type VARCHAR(50) DEFAULT 'CustomerPayBillOnline',
+          ADD COLUMN IF NOT EXISTS is_mpesa_active BOOLEAN DEFAULT false,
+          ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ(6);
       `);
     } catch (err: any) {
-      logger.warn(`Clubs table creation warning: ${err.message}`);
-    }
-
-    const clubsColumns = [
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS business_type business_type_enum NOT NULL DEFAULT 'RESTAURANT';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS logo_url TEXT;`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS banner_url TEXT;`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS brand_color VARCHAR(50) DEFAULT '#e11d48';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS phone VARCHAR(20);`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS email VARCHAR(255);`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS city VARCHAR(100) DEFAULT 'Nairobi';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS county VARCHAR(100) DEFAULT 'Nairobi';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS address TEXT;`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS gps_coordinates VARCHAR(100);`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS description TEXT;`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS country VARCHAR(100) DEFAULT 'Kenya';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'KES';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) DEFAULT 'Africa/Nairobi';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS opening_hours VARCHAR(10) DEFAULT '08:00';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS closing_hours VARCHAR(10) DEFAULT '23:00';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS operating_schedule JSONB;`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS business_status business_status_enum NOT NULL DEFAULT 'ACTIVE';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS subscription_status subscription_status_enum NOT NULL DEFAULT 'ACTIVE';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS mpesa_shortcode VARCHAR(20);`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS mpesa_passkey TEXT;`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS mpesa_transaction_type VARCHAR(50) DEFAULT 'CustomerPayBillOnline';`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS is_mpesa_active BOOLEAN DEFAULT false;`,
-      `ALTER TABLE clubs ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ(6);`,
-    ];
-
-    for (const colQuery of clubsColumns) {
-      try {
-        await prisma.$executeRawUnsafe(colQuery);
-      } catch (err: any) {
-        logger.warn(`Column ensure query warning: ${err.message}`);
-      }
+      logger.warn(`Clubs schema batch warning: ${err.message}`);
     }
 
     // 5. Ensure user_sessions and refresh_tokens tables
@@ -110,13 +105,7 @@ export async function autoMigrateDatabase(): Promise<void> {
           created_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW(),
           updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT NOW()
         );
-      `);
-    } catch (err: any) {
-      logger.warn(`user_sessions table creation warning: ${err.message}`);
-    }
 
-    try {
-      await prisma.$executeRawUnsafe(`
         CREATE TABLE IF NOT EXISTS refresh_tokens (
           token_uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           session_uuid UUID NOT NULL REFERENCES user_sessions(session_uuid) ON DELETE CASCADE,
@@ -128,79 +117,68 @@ export async function autoMigrateDatabase(): Promise<void> {
         );
       `);
     } catch (err: any) {
-      logger.warn(`refresh_tokens table creation warning: ${err.message}`);
+      logger.warn(`Session/token table batch warning: ${err.message}`);
     }
 
-    // 6. Ensure payments table columns and indexes
-    const paymentColumns = [
-      `ALTER TABLE payments ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;`,
-      `ALTER TABLE payments ADD COLUMN IF NOT EXISTS exact_cash BOOLEAN;`,
-      `ALTER TABLE payments ADD COLUMN IF NOT EXISTS customer_cash_amount NUMERIC(10, 2);`,
-      `ALTER TABLE payments ADD COLUMN IF NOT EXISTS change_due NUMERIC(10, 2);`,
-      `ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_notes TEXT;`,
-      `UPDATE payments SET paid_at = COALESCE(updated_at, created_at) WHERE payment_status = 'PAID' AND paid_at IS NULL;`,
-      `CREATE INDEX IF NOT EXISTS idx_payments_biz_status_paid_at ON payments(club_uuid, payment_status, paid_at);`,
-    ];
+    // 6. Ensure payments table columns and indexes in batched block
+    try {
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE payments
+          ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ,
+          ADD COLUMN IF NOT EXISTS exact_cash BOOLEAN,
+          ADD COLUMN IF NOT EXISTS customer_cash_amount NUMERIC(10, 2),
+          ADD COLUMN IF NOT EXISTS change_due NUMERIC(10, 2),
+          ADD COLUMN IF NOT EXISTS payment_notes TEXT;
 
-    for (const pQuery of paymentColumns) {
-      try {
-        await prisma.$executeRawUnsafe(pQuery);
-      } catch (err: any) {
-        logger.warn(`Payment schema ensure query warning: ${err.message}`);
-      }
+        CREATE INDEX IF NOT EXISTS idx_payments_biz_status_paid_at ON payments(club_uuid, payment_status, paid_at);
+      `);
+    } catch (err: any) {
+      logger.warn(`Payment schema ensure batch warning: ${err.message}`);
     }
 
-    // 7. Ensure orders table columns and indexes
-    const orderQueries = [
-      `ALTER TABLE orders ADD COLUMN IF NOT EXISTS age_verified BOOLEAN DEFAULT false;`,
-      `ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT;`,
-      `CREATE INDEX IF NOT EXISTS idx_orders_biz_created_at ON orders(club_uuid, created_at);`,
-      `CREATE INDEX IF NOT EXISTS idx_orders_biz_status ON orders(club_uuid, status);`,
-      `CREATE INDEX IF NOT EXISTS idx_orders_biz_waiter ON orders(club_uuid, waiter_uuid);`,
-    ];
+    // 7. Ensure orders table columns and indexes in batched block
+    try {
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE orders
+          ADD COLUMN IF NOT EXISTS age_verified BOOLEAN DEFAULT false,
+          ADD COLUMN IF NOT EXISTS notes TEXT;
 
-    for (const oQuery of orderQueries) {
-      try {
-        await prisma.$executeRawUnsafe(oQuery);
-      } catch (err: any) {
-        logger.warn(`Order schema ensure query warning: ${err.message}`);
-      }
+        CREATE INDEX IF NOT EXISTS idx_orders_biz_created_at ON orders(club_uuid, created_at);
+        CREATE INDEX IF NOT EXISTS idx_orders_biz_status ON orders(club_uuid, status);
+        CREATE INDEX IF NOT EXISTS idx_orders_biz_waiter ON orders(club_uuid, waiter_uuid);
+      `);
+    } catch (err: any) {
+      logger.warn(`Order schema ensure batch warning: ${err.message}`);
     }
 
     // 8. Ensure order_items indexes
-    const itemQueries = [
-      `CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_uuid);`,
-      `CREATE INDEX IF NOT EXISTS idx_order_items_biz_product ON order_items(club_uuid, product_uuid);`,
-    ];
-
-    for (const iQuery of itemQueries) {
-      try {
-        await prisma.$executeRawUnsafe(iQuery);
-      } catch (err: any) {
-        logger.warn(`OrderItem index query warning: ${err.message}`);
-      }
+    try {
+      await prisma.$executeRawUnsafe(`
+        CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_uuid);
+        CREATE INDEX IF NOT EXISTS idx_order_items_biz_product ON order_items(club_uuid, product_uuid);
+      `);
+    } catch (err: any) {
+      logger.warn(`OrderItem index batch warning: ${err.message}`);
     }
 
-    // 9. Ensure users table columns and indexes
-    const userQueries = [
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false;`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false;`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token TEXT;`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_token TEXT;`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_password_expires TIMESTAMPTZ(6);`,
-      `CREATE INDEX IF NOT EXISTS idx_users_biz_role_active_del ON users(club_uuid, role, is_active, deleted_at);`,
-      `CREATE INDEX IF NOT EXISTS idx_users_biz_role_del ON users(club_uuid, role, deleted_at);`,
-    ];
+    // 9. Ensure users table columns and indexes in batched block
+    try {
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE users
+          ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false,
+          ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false,
+          ADD COLUMN IF NOT EXISTS email_verification_token TEXT,
+          ADD COLUMN IF NOT EXISTS reset_password_token TEXT,
+          ADD COLUMN IF NOT EXISTS reset_password_expires TIMESTAMPTZ(6);
 
-    for (const uQuery of userQueries) {
-      try {
-        await prisma.$executeRawUnsafe(uQuery);
-      } catch (err: any) {
-        logger.warn(`User schema ensure query warning: ${err.message}`);
-      }
+        CREATE INDEX IF NOT EXISTS idx_users_biz_role_active_del ON users(club_uuid, role, is_active, deleted_at);
+        CREATE INDEX IF NOT EXISTS idx_users_biz_role_del ON users(club_uuid, role, deleted_at);
+      `);
+    } catch (err: any) {
+      logger.warn(`User schema ensure batch warning: ${err.message}`);
     }
 
-    // 10. Ensure offers table columns
+    // 10. Ensure offers promo_code column
     try {
       await prisma.$executeRawUnsafe(`ALTER TABLE offers ADD COLUMN IF NOT EXISTS promo_code VARCHAR(100);`);
     } catch (err: any) {
@@ -211,15 +189,13 @@ export async function autoMigrateDatabase(): Promise<void> {
     try {
       await prisma.$executeRawUnsafe(`
         UPDATE users SET role = 'SUPER_ADMIN' WHERE role::text = 'PLATFORM_ADMIN';
-      `);
-      await prisma.$executeRawUnsafe(`
         UPDATE users SET role = 'ADMIN' WHERE role::text IN ('CLUB_ADMIN', 'TENANT_ADMIN');
       `);
     } catch {
       // Ignored if table or values are not ready yet
     }
 
-    // 12. Ensure default Super Administrator exists & migrate legacy DrinkHub admin
+    // 12. Ensure default Super Administrator exists without costly re-hashing on every boot
     try {
       // Step A: Migrate legacy email if exists
       await prisma.$executeRawUnsafe(`
@@ -237,9 +213,8 @@ export async function autoMigrateDatabase(): Promise<void> {
         },
       });
 
-      const superAdminPasswordHash = await bcrypt.hash('Password123!', 12);
-
       if (!existingSuperAdmin) {
+        const superAdminPasswordHash = await bcrypt.hash('Password123!', 12);
         await prisma.user.create({
           data: {
             userUuid: '00000000-0000-0000-0000-000000000001',
@@ -252,42 +227,13 @@ export async function autoMigrateDatabase(): Promise<void> {
           },
         });
         logger.info('👤 Auto-provisioned default Super Administrator: superadmin@orderup.co.ke');
-      } else {
-        // Ensure superadmin has active status, SUPER_ADMIN role, and auto-healed Password123! hash
-        await prisma.user.update({
-          where: { userUuid: existingSuperAdmin.userUuid },
-          data: {
-            role: 'SUPER_ADMIN' as any,
-            isActive: true,
-            passwordHash: superAdminPasswordHash,
-          },
-        });
-        logger.info('👤 Verified & updated Super Administrator credentials');
       }
     } catch (err: any) {
       logger.warn(`Superadmin auto-provision warning: ${err.message}`);
     }
 
-    // 7. Auto-heal any legacy QR code URLs in qr_codes table
-    try {
-      await prisma.$executeRawUnsafe(`
-        UPDATE qr_codes 
-        SET qr_code_payload = REPLACE(qr_code_payload, 'drink-hub-ke-customer-pwa.vercel.app', 'orderup-customer.vercel.app'),
-            image_url = REPLACE(image_url, 'drink-hub-ke-customer-pwa.vercel.app', 'orderup-customer.vercel.app')
-        WHERE qr_code_payload LIKE '%drink-hub-ke-customer-pwa.vercel.app%';
-      `);
-      await prisma.$executeRawUnsafe(`
-        UPDATE qr_codes 
-        SET qr_code_payload = REPLACE(qr_code_payload, 'orderup-ke-customer-pwa.vercel.app', 'orderup-customer.vercel.app'),
-            image_url = REPLACE(image_url, 'orderup-ke-customer-pwa.vercel.app', 'orderup-customer.vercel.app')
-        WHERE qr_code_payload LIKE '%orderup-ke-customer-pwa.vercel.app%';
-      `);
-      logger.info('📱 Verified & auto-healed QR code URLs to orderup-customer.vercel.app');
-    } catch (err: any) {
-      logger.warn(`QR code URL auto-heal warning: ${err.message}`);
-    }
-
-    logger.info("✅ Database auto-migration completed successfully");
+    migrationAlreadyCompleted = true;
+    logger.info("✅ Database schema check completed successfully");
   } catch (error: any) {
     logger.error(`❌ Database auto-migration failed: ${error.message}`);
   }

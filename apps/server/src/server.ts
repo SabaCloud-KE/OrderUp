@@ -15,11 +15,14 @@ initSocket(server);
 const PORT = parseInt(env.PORT, 10) || 5000;
 
 async function bootstrap() {
-  await autoMigrateDatabase();
-
   server.listen(PORT, () => {
     logger.info(`🚀 OrderUp Backend Server running on port ${PORT} [${env.NODE_ENV}]`);
     logger.info(`📄 Swagger API Docs available at http://localhost:${PORT}/api-docs`);
+  });
+
+  // Run auto-migration asynchronously in background to ensure zero cold-start delay
+  autoMigrateDatabase().catch((err) => {
+    logger.warn(`Non-blocking database auto-migration note: ${err.message}`);
   });
 }
 

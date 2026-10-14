@@ -8,7 +8,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CLIENT_URL: z.string().default('http://localhost:3000'),
   ALLOWED_ORIGINS: z.string().default('http://localhost:3000,http://localhost:3001,http://localhost:3002,*'),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required').default('postgresql://neondb_owner:npg_Qi58OYaeAdGB@ep-soft-union-b5zqun7f-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require'),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required').default('postgresql://neondb_owner:npg_Qi58OYaeAdGB@ep-soft-union-b5zqun7f-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require&pgbouncer=true&connection_limit=10&pool_timeout=20'),
   JWT_ACCESS_SECRET: z.string().default(process.env.JWT_SECRET || process.env.JWT_ACCESS_SECRET || 'dev_access_secret_must_be_32_bytes_long'),
   JWT_REFRESH_SECRET: z.string().default(process.env.JWT_REFRESH_SECRET || 'dev_refresh_secret_must_be_32_bytes_long'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('8h'),

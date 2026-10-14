@@ -7151,10 +7151,10 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
         </header>
 
         <main className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6 pb-12">
-          {loading ? (
+          {page !== 'dashboard' && loading ? (
             <div className="h-96 flex flex-col items-center justify-center text-slate-400 space-y-3">
               <Building2 className="h-10 w-10 animate-bounce" style={{ color: currentThemeColor }} />
-              <p className="text-xs font-bold">Loading Business Dashboard...</p>
+              <p className="text-xs font-bold">Loading {NAV_ITEMS.find((n) => n.key === page)?.label || 'Page'}...</p>
             </div>
           ) : (
             renderCurrentPage()

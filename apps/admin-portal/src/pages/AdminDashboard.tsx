@@ -3381,17 +3381,21 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const loadPlatformData = useCallback(async () => {
     setLoading(true);
     try {
+      const [statsRes, tenantRes, staffRes] = await Promise.allSettled([
+        apiFetch(getApiUrl('/tenants/platform/stats')),
+        apiFetch(getApiUrl('/tenants')),
+        apiFetch(getApiUrl('/auth/staff?role=ADMIN')),
+      ]);
+
       // 1. Platform Stats
-      const statsRes = await apiFetch(getApiUrl('/tenants/platform/stats'));
-      if (statsRes.ok) {
-        const sData = await statsRes.json();
+      if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+        const sData = await statsRes.value.json();
         setStats(sData.data);
       }
 
       // 2. All Businesses
-      const tenantRes = await apiFetch(getApiUrl('/tenants'));
-      if (tenantRes.ok) {
-        const tenantData = await tenantRes.json();
+      if (tenantRes.status === 'fulfilled' && tenantRes.value.ok) {
+        const tenantData = await tenantRes.value.json();
         const rawTenants: any[] = tenantData.data ?? [];
         const parsedBusinesses: Business[] = rawTenants.map(t => {
           const primaryUser = t.users?.find((u: any) => u.role === 'ADMIN' || u.role === 'MANAGER') ?? t.users?.[0];
@@ -3429,9 +3433,8 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
       }
 
       // 3. Business Admins
-      const staffRes = await apiFetch(getApiUrl('/auth/staff?role=ADMIN'));
-      if (staffRes.ok) {
-        const staffData = await staffRes.json();
+      if (staffRes.status === 'fulfilled' && staffRes.value.ok) {
+        const staffData = await staffRes.value.json();
         const rawStaff: any[] = staffData.data?.staff ?? staffData.data ?? [];
         const parsedAdmins: BusinessAdmin[] = rawStaff.map(s => ({
           id: s.uuid ?? s.userUuid,

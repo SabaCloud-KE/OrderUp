@@ -58,7 +58,7 @@ export class OrderRepository implements IOrderRepository {
     return this.formatOrder(order);
   }
 
-  async findOrdersByBusiness(businessUuid?: string, status?: OrderStatus, waiterUuid?: string): Promise<Order[]> {
+  async findOrdersByBusiness(businessUuid?: string, status?: OrderStatus, waiterUuid?: string, limit: number = 200): Promise<Order[]> {
     const orders = await prisma.order.findMany({
       where: {
         ...(businessUuid ? { businessUuid } : {}),
@@ -66,6 +66,7 @@ export class OrderRepository implements IOrderRepository {
         ...(waiterUuid ? { waiterUuid } : {}),
       },
       orderBy: { createdAt: 'desc' },
+      ...(limit > 0 ? { take: limit } : {}),
       include: {
         table: true,
         waiter: true,

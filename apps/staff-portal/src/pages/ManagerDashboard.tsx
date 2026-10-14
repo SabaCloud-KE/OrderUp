@@ -554,7 +554,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
     fetchStaff(true);
     const interval = setInterval(() => {
       fetchStaff(false);
-    }, 5000);
+    }, 30000);
     return () => clearInterval(interval);
   }, [fetchStaff]);
 
@@ -805,10 +805,10 @@ const OrdersPage = ({ showToast }: { showToast: (m: string) => void }) => {
       // Fallback to active polling
     }
 
-    // High frequency 3-second background polling to guarantee seamless zero-refresh live updates
+    // Background polling fallback (20s) in case socket reconnects
     const pollInterval = setInterval(() => {
       fetchOrders(true);
-    }, 3000);
+    }, 20000);
 
     return () => {
       clearInterval(pollInterval);
@@ -2390,9 +2390,10 @@ const DashboardPage = ({
       socket.on('notification', handleRealtimeUpdate);
     } catch {}
 
+    // Real-time Socket.IO handles instant updates; 30s poll acts as gentle fallback
     const pollInterval = setInterval(() => {
       fetchDashboard(true);
-    }, 3000);
+    }, 30000);
 
     return () => {
       clearInterval(pollInterval);

@@ -35,7 +35,8 @@ export class OrderController {
 
       const status = req.query.status as any;
       const waiterUuid = req.query.waiterUuid as string;
-      const orders = await this.orderService.getOrdersForBusiness(businessUuid, status, waiterUuid);
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+      const orders = await this.orderService.getOrdersForBusiness(businessUuid, status, waiterUuid, limit);
       res.json({
         success: true,
         data: orders,
