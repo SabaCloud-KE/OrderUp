@@ -20,7 +20,6 @@ export interface CreateBusinessWithAdminInput {
   // Admin fields (already hashed)
   adminPasswordHash: string;
   adminFullName: string;
-  adminUsername?: string;
   adminEmail: string;
   adminPhone?: string;
 }

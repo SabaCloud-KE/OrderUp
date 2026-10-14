@@ -51,26 +51,8 @@ export const createBusinessWithAdminSchema = z.object({
     // Admin / Manager fields (support both naming conventions)
     adminFullName: z.string().min(2, 'Admin name must be at least 2 characters').optional(),
     managerFullName: z.string().min(2, 'Manager name must be at least 2 characters').optional(),
-    adminUsername: z
-      .string()
-      .trim()
-      .min(3, 'Username must be at least 3 characters')
-      .max(30, 'Username cannot exceed 30 characters')
-      .regex(/^[a-zA-Z0-9._]+$/, 'Username may only contain letters, numbers, dots, and underscores')
-      .optional()
-      .nullable()
-      .or(z.literal('')),
-    managerUsername: z
-      .string()
-      .trim()
-      .min(3, 'Username must be at least 3 characters')
-      .max(30, 'Username cannot exceed 30 characters')
-      .regex(/^[a-zA-Z0-9._]+$/, 'Username may only contain letters, numbers, dots, and underscores')
-      .optional()
-      .nullable()
-      .or(z.literal('')),
-    adminEmail: z.string().min(1, 'Admin username or email is required').optional(),
-    managerEmail: z.string().min(1, 'Manager username or email is required').optional(),
+    adminEmail: z.string().min(1, 'Admin email is required').optional(),
+    managerEmail: z.string().min(1, 'Manager email is required').optional(),
     adminPhone: z.string().optional().nullable().or(z.literal('')),
     managerPhone: z.string().optional().nullable().or(z.literal('')),
     adminPassword: z.string().min(8, 'Temporary password must be at least 8 characters').optional(),

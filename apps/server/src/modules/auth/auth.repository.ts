@@ -5,37 +5,9 @@ import { IAuthRepository } from './auth.interface';
 export class AuthRepository implements IAuthRepository {
   async findByEmail(email: string): Promise<User | null> {
     const trimmed = (email || '').trim();
-    if (!trimmed) return null;
     return prisma.user.findFirst({
       where: {
         email: { equals: trimmed, mode: 'insensitive' },
-        deletedAt: null,
-      },
-      include: { business: true } as any,
-    });
-  }
-
-  async findByUsername(username: string): Promise<User | null> {
-    const trimmed = (username || '').trim();
-    if (!trimmed) return null;
-    return prisma.user.findFirst({
-      where: {
-        username: { equals: trimmed, mode: 'insensitive' },
-        deletedAt: null,
-      },
-      include: { business: true } as any,
-    });
-  }
-
-  async findByIdentifier(identifier: string): Promise<User | null> {
-    const trimmed = (identifier || '').trim();
-    if (!trimmed) return null;
-    return prisma.user.findFirst({
-      where: {
-        OR: [
-          { username: { equals: trimmed, mode: 'insensitive' } },
-          { email: { equals: trimmed, mode: 'insensitive' } },
-        ],
         deletedAt: null,
       },
       include: { business: true } as any,
@@ -68,7 +40,6 @@ export class AuthRepository implements IAuthRepository {
   async createUser(data: Partial<User>): Promise<User> {
     return prisma.user.create({
       data: {
-        username: data.username,
         email: data.email!,
         passwordHash: data.passwordHash!,
         fullName: data.fullName!,
@@ -239,7 +210,6 @@ export class AuthRepository implements IAuthRepository {
       ? {
           OR: [
             { fullName: { contains: search, mode: 'insensitive' as const } },
-            { username: { contains: search, mode: 'insensitive' as const } },
             { email: { contains: search, mode: 'insensitive' as const } },
             { phone: { contains: search, mode: 'insensitive' as const } },
           ],

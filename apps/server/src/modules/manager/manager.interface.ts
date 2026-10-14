@@ -16,7 +16,6 @@ export interface ManagerActivitySummary {
 export interface ManagerListItem {
   managerUuid: string;
   userUuid?: string; // alias for client compatibility
-  username?: string | null;
   fullName: string;
   email: string;
   phone: string | null;
@@ -41,7 +40,6 @@ export interface ManagerDetail extends ManagerListItem {
 export interface CreateManagerInput {
   fullName: string;
   email: string;
-  username?: string;
   phone?: string;
   password: string;
 }
@@ -49,7 +47,6 @@ export interface CreateManagerInput {
 export interface UpdateManagerInput {
   fullName?: string;
   email?: string;
-  username?: string;
   phone?: string;
 }
 

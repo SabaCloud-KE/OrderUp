@@ -81,8 +81,6 @@ export class TenantService {
     // Admin / Manager
     adminFullName?: string;
     managerFullName?: string;
-    adminUsername?: string;
-    managerUsername?: string;
     adminEmail?: string;
     managerEmail?: string;
     adminPhone?: string;
@@ -117,34 +115,6 @@ export class TenantService {
       }
     }
 
-    const rawUsername = (data.adminUsername || data.managerUsername || '').trim();
-    let finalUsername: string;
-
-    if (rawUsername) {
-      const existingUsername = await prisma.user.findFirst({
-        where: { username: { equals: rawUsername, mode: 'insensitive' }, deletedAt: null },
-      });
-      if (existingUsername) {
-        throw new BadRequestError(`Username '@${rawUsername}' is already taken`);
-      }
-      finalUsername = rawUsername.toLowerCase();
-    } else {
-      const baseName = (data.adminFullName || data.managerFullName || 'admin')
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '.')
-        .replace(/\.+/g, '.')
-        .replace(/^\.|\.$/g, '') || 'admin';
-      finalUsername = baseName;
-      let counter = 1;
-      while (
-        await prisma.user.findFirst({
-          where: { username: { equals: finalUsername, mode: 'insensitive' }, deletedAt: null },
-        })
-      ) {
-        finalUsername = `${baseName}${counter++}`;
-      }
-    }
-
     const rawPassword = data.adminPassword || data.managerPassword;
     if (!rawPassword) {
       throw new BadRequestError('Initial admin password is required');
@@ -170,7 +140,6 @@ export class TenantService {
       gpsCoordinates: data.gpsCoordinates,
       adminPasswordHash,
       adminFullName: (data.adminFullName || data.managerFullName || 'Admin').trim(),
-      adminUsername: finalUsername,
       adminEmail: (data.adminEmail || data.managerEmail || '').trim().toLowerCase(),
       adminPhone: data.adminPhone || data.managerPhone,
     });
@@ -180,7 +149,6 @@ export class TenantService {
       emailService
         .sendUserCredentialsEmail({
           email: result.admin.email,
-          username: result.admin.username || finalUsername,
           fullName: result.admin.fullName,
           rawPassword,
           role: result.admin.role,

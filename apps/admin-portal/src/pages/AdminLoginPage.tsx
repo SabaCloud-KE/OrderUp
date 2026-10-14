@@ -8,7 +8,7 @@ interface AdminLoginPageProps {
 }
 
 export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,19 +18,18 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const cleanUser = username.trim();
-    if (!cleanUser || !password) {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) {
       setError('Administrator credentials are required.');
       return;
     }
     setIsLoading(true);
 
     const isDemoAdmin = (
-      (cleanUser.toLowerCase() === 'superadmin@orderup.co.ke' ||
-       cleanUser.toLowerCase() === 'superadmin@drinkhub.co.ke' ||
-       cleanUser.toLowerCase() === 'superadmin' ||
-       cleanUser.toLowerCase() === 'admin@orderup.co.ke' ||
-       cleanUser.toLowerCase() === 'admin@drinkhub.co.ke') &&
+      (cleanEmail === 'superadmin@orderup.co.ke' ||
+       cleanEmail === 'superadmin@drinkhub.co.ke' ||
+       cleanEmail === 'admin@orderup.co.ke' ||
+       cleanEmail === 'admin@drinkhub.co.ke') &&
       (password === 'Password123!' || password === 'admin' || password === 'admin123')
     );
 
@@ -38,11 +37,11 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
       const res = await fetch(getApiUrl('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: cleanUser, email: cleanUser, password }),
+        body: JSON.stringify({ email: cleanEmail, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
-        const msg = data.error?.message || data.message || 'Invalid username or password.';
+        const msg = data.error?.message || data.message || 'Invalid email or password.';
         throw new Error(msg);
       }
 
@@ -66,7 +65,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
       }
       onLogin();
     } catch (err: any) {
-      if (cleanUser.toLowerCase().includes('waiter') || cleanUser.toLowerCase().includes('kamau') || cleanUser.toLowerCase().includes('alchemist.co.ke') || cleanUser.toLowerCase().includes('bclub.co.ke') || cleanUser.toLowerCase().includes('gplace.co.ke') || cleanUser.toLowerCase().includes('belvin')) {
+      if (cleanEmail.includes('waiter') || cleanEmail.includes('kamau') || cleanEmail.includes('alchemist.co.ke') || cleanEmail.includes('bclub.co.ke') || cleanEmail.includes('gplace.co.ke') || cleanEmail.includes('belvin')) {
         setError('Access denied. Managers and Waiters must log into the Staff Portal, not the Super Admin Portal.');
       } else if (err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('Failed')) {
         setError('Cannot connect to backend server. Please verify your backend API is online and CORS is enabled.');
@@ -118,12 +117,12 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
             <button
               type="button"
               onClick={() => {
-                setUsername('superadmin');
+                setEmail('superadmin@orderup.co.ke');
                 setPassword('Password123!');
               }}
               className="mt-1 text-[11px] underline text-blue-600 hover:text-blue-800 font-medium"
             >
-              Click to fill: superadmin / Password123!
+              Click to fill: superadmin@orderup.co.ke / Password123!
             </button>
           </div>
         </div>
@@ -132,14 +131,14 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-              Username
+              Email Address
             </label>
             <input
-              type="text"
-              placeholder="e.g. superadmin"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
+              type="email"
+              placeholder="superadmin@orderup.co.ke"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               className="w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
               style={{
                 background: 'var(--bg-card)',

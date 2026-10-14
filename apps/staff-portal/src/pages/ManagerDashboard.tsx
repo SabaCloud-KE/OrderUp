@@ -285,7 +285,7 @@ const authHeaders = (): Record<string, string> => {
 /* --- Data types --- */
 interface Waiter {
   id: string; firstName: string; lastName: string; phone: string;
-  email: string; username: string; employeeNo: string; status: 'Active' | 'Inactive' | 'On Leave';
+  email: string; employeeNo: string; status: 'Active' | 'Inactive' | 'On Leave';
   shift: string; onlineStatus: 'Online' | 'Offline'; lastLogin: string; notes: string;
 }
 
@@ -309,11 +309,11 @@ type MenuItem = {
 ------------------------------------------------ */
 interface WaiterForm {
   firstName: string; lastName: string; phone: string; email: string;
-  username: string; employeeNo: string; tempPwd: string;
+  employeeNo: string; tempPwd: string;
   requirePwdChange: boolean; status: string; shift: string; notes: string;
 }
 const defaultWaiterForm: WaiterForm = {
-  firstName: '', lastName: '', phone: '', email: '', username: '', employeeNo: '',
+  firstName: '', lastName: '', phone: '', email: '', employeeNo: '',
   tempPwd: '', requirePwdChange: true, status: 'Active', shift: 'Evening', notes: '',
 };
 
@@ -334,34 +334,19 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
       if (!/^[a-zA-Z\s]+$/.test(String(v))) return 'Letters only';
       if (String(v).trim().length < 2) return 'Min 2 characters';
     }
-    if (k === 'username') {
-      if (!String(v).trim()) return 'Username is required for login';
-      if (String(v).trim().length < 2) return 'Min 2 characters';
-      if (!/^[a-zA-Z0-9._-]+$/.test(String(v).trim())) return 'Letters, numbers, dots, and hyphens only';
-    }
     if (k === 'phone') {
       if (!String(v).trim()) return 'Required';
       if (!/^\d+$/.test(String(v).trim())) return 'Numbers only';
     }
     if (k === 'email') {
-      if (!String(v).trim()) return 'Email is required';
+      if (!String(v).trim()) return 'Email is required for login';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v))) return 'Enter a valid email address';
     }
     return '';
   };
 
   const set = (k: keyof WaiterForm, v: string | boolean) => {
-    setForm(p => {
-      const next = { ...p, [k]: v };
-      // Auto-suggest username if user hasn't typed one manually yet
-      if ((k === 'firstName' || k === 'lastName') && (!p.username || p.username === `${p.firstName}.${p.lastName}`.toLowerCase().replace(/[^a-z0-9.]/g, ''))) {
-        const fn = k === 'firstName' ? String(v) : p.firstName;
-        const ln = k === 'lastName' ? String(v) : p.lastName;
-        const candidate = `${fn}.${ln}`.toLowerCase().trim().replace(/[^a-z0-9]+/g, '.').replace(/(^\.|\.$)/g, '');
-        next.username = candidate;
-      }
-      return next;
-    });
+    setForm(p => ({ ...p, [k]: v }));
     if (typeof v === 'string') {
       setErrors(p => ({ ...p, [k]: validateField(k, v) }));
     } else {
@@ -373,7 +358,6 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
     const e: Partial<Record<keyof WaiterForm, string>> = {};
     const fnErr = validateField('firstName', form.firstName); if (fnErr) e.firstName = fnErr;
     const lnErr = validateField('lastName', form.lastName); if (lnErr) e.lastName = lnErr;
-    const usErr = validateField('username', form.username); if (usErr) e.username = usErr;
     const phErr = validateField('phone', form.phone); if (phErr) e.phone = phErr;
     const emErr = validateField('email', form.email); if (emErr) e.email = emErr;
     if (form.tempPwd.length < 8) e.tempPwd = 'Min. 8 characters';
@@ -390,7 +374,6 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
         headers: authHeaders(),
         body: JSON.stringify({
           email: form.email.trim().toLowerCase(),
-          username: form.username.trim().toLowerCase(),
           password: form.tempPwd,
           fullName: `${form.firstName.trim()} ${form.lastName.trim()}`,
           phone: form.phone.trim() || undefined,
@@ -412,7 +395,6 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
         lastName: parts.slice(1).join(' ') || form.lastName,
         phone: form.phone.trim(),
         email: u.email ?? form.email,
-        username: u.username ?? form.username,
         employeeNo: form.employeeNo || `EMP-${idx}`,
         status: 'Active' as Waiter['status'],
         shift: form.shift,
@@ -443,7 +425,6 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
           <div className="grid grid-cols-2 gap-3">
             <div><FL required>First Name</FL><SI value={form.firstName} onChange={e => set('firstName', e.target.value)} placeholder="Jane" error={errors.firstName} /></div>
             <div><FL required>Last Name</FL><SI value={form.lastName} onChange={e => set('lastName', e.target.value)} placeholder="Wanjiku" error={errors.lastName} /></div>
-            <div><FL required>Username</FL><SI value={form.username} onChange={e => set('username', e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))} placeholder="jane.wanjiku" error={errors.username} /></div>
             <div><FL required>Phone Number</FL><PhoneInput value={form.phone} onChange={v => set('phone', v)} error={errors.phone} /></div>
             <div><FL required>Email</FL><SI type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="jane@club.co.ke" error={errors.email} /></div>
             <div><FL>Employee No. <span className="text-slate-400 font-normal normal-case">(optional)</span></FL><SI value={form.employeeNo} onChange={e => set('employeeNo', e.target.value)} placeholder="EMP-006" /></div>
@@ -552,7 +533,6 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
           lastName: parts.slice(1).join(' ') ?? '',
           phone: u.phone ?? '',
           email: u.email ?? '',
-          username: u.email?.split('@')[0] ?? `staff-${i + 1}`,
           employeeNo: `EMP-${String(i + 1).padStart(3, '0')}`,
           status: (u.isActive ? 'Active' : 'Inactive') as Waiter['status'],
           shift: '',
@@ -577,7 +557,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
   }, [fetchStaff]);
 
   const filtered = waiters.filter(w => {
-    const matchSearch = `${w.firstName} ${w.lastName} ${w.username} ${w.phone}`.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = `${w.firstName} ${w.lastName} ${w.email} ${w.phone}`.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'All' || w.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -663,12 +643,12 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
         <div className="flex items-center gap-3">
           <div className="flex-1 flex items-center gap-2 rounded-lg border px-3.5 py-2" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
             <Search className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, username or phone…" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or phone…" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
           </div>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
             {['All', 'Active', 'Inactive', 'On Leave'].map(s => <option key={s}>{s}</option>)}
           </select>
-          <button onClick={() => { csvExport(['Name', 'Username', 'Phone', 'Email', 'Status', 'Shift', 'Online', 'Last Login'], filtered.map(w => [`${w.firstName} ${w.lastName}`, w.username, w.phone, w.email, w.status, w.shift, w.onlineStatus, w.lastLogin]), 'staff-export.csv'); showToast('Staff list exported'); }}
+          <button onClick={() => { csvExport(['Name', 'Email', 'Phone', 'Status', 'Shift', 'Online', 'Last Login'], filtered.map(w => [`${w.firstName} ${w.lastName}`, w.email, w.phone, w.status, w.shift, w.onlineStatus, w.lastLogin]), 'staff-export.csv'); showToast('Staff list exported'); }}
             className="flex items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-medium hover:bg-slate-50 transition-colors" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
             <Download className="h-3.5 w-3.5" /> Export
           </button>
@@ -681,7 +661,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
           <table className="w-full text-sm border-separate border-spacing-0">
             <thead className="sticky top-0 z-20 shadow-sm">
               <tr style={{ background: 'var(--bg-card)' }}>
-                {['Waiter', 'Username', 'Phone', 'Status', 'Online', 'Shift', 'Last Login', 'Actions'].map(h => (
+                {['Waiter', 'Email', 'Phone', 'Status', 'Online', 'Shift', 'Last Login', 'Actions'].map(h => (
                   <th key={h} className="sticky top-0 z-20 px-4 py-3 text-left text-xs font-bold border-b backdrop-blur-md" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}>{h}</th>
                 ))}
               </tr>
@@ -702,7 +682,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-xs font-mono border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>@{w.username}</td>
+                  <td className="px-4 py-3.5 text-xs font-mono border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>{w.email}</td>
                   <td className="px-4 py-3.5 text-xs border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>{w.phone}</td>
                   <td className="px-4 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}><StatusBadge status={w.status} /></td>
                   <td className="px-4 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>

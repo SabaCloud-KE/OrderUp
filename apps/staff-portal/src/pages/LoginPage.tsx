@@ -11,10 +11,10 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [username, setUsername] = useState(() => {
+  const [email, setEmail] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      return params.get('email') || params.get('username') || '';
+      return params.get('email') || '';
     } catch {}
     return '';
   });
@@ -40,9 +40,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     e.preventDefault();
     setError('');
 
-    const cleanUser = username.trim();
-    if (!cleanUser || !password) {
-      setError('Please enter your username and password.');
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) {
+      setError('Please enter your email and password.');
       return;
     }
 
@@ -52,12 +52,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       const res = await fetch(getApiUrl('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: cleanUser, email: cleanUser, password }),
+        body: JSON.stringify({ email: cleanEmail, password }),
       });
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
-        const msg = data.error?.message || data.message || 'Invalid credentials. Please check your username and password.';
+        const msg = data.error?.message || data.message || 'Invalid credentials. Please check your email and password.';
         throw new Error(msg);
       }
 
@@ -259,8 +259,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setUsername('admin.alchemist');
-                  setPassword('Admin123!');
+                  setEmail('john123@gmail.com');
+                  setPassword('john1234');
                   setError('');
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
@@ -271,8 +271,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setUsername('manager.alchemist');
-                  setPassword('Manager123!');
+                  setEmail('tonnykim@gmail.com');
+                  setPassword('Tonny1234');
                   setError('');
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
@@ -283,8 +283,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setUsername('waiter.kamau');
-                  setPassword('Waiter123!');
+                  setEmail('jane@gmail.com');
+                  setPassword('Jane1234');
                   setError('');
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
@@ -382,14 +382,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Username
+                  Email Address
                 </label>
                 <input
-                  type="text"
-                  placeholder="e.g. admin.alchemist, manager.alchemist, or waiter.kamau"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  autoComplete="username"
+                  type="email"
+                  placeholder="name@orderup.co.ke"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                   className="w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
                   style={{
                     background: 'var(--bg-card)',

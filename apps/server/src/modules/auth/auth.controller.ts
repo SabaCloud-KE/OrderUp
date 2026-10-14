@@ -8,12 +8,11 @@ export class AuthController {
 
   login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { email, username, password, rememberMe } = req.body;
-      const identifier = (username || email || '').trim();
+      const { email, password, rememberMe } = req.body;
       const ipAddress = req.ip;
       const userAgent = req.headers['user-agent'];
 
-      const result = await this.authService.login(identifier, password, rememberMe, ipAddress, userAgent);
+      const result = await this.authService.login(email, password, rememberMe, ipAddress, userAgent);
       res.json({
         success: true,
         data: result,

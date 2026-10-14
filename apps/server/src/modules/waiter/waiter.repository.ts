@@ -108,7 +108,6 @@ export class WaiterRepository {
         take: limit,
         select: {
           userUuid: true,
-          username: true,
           fullName: true,
           email: true,
           phone: true,
@@ -162,7 +161,6 @@ export class WaiterRepository {
 
         return {
           waiterUuid: u.userUuid,
-          username: u.username,
           fullName: u.fullName,
           email: u.email,
           phone: u.phone,
@@ -211,7 +209,6 @@ export class WaiterRepository {
       },
       select: {
         userUuid: true,
-        username: true,
         fullName: true,
         email: true,
         phone: true,
@@ -252,7 +249,6 @@ export class WaiterRepository {
 
     return {
       waiterUuid: user.userUuid,
-      username: user.username,
       fullName: user.fullName,
       email: user.email,
       phone: user.phone,
@@ -292,20 +288,6 @@ export class WaiterRepository {
   }
 
   /**
-   * Check if a non-deleted user with the given username already exists globally.
-   */
-  async findUserByUsername(username: string): Promise<User | null> {
-    const trimmed = (username || '').trim();
-    if (!trimmed) return null;
-    return prisma.user.findFirst({
-      where: {
-        username: { equals: trimmed, mode: 'insensitive' },
-        deletedAt: null,
-      },
-    });
-  }
-
-  /**
    * Create a new Waiter record.
    * Role is strictly set to UserRole.WAITER server-side.
    */
@@ -313,7 +295,6 @@ export class WaiterRepository {
     businessUuid: string;
     fullName: string;
     email: string;
-    username?: string;
     phone?: string;
     passwordHash: string;
   }): Promise<User> {
@@ -322,7 +303,6 @@ export class WaiterRepository {
         businessUuid: data.businessUuid,
         fullName: data.fullName,
         email: data.email,
-        username: data.username,
         phone: data.phone,
         passwordHash: data.passwordHash,
         role: UserRole.WAITER,
