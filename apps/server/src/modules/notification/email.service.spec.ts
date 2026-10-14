@@ -94,9 +94,9 @@ describe('EmailService', () => {
   it('should support mock mode gracefully when RESEND_API_KEY is not set', async () => {
     // Instantiate with mock mode
     const mockEmailService = new EmailService();
-    // @ts-ignore
+    // @ts-expect-error — accessing private property for test setup
     mockEmailService.isConfigured = false;
-    // @ts-ignore
+    // @ts-expect-error — accessing private property for test setup
     mockEmailService.resend = null;
 
     const result = await mockEmailService.sendEmail({
