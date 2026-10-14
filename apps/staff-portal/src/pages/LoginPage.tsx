@@ -11,14 +11,6 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [role, setRole] = useState<StaffRole>(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const r = (params.get('role') || '').toLowerCase();
-      if (r === 'waiter' || r === 'manager' || r === 'admin') return r;
-    } catch {}
-    return 'admin';
-  });
   const [username, setUsername] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -70,10 +62,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       }
 
       const userRole = (data.data?.user?.role || '').toUpperCase();
-      let targetRole: StaffRole = role;
+      let targetRole: StaffRole;
 
-      if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
-        targetRole = (role === 'manager' || role === 'waiter') ? role : 'admin';
+      if (userRole === 'ADMIN' || userRole === 'CLUB_ADMIN' || userRole === 'TENANT_ADMIN' || userRole === 'SUPER_ADMIN') {
+        targetRole = 'admin';
       } else if (userRole === 'MANAGER') {
         targetRole = 'manager';
       } else if (userRole === 'WAITER') {
@@ -82,7 +74,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         throw new Error(`Access denied. Account role "${userRole}" is not permitted on the staff portal.`);
       }
 
-      setRole(targetRole);
+      setPendingRole(targetRole);
 
       if (data.data?.accessToken) {
         localStorage.setItem('orderup_token', data.data.accessToken);
@@ -176,7 +168,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       setConfirmPassword('');
 
       // After password change, if user is Business Admin, prompt them to accept the policy
-      if (role === 'admin') {
+      const resolvedRole: StaffRole = pendingRole || 'admin';
+      if (resolvedRole === 'admin') {
         try {
           const userObj = JSON.parse(
             localStorage.getItem('orderup_user') ||
@@ -189,7 +182,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             localStorage.getItem('drinkhub_policy_accepted_' + userKey)
           );
           if (!isPolicyAccepted) {
-            setPendingRole(role);
+            setPendingRole(resolvedRole);
             setOnboardingSubtitle('Your temporary password has been successfully updated! Before accessing your Business Admin portal, statutory compliance requires your formal review and acceptance of our service agreements.');
             setShowOnboardingModal(true);
             return;
@@ -199,7 +192,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         }
       }
 
-      onLogin(role);
+      onLogin(resolvedRole);
     } catch (err: any) {
       setError(err.message || 'Failed to update password.');
     } finally {
@@ -220,7 +213,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       localStorage.setItem('orderup_policy_accepted_admin', new Date().toISOString());
     }
     setShowOnboardingModal(false);
-    onLogin(pendingRole || role);
+    onLogin(pendingRole || 'admin');
   };
 
   return (
@@ -257,59 +250,49 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
           )}
 
-          {/* Role Selector */}
-          <div className="rounded-xl p-1 flex gap-1 border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-            {(['admin', 'manager', 'waiter'] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => {
-                  setRole(r);
-                  setError('');
-                }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all duration-200"
-                style={{
-                  background: role === r ? '#2563EB' : 'transparent',
-                  color: role === r ? '#FFFFFF' : 'var(--text-secondary)',
-                }}
-              >
-                {r === 'admin' ? <Shield className="h-3.5 w-3.5" /> : r === 'manager' ? <Briefcase className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
-                {r === 'admin' ? 'Admin (Owner)' : r === 'manager' ? 'Manager' : 'Waiter'}
-              </button>
-            ))}
-          </div>
-
-          {/* Demo Account Hint */}
-          <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3 text-xs text-blue-900">
-            <div className="flex items-center justify-between font-semibold mb-1">
-              <span>
-                Demo {role === 'admin' ? 'Business Admin' : role === 'manager' ? 'Manager' : 'Waiter'}:
-              </span>
+          {/* Quick Demo Credentials Autofill Helper */}
+          <div className="rounded-xl border border-blue-200/80 bg-blue-50/60 p-3 text-xs text-blue-900 shadow-sm">
+            <div className="flex items-center justify-between font-semibold mb-2">
+              <span className="text-[11px] font-bold text-blue-900 uppercase tracking-wider">Quick Demo Credentials:</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  if (role === 'admin') {
-                    setUsername('john123@gmail.com');
-                    setPassword('john1234');
-                  } else if (role === 'manager') {
-                    setUsername('tonnykim@gmail.com');
-                    setPassword('Tonny1234');
-                  } else {
-                    setUsername('jane@gmail.com');
-                    setPassword('Jane1234');
-                  }
+                  setUsername('john123@gmail.com');
+                  setPassword('john1234');
+                  setError('');
                 }}
-                className="text-blue-600 hover:underline font-bold"
+                className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
               >
-                Auto-fill ⚡
+                <Shield className="h-3 w-3 text-blue-600" />
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('tonnykim@gmail.com');
+                  setPassword('Tonny1234');
+                  setError('');
+                }}
+                className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
+              >
+                <Briefcase className="h-3 w-3 text-blue-600" />
+                Manager
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('jane@gmail.com');
+                  setPassword('Jane1234');
+                  setError('');
+                }}
+                className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
+              >
+                <User className="h-3 w-3 text-blue-600" />
+                Waiter
               </button>
             </div>
-            <p className="text-[11px] text-blue-700">
-              {role === 'admin'
-                ? 'john123@gmail.com / john1234 (Admin)'
-                : role === 'manager'
-                ? 'tonnykim@gmail.com / Tonny1234 (Manager)'
-                : 'jane@gmail.com / Jane1234 (Waiter)'}
-            </p>
           </div>
 
           {/* First-time login Password Change View */}
@@ -399,11 +382,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Username
+                  Email or Username
                 </label>
                 <input
                   type="text"
-                  placeholder={role === 'waiter' ? 'e.g. waiter.jane' : 'e.g. manager.john'}
+                  placeholder="name@orderup.co.ke or username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   autoComplete="username"
@@ -469,7 +452,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    Sign In as {role === 'admin' ? 'Admin' : role === 'manager' ? 'Manager' : 'Waiter'}
+                    Sign In
                     <ChevronRight className="h-4 w-4" />
                   </>
                 )}

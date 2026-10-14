@@ -59,7 +59,7 @@ export const App: React.FC = () => {
         const user = JSON.parse(userStr);
         const role = (user.role || '').toUpperCase();
         if (role === 'WAITER') return { role: 'waiter' };
-        if (role === 'ADMIN') return { role: 'admin' };
+        if (role === 'ADMIN' || role === 'CLUB_ADMIN' || role === 'TENANT_ADMIN' || role === 'SUPER_ADMIN') return { role: 'admin' };
         if (role === 'MANAGER') return { role: 'manager' };
 
         // Reject any other role (deprecated, customer, invalid, or unknown) — clear stale state
