@@ -386,7 +386,9 @@ export const DigitalStorefrontPage: React.FC = () => {
 
   /* ── Live Poll Order Status (every 3s) ── */
   useEffect(() => {
-    if (!activeOrderUuid) return;
+    // Do not start polling until the initial menu load is complete.
+    // Starting polling during load wastes a connection slot needed for the menu fetch.
+    if (!activeOrderUuid || loading) return;
 
     let isMounted = true;
     const pollOrderStatus = async () => {
@@ -422,7 +424,7 @@ export const DigitalStorefrontPage: React.FC = () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [activeOrderUuid]);
+  }, [activeOrderUuid, loading]);
 
   /* ── Fetch venue & menu on mount ─────────── */
   useEffect(() => {
@@ -437,8 +439,19 @@ export const DigitalStorefrontPage: React.FC = () => {
         setLoading(true);
         setLoadError(null);
 
-        // 1. Fetch venue branding
-        const tenantRes = await fetch(getApiUrl(`/tenants/${venueSlug}`));
+        // Fire tenant and menu fetches IN PARALLEL — menu request starts immediately
+        // without waiting for the tenant response. The tenant UUID is needed for the
+        // menu's X-Tenant-Id header, but we can use venueSlug as a fallback key and
+        // then re-fetch the menu with UUID if the first attempt fails.
+        // This cuts the sequential 3-fetch waterfall down to 2 parallel fetches.
+        const [tenantRes, menuRes] = await Promise.all([
+          fetch(getApiUrl(`/tenants/${venueSlug}`)),
+          fetch(getApiUrl('/menu'), {
+            headers: { 'X-Venue-Slug': venueSlug },
+          }),
+        ]);
+
+        // ── Process tenant response ───────────────────────────────────────────
         if (!tenantRes.ok) {
           const err = await tenantRes.json().catch(() => ({}));
           throw new Error(err?.error?.message || `Venue "${venueSlug}" not found.`);
@@ -472,7 +485,9 @@ export const DigitalStorefrontPage: React.FC = () => {
           operatingSchedule: club.operatingSchedule ?? null,
         });
 
-        // Resolve table UUID from venueTables/tables array
+        // Resolve table UUID from the venueTables already embedded in the tenant response.
+        // The server's findBySlug query includes venueTables, so a separate /tables fetch
+        // is not needed. Only fall back to a network request if the array is missing.
         const tablesList: any[] = club.venueTables ?? club.tables ?? [];
         let matchedTableUuid: string | null = null;
         if (table && tablesList.length > 0) {
@@ -482,7 +497,8 @@ export const DigitalStorefrontPage: React.FC = () => {
           if (match) matchedTableUuid = match.tableUuid ?? match.uuid ?? match.id ?? null;
         }
 
-        if (!matchedTableUuid && table && resolvedClubUuid) {
+        if (!matchedTableUuid && table && resolvedClubUuid && tablesList.length === 0) {
+          // Only fetch /tables as a genuine last resort when venueTables was not included
           try {
             const tablesRes = await fetch(getApiUrl(`/tenants/${resolvedClubUuid}/tables`));
             if (tablesRes.ok) {
@@ -497,14 +513,20 @@ export const DigitalStorefrontPage: React.FC = () => {
         }
         setTableUuid(matchedTableUuid);
 
-        // 2. Fetch menu with X-Tenant-Id header
-        const menuRes = await fetch(getApiUrl('/menu'), {
-          headers: {
-            ...(resolvedClubUuid ? { 'X-Tenant-Id': resolvedClubUuid } : {}),
-          },
-        });
-        if (!menuRes.ok) throw new Error('Failed to load the menu. Please try again.');
-        const menuData = await menuRes.json();
+        // ── Process menu response ─────────────────────────────────────────────
+        // If the parallel menu fetch (using venueSlug) failed, retry with the resolved UUID
+        let menuData: any;
+        if (!menuRes.ok && resolvedClubUuid) {
+          const retryRes = await fetch(getApiUrl('/menu'), {
+            headers: { 'X-Tenant-Id': resolvedClubUuid },
+          });
+          if (!retryRes.ok) throw new Error('Failed to load the menu. Please try again.');
+          menuData = await retryRes.json();
+        } else if (!menuRes.ok) {
+          throw new Error('Failed to load the menu. Please try again.');
+        } else {
+          menuData = await menuRes.json();
+        }
 
         // Flatten categories + products
         const cats: string[] = ['All'];

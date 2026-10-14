@@ -102,33 +102,48 @@ export const App: React.FC = () => {
       <QueryClientProvider client={queryClient}>
         <TenantProvider>
           <AuthProvider>
-            <SocketProvider>
-              <OfflineScreen>
-                <Router>
-                  <div className="min-h-screen bg-dark-950 text-slate-100 flex flex-col font-sans">
-                    <Navbar />
-                    <main className="flex-1">
-                      <Suspense fallback={<PageLoadingSkeleton />}>
-                        <Routes>
-                          <Route path="/" element={<LandingPage />} />
-                          <Route path="/v/:venueSlug" element={<QrMenuPage />} />
-                          <Route path="/v/:venueSlug/t/:tableNum" element={<QrMenuPage />} />
-                          <Route path="/order/track" element={<CustomerOrderStatusPage />} />
-                          <Route path="/kitchen" element={<KitchenDisplayPage />} />
-                          <Route path="/waiter/dashboard" element={<WaiterDashboardPage />} />
-                          <Route path="/manager/dashboard" element={<ManagerAnalyticsDashboardPage />} />
-                          <Route path="/manager/menu" element={<ManagerMenuPage />} />
-                          <Route path="/admin/reports" element={<ReportingAnalyticsPage />} />
-                          <Route path="/admin/dashboard" element={<PlatformAdminDashboardPage />} />
-                          <Route path="/admin/clubs" element={<ClubManagementPage />} />
-                        </Routes>
-                      </Suspense>
-                    </main>
-                    <InstallPromptBanner />
-                  </div>
-                </Router>
-              </OfflineScreen>
-            </SocketProvider>
+            <OfflineScreen>
+              <Router>
+                <div className="min-h-screen bg-dark-950 text-slate-100 flex flex-col font-sans">
+                  <Navbar />
+                  <main className="flex-1">
+                    <Suspense fallback={<PageLoadingSkeleton />}>
+                      <Routes>
+                        {/* ── Public / Customer routes (no WebSocket needed) ── */}
+                        <Route path="/" element={<LandingPage />} />
+                        <Route path="/v/:venueSlug" element={<QrMenuPage />} />
+                        <Route path="/v/:venueSlug/t/:tableNum" element={<QrMenuPage />} />
+                        <Route path="/order/track" element={<CustomerOrderStatusPage />} />
+
+                        {/* ── Staff routes (WebSocket required for real-time updates) ── */}
+                        <Route
+                          path="/kitchen"
+                          element={
+                            <SocketProvider>
+                              <KitchenDisplayPage />
+                            </SocketProvider>
+                          }
+                        />
+                        <Route
+                          path="/waiter/dashboard"
+                          element={
+                            <SocketProvider>
+                              <WaiterDashboardPage />
+                            </SocketProvider>
+                          }
+                        />
+                        <Route path="/manager/dashboard" element={<ManagerAnalyticsDashboardPage />} />
+                        <Route path="/manager/menu" element={<ManagerMenuPage />} />
+                        <Route path="/admin/reports" element={<ReportingAnalyticsPage />} />
+                        <Route path="/admin/dashboard" element={<PlatformAdminDashboardPage />} />
+                        <Route path="/admin/clubs" element={<ClubManagementPage />} />
+                      </Routes>
+                    </Suspense>
+                  </main>
+                  <InstallPromptBanner />
+                </div>
+              </Router>
+            </OfflineScreen>
           </AuthProvider>
         </TenantProvider>
       </QueryClientProvider>

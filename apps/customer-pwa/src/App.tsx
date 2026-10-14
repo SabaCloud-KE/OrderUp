@@ -52,47 +52,17 @@ const DEFAULT_BRANDING: ClubBranding = CLUB_REGISTRY['quiver-kilimani'];
  * Reads the :venueSlug from the URL and applies the club's CSS variables.
  * Falls back to the default Quiver Lounge branding.
  */
-const getApiUrl = (path: string): string => {
-  const envUrl = import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL;
-  let base = envUrl ? envUrl.trim() : 'http://localhost:5000/api/v1';
-  if (base.endsWith('/')) base = base.slice(0, -1);
-  if (!base.includes('/api/v1')) base = `${base}/api/v1`;
-  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
-};
 
 const ClubBrandingEngine: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { venueSlug } = useParams<{ venueSlug?: string }>();
   const { applyClubBranding } = useTheme();
 
   useEffect(() => {
-    if (!venueSlug) {
-      applyClubBranding(DEFAULT_BRANDING);
-      return;
-    }
-
-    fetch(getApiUrl(`/tenants/${venueSlug}`))
-      .then((res) => res.json())
-      .then((data) => {
-        const club = data.data?.club ?? data.data ?? data;
-        if (club && club.name) {
-          applyClubBranding({
-            primaryColor: club.brandColor || club.themeColor || '#DC2626',
-            secondaryColor: club.brandColor || '#991B1B',
-            accentColor: '#F59E0B',
-            name: club.name || 'OrderUp Venue',
-            welcomeMessage: club.tagline || 'Enjoy our premium drinks.',
-            logoUrl: club.logoUrl || '',
-            bannerUrl: club.bannerUrl || '',
-          });
-        } else {
-          const fallback = CLUB_REGISTRY[venueSlug] || DEFAULT_BRANDING;
-          applyClubBranding(fallback);
-        }
-      })
-      .catch(() => {
-        const fallback = CLUB_REGISTRY[venueSlug] || DEFAULT_BRANDING;
-        applyClubBranding(fallback);
-      });
+    // Apply branding immediately from the static registry (instant — no network request).
+    // DigitalStorefrontPage fetches the full tenant data and applies live branding from the
+    // API response, so a duplicate fetch here is unnecessary and wastes a network request.
+    const branding = (venueSlug && CLUB_REGISTRY[venueSlug]) || DEFAULT_BRANDING;
+    applyClubBranding(branding);
   }, [venueSlug, applyClubBranding]);
 
   return <>{children}</>;
