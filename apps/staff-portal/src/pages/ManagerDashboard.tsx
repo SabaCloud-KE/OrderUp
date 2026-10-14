@@ -403,7 +403,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
       setErrors({});
       onClose();
     } catch {
-      setErrors({ api: 'Network error â€” please try again' });
+      setErrors({ api: 'Network error — please try again' });
     } finally {
       setSaving(false);
     }
@@ -495,7 +495,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
         <div className="flex gap-3 pt-2 border-t" style={{ borderColor: '#E2E8F0' }}>
           <button onClick={onClose} disabled={saving} className="flex-1 rounded-xl border py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50" style={{ borderColor: '#E2E8F0' }}>Cancel</button>
           <button onClick={handleSubmit} disabled={saving} className="flex-1 rounded-xl py-2.5 text-sm font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: '#2563EB' }}>
-            {saving ? 'Creatingâ€¦' : <><Users className="h-4 w-4 inline mr-1.5" />Add Waiter</>}
+            {saving ? 'Creating…' : <><Users className="h-4 w-4 inline mr-1.5" />Add Waiter</>}
           </button>
         </div>
       </div>
@@ -622,7 +622,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
     <div className="flex-1 min-h-0 flex flex-col space-y-4">
       {/* Top section: Title, KPIs, Filters */}
       <div className="flex-shrink-0 space-y-4">
-        <SectionHeader title="Staff Management" subtitle="Manage waiters for your venue â€” only managers can create staff" action={
+        <SectionHeader title="Staff Management" subtitle="Manage waiters for your venue — only managers can create staff" action={
           <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold text-white hover:opacity-90 transition-opacity" style={{ background: '#2563EB' }}>
             <Plus className="h-3.5 w-3.5" /> Add Waiter
           </button>
@@ -640,7 +640,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
         <div className="flex items-center gap-3">
           <div className="flex-1 flex items-center gap-2 rounded-lg border px-3.5 py-2" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
             <Search className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or phoneâ€¦" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or phone…" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
           </div>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="rounded-lg border px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
             {['All', 'Active', 'Inactive', 'On Leave'].map(s => <option key={s}>{s}</option>)}
@@ -690,7 +690,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-xs border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>{w.shift || 'â€”'}</td>
+                  <td className="px-4 py-3.5 text-xs border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>{w.shift || '—'}</td>
                   <td className="px-4 py-3.5 text-xs border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>{w.lastLogin}</td>
                   <td className="px-4 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>
                     <div className="flex items-center gap-1.5">
@@ -832,11 +832,11 @@ const OrdersPage = ({ showToast }: { showToast: (m: string) => void }) => {
               </span>
             </div>
           }
-          subtitle="Real-time order feed for your venue â€” auto updates instantly on status changes"
+          subtitle="Real-time order feed for your venue — auto updates instantly on status changes"
           action={
           <div className="flex items-center gap-2">
             <button onClick={doRefresh} disabled={refreshing} className="flex items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-medium hover:bg-slate-50 transition-colors disabled:opacity-50" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
-              <RefreshCcw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />{refreshing ? 'Refreshingâ€¦' : 'Refresh'}
+              <RefreshCcw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />{refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
             <button onClick={() => { csvExport(['Order', 'Table', 'Item', 'Waiter', 'Amount (KES)', 'Status', 'Time'], filtered.map(o => [o.id, o.table, o.item, o.waiter, o.amount, o.status, o.time]), 'orders-export.csv'); showToast('Orders exported'); }}
               className="flex items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-medium hover:bg-slate-50 transition-colors" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
@@ -847,7 +847,7 @@ const OrdersPage = ({ showToast }: { showToast: (m: string) => void }) => {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex-1 min-w-48 flex items-center gap-2 rounded-lg border px-3.5 py-2" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
             <Search className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search order, table, waiterâ€¦" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search order, table, waiter…" className="flex-1 bg-transparent text-sm outline-none" style={{ color: 'var(--text-primary)' }} />
           </div>
           <div className="flex gap-1.5 flex-wrap items-center">
             {statuses.map(s => {
@@ -931,7 +931,7 @@ interface ManagerOffer {
   isActive: boolean;
 }
 
-/* Module-level cache â€” survives re-renders and tab navigation */
+/* Module-level cache — survives re-renders and tab navigation */
 let _menuCache: { categories: CategoryItem[]; items: MenuItem[]; offers: ManagerOffer[] } | null = null;
 
 const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
@@ -962,7 +962,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
     discountValue: '20',
     promoCode: '',
     offerType: 'PERCENTAGE_DISCOUNT',
-    badge: 'ðŸ”¥ TODAY\'S SPECIAL',
+    badge: '🔥 TODAY\'S SPECIAL',
     imageUrl: '',
     originalPrice: '',
     dealPrice: '',
@@ -973,7 +973,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
   // True only on first load when there's no cached data yet
   const [fetching, setFetching] = React.useState(_menuCache === null);
 
-  /* â”€â”€ Offer Image Upload & Compression â”€â”€ */
+  /* -- Offer Image Upload & Compression -- */
   const handleOfferImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1023,7 +1023,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
     reader.readAsDataURL(file);
   };
 
-  /* â”€â”€ Image Upload & Canvas Compression â”€â”€ */
+  /* -- Image Upload & Canvas Compression -- */
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1169,7 +1169,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
       const richDesc = JSON.stringify({
         desc: offerForm.description.trim(),
         imageUrl: offerForm.imageUrl || undefined,
-        badge: offerForm.badge || 'ðŸ”¥ TODAY\'S SPECIAL',
+        badge: offerForm.badge || '🔥 TODAY\'S SPECIAL',
         originalPrice: offerForm.originalPrice ? Number(offerForm.originalPrice) : undefined,
         dealPrice: offerForm.dealPrice ? Number(offerForm.dealPrice) : undefined,
         productId: offerForm.selectedProductId || undefined,
@@ -1195,7 +1195,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         discountValue: '20',
         promoCode: '',
         offerType: 'PERCENTAGE_DISCOUNT',
-        badge: 'ðŸ”¥ TODAY\'S SPECIAL',
+        badge: '🔥 TODAY\'S SPECIAL',
         imageUrl: '',
         originalPrice: '',
         dealPrice: '',
@@ -1404,7 +1404,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         ...categories.map(c => ({ v: c.name, l: c.name }))
       ];
     }
-    return [{ v: '', l: 'No categories yet â€” click + New Category' }];
+    return [{ v: '', l: 'No categories yet — click + New Category' }];
   }, [categories]);
 
   const filteredItems = React.useMemo(() => {
@@ -1488,7 +1488,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       } />
 
-      {/* â”€â”€ Deals & Daily Offers Preview Strip â”€â”€ */}
+      {/* -- Deals & Daily Offers Preview Strip -- */}
       {offers.length > 0 && (
         <div className="rounded-2xl border p-4 transition-all" style={{ background: 'var(--bg-card)', borderColor: 'rgba(245,158,11,0.3)' }}>
           <div className="flex items-center justify-between gap-3 mb-2.5">
@@ -1522,7 +1522,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                   <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{offer.title}</p>
                   <p className="text-[11px] text-slate-500 truncate">
                     {offer.offerType === 'BUY_ONE_GET_ONE' ? 'Buy 1 Get 1' : `${offer.discountValue}% Discount`}
-                    {offer.promoCode ? ` Â· Code: ${offer.promoCode}` : ''}
+                    {offer.promoCode ? ` · Code: ${offer.promoCode}` : ''}
                   </p>
                 </div>
                 <button
@@ -1632,7 +1632,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                           <img src={item.imageUrl} alt={item.name} className="h-10 w-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 flex-shrink-0 shadow-sm" />
                         ) : (
                           <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base flex-shrink-0 text-slate-400">
-                            ðŸ¸
+                            🐸
                           </div>
                         )}
                         <div>
@@ -1668,7 +1668,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </div>
 
-      {/* â”€â”€ Modal: Manage Categories â”€â”€ */}
+      {/* -- Modal: Manage Categories -- */}
       <Modal open={showCategoriesModal} onClose={() => setShowCategoriesModal(false)} title="Manage Menu Categories" size="md">
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
@@ -1728,7 +1728,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* â”€â”€ Modal: Add Category â”€â”€ */}
+      {/* -- Modal: Add Category -- */}
       <Modal open={showAddCatModal} onClose={() => setShowAddCatModal(false)} title="Create New Category" size="sm" zIndex="z-[60]">
         <div className="space-y-4">
           <div><FL required>Category Name</FL><SI value={newCatForm.name} onChange={e => setNewCatForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Starters, Main Dishes, Hot Beverages, Desserts" /></div>
@@ -1742,7 +1742,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* â”€â”€ Modal: Edit Category â”€â”€ */}
+      {/* -- Modal: Edit Category -- */}
       <Modal open={showEditCatModal} onClose={() => setShowEditCatModal(false)} title="Edit Category" size="sm" zIndex="z-[60]">
         <div className="space-y-4">
           <div><FL required>Category Name</FL><SI value={editCatForm.name} onChange={e => setEditCatForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Starters, Main Course, Beverages" /></div>
@@ -1756,7 +1756,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* â”€â”€ Modal: Add Menu Item â”€â”€ */}
+      {/* -- Modal: Add Menu Item -- */}
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add Menu Item">
         <div className="space-y-4">
           {/* Item Photo Upload */}
@@ -1844,7 +1844,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* â”€â”€ Modal: Edit Menu Item â”€â”€ */}
+      {/* -- Modal: Edit Menu Item -- */}
       <Modal open={showEditItemModal} onClose={() => setShowEditItemModal(false)} title="Edit Menu Item">
         <div className="space-y-4">
           {/* Item Photo Upload */}
@@ -1898,7 +1898,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* â”€â”€ Modal: Manage Daily Deals & Offers â”€â”€ */}
+      {/* -- Modal: Manage Daily Deals & Offers -- */}
       <Modal open={showOffersModal} onClose={() => setShowOffersModal(false)} title="Manage Special Deals & Offers of the Day" size="lg">
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--border)' }}>
@@ -1913,7 +1913,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                   discountValue: '20',
                   promoCode: '',
                   offerType: 'PERCENTAGE_DISCOUNT',
-                  badge: 'ðŸ”¥ TODAY\'S SPECIAL',
+                  badge: '🔥 TODAY\'S SPECIAL',
                   imageUrl: '',
                   originalPrice: '',
                   dealPrice: '',
@@ -1937,7 +1937,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                   onClick={() => setShowAddOfferModal(true)}
                   className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline"
                 >
-                  Create your first Special Deal or Daily Offer â†’
+                  Create your first Special Deal or Daily Offer ↑
                 </button>
               </div>
             ) : (
@@ -1950,7 +1950,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                   <div className="space-y-1 min-w-0 flex-1 pr-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                        {offer.offerType === 'BUY_ONE_GET_ONE' ? 'ðŸŽ BUY 1 GET 1' : `${offer.discountValue}% OFF`}
+                        {offer.offerType === 'BUY_ONE_GET_ONE' ? '🎠 BUY 1 GET 1' : `${offer.discountValue}% OFF`}
                       </span>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                         {offer.title}
@@ -1997,7 +1997,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
         </div>
       </Modal>
 
-      {/* â”€â”€ Modal: Create Special Deal / Offer of the Day â”€â”€ */}
+      {/* -- Modal: Create Special Deal / Offer of the Day -- */}
       <Modal open={showAddOfferModal} onClose={() => setShowAddOfferModal(false)} title="Create Special Deal of the Day" size="lg">
         <div className="space-y-4">
           {/* Quick presets */}
@@ -2005,11 +2005,11 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Quick Presets (For Any Business)</p>
             <div className="flex gap-1.5 flex-wrap">
               {[
-                { label: 'ðŸŽ Buy 1 Get 1 Free', title: 'Buy 1 Get 1 Free Special', type: 'BUY_ONE_GET_ONE', val: '1', code: 'BOGO', badge: 'ðŸŽ BUY 1 GET 1', desc: 'Order any qualifying item and get an extra one on the house!' },
-                { label: 'ðŸ”¥ 20% Off Featured', title: '20% Off Today\'s Featured Specials', type: 'PERCENTAGE_DISCOUNT', val: '20', code: 'SAVE20', badge: 'ðŸ”¥ 20% OFF', desc: 'Enjoy a 20% discount on selected menu specials.' },
-                { label: 'âš¡ KES 300 Off Combo', title: 'Combo Deal: KES 300 Off Order', type: 'FIXED_AMOUNT_DISCOUNT', val: '300', code: 'DEAL300', badge: 'âš¡ FLASH DEAL', desc: 'Save KES 300 on meals and combo orders.' },
-                { label: 'âœ¨ 15% House Pick', title: 'House Special: 15% Off Favorites', type: 'PERCENTAGE_DISCOUNT', val: '15', code: 'HOUSE15', badge: 'âœ¨ HOUSE SPECIAL', desc: 'Handcrafted favorites at a special 15% promotional discount.' },
-                { label: 'ðŸŽ‰ Happy Hour 25%', title: 'Happy Hour: 25% Off Refreshments & Bites', type: 'PERCENTAGE_DISCOUNT', val: '25', code: 'HAPPY25', badge: 'ðŸŽ‰ HAPPY HOUR', desc: 'Special discount during promotional hours.' },
+                { label: '🎠 Buy 1 Get 1 Free', title: 'Buy 1 Get 1 Free Special', type: 'BUY_ONE_GET_ONE', val: '1', code: 'BOGO', badge: '🎠 BUY 1 GET 1', desc: 'Order any qualifying item and get an extra one on the house!' },
+                { label: '🔥 20% Off Featured', title: '20% Off Today\'s Featured Specials', type: 'PERCENTAGE_DISCOUNT', val: '20', code: 'SAVE20', badge: '🔥 20% OFF', desc: 'Enjoy a 20% discount on selected menu specials.' },
+                { label: '⚡ KES 300 Off Combo', title: 'Combo Deal: KES 300 Off Order', type: 'FIXED_AMOUNT_DISCOUNT', val: '300', code: 'DEAL300', badge: '⚡ FLASH DEAL', desc: 'Save KES 300 on meals and combo orders.' },
+                { label: '✨ 15% House Pick', title: 'House Special: 15% Off Favorites', type: 'PERCENTAGE_DISCOUNT', val: '15', code: 'HOUSE15', badge: '✨ HOUSE SPECIAL', desc: 'Handcrafted favorites at a special 15% promotional discount.' },
+                { label: '🎉 Happy Hour 25%', title: 'Happy Hour: 25% Off Refreshments & Bites', type: 'PERCENTAGE_DISCOUNT', val: '25', code: 'HAPPY25', badge: '🎉 HAPPY HOUR', desc: 'Special discount during promotional hours.' },
               ].map(preset => (
                 <button
                   key={preset.title}
@@ -2063,7 +2063,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
               <option value="">-- Choose an item to link photo & price --</option>
               {items.map(it => (
                 <option key={it.id} value={it.id}>
-                  {it.name} ({it.category}) â€” KES {it.price.toLocaleString()}
+                  {it.name} ({it.category}) — KES {it.price.toLocaleString()}
                 </option>
               ))}
             </select>
@@ -2119,17 +2119,17 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                 value={offerForm.badge}
                 onChange={e => setOfferForm(p => ({ ...p, badge: e.target.value }))}
                 options={[
-                  { v: 'ðŸ”¥ TODAY\'S SPECIAL', l: 'ðŸ”¥ TODAY\'S SPECIAL' },
-                  { v: 'âš¡ FLASH DEAL', l: 'âš¡ FLASH DEAL' },
-                  { v: 'ðŸŽ BUY 1 GET 1', l: 'ðŸŽ BUY 1 GET 1' },
-                  { v: 'âœ¨ HOUSE SPECIAL', l: 'âœ¨ HOUSE SPECIAL' },
-                  { v: 'ðŸ‘¨â€ðŸ³ CHEF\'S PICK', l: 'ðŸ‘¨â€ðŸ³ CHEF\'S PICK' },
-                  { v: 'ðŸŽ‰ LIMITED TIME OFFER', l: 'ðŸŽ‰ LIMITED TIME OFFER' },
-                  { v: 'ðŸ’° SPECIAL DISCOUNT', l: 'ðŸ’° SPECIAL DISCOUNT' },
-                  { v: 'â˜• MORNING SPECIAL', l: 'â˜• MORNING SPECIAL' },
-                  { v: 'ðŸ½ï¸ COMBO SPECIAL', l: 'ðŸ½ï¸ COMBO SPECIAL' },
-                  { v: 'ðŸŒŸ VIP DEAL', l: 'ðŸŒŸ VIP DEAL' },
-                  { v: 'ðŸ¹ HAPPY HOUR', l: 'ðŸ¹ HAPPY HOUR' },
+                  { v: '🔥 TODAY\'S SPECIAL', l: '🔥 TODAY\'S SPECIAL' },
+                  { v: '⚡ FLASH DEAL', l: '⚡ FLASH DEAL' },
+                  { v: '🎠 BUY 1 GET 1', l: '🎠 BUY 1 GET 1' },
+                  { v: '✨ HOUSE SPECIAL', l: '✨ HOUSE SPECIAL' },
+                  { v: '👨‍🍳 CHEF\'S PICK', l: '👨‍🍳 CHEF\'S PICK' },
+                  { v: '🎉 LIMITED TIME OFFER', l: '🎉 LIMITED TIME OFFER' },
+                  { v: '💰 SPECIAL DISCOUNT', l: '💰 SPECIAL DISCOUNT' },
+                  { v: '☕ MORNING SPECIAL', l: '☕ MORNING SPECIAL' },
+                  { v: '🍽️ COMBO SPECIAL', l: '🍽️ COMBO SPECIAL' },
+                  { v: '🌟 VIP DEAL', l: '🌟 VIP DEAL' },
+                  { v: '🕹 HAPPY HOUR', l: '🕹 HAPPY HOUR' },
                 ]}
               />
             </div>
@@ -2197,7 +2197,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1 min-w-0 flex-1">
                 <span className="text-[9px] font-black px-2 py-0.5 rounded bg-amber-500 text-white uppercase tracking-wider">
-                  {offerForm.badge || 'ðŸ”¥ TODAY\'S SPECIAL'}
+                  {offerForm.badge || '🔥 TODAY\'S SPECIAL'}
                 </span>
                 <p className="text-xs font-black truncate">{offerForm.title || 'Deal Title Preview'}</p>
                 <p className="text-[11px] text-slate-300 truncate">{offerForm.description || 'Special limited-time deal for our guests.'}</p>
@@ -2216,7 +2216,7 @@ const MenuPage = ({ showToast }: { showToast: (m: string) => void }) => {
                 {offerForm.imageUrl ? (
                   <img src={offerForm.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-2xl">âœ¨</span>
+                  <span className="text-2xl">✨</span>
                 )}
               </div>
             </div>
@@ -2251,7 +2251,7 @@ const DashboardPage = ({
 }) => {
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // â”€â”€ Core 7-day KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- Core 7-day KPIs ------------------------------------------------------
   const [kpis, setKpis] = React.useState({
     revenue: 'KES 0',
     orders: '0',
@@ -2262,18 +2262,18 @@ const DashboardPage = ({
     totalCount: 0,
   });
 
-  // â”€â”€ Today's Revenue (separate DAILY fetch) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- Today's Revenue (separate DAILY fetch) -------------------------------
   const [todayRevenue, setTodayRevenue] = React.useState('KES 0');
 
-  // â”€â”€ Pending Alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- Pending Alert ---------------------------------------------------------
   const [pendingCount, setPendingCount] = React.useState(0);
   const [oldestPendingMins, setOldestPendingMins] = React.useState(0);
 
-  // â”€â”€ Charts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- Charts -----------------------------------------------------------------
   const [revChart, setRevChart] = React.useState<{ day: string; rev: number }[]>([]);
   const [hourChart, setHourChart] = React.useState<{ h: number; n: number }[]>([]);
 
-  // â”€â”€ Waiter Leaderboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- Waiter Leaderboard ----------------------------------------------------
   const [waiterLeaderboard, setWaiterLeaderboard] = React.useState<any[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = React.useState(false);
 
@@ -2299,7 +2299,7 @@ const DashboardPage = ({
         fetch(getApiUrl('/orders'), { headers: authHeaders() }),
       ]);
 
-      // â”€â”€ Today revenue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+      // -- Today revenue ----------------------------------------------------
       if (todayRes.ok) {
         const td = await todayRes.json();
         const todayData = td.data?.report ?? td.data ?? {};
@@ -2317,7 +2317,7 @@ const DashboardPage = ({
         const od = await ordersRes.json();
         const raw: any[] = od.data?.orders ?? od.data ?? [];
 
-        // â”€â”€ KPI calculations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // -- KPI calculations ------------------------------------------------
         const paidOrCompleted = raw.filter(o =>
           o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.paymentStatus === 'PAID'
         );
@@ -2340,7 +2340,7 @@ const DashboardPage = ({
           totalCount: raw.length,
         });
 
-        // â”€â”€ Pending alert â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // -- Pending alert ----------------------------------------------------
         setPendingCount(pendingOrders.length);
         if (pendingOrders.length > 0) {
           const oldest = pendingOrders
@@ -2351,7 +2351,7 @@ const DashboardPage = ({
           setOldestPendingMins(0);
         }
 
-        // â”€â”€ Weekly Revenue chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // -- Weekly Revenue chart ---------------------------------------------
         const dayNames  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const daysOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const dayRevMap: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
@@ -2372,7 +2372,7 @@ const DashboardPage = ({
           setRevChart(daysOrder.map(day => ({ day, rev: dayRevMap[day] || 0 })));
         }
 
-        // â”€â”€ Hourly Orders chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // -- Hourly Orders chart ----------------------------------------------
         const hourMap: Record<number, number> = {};
         for (let i = 0; i < 24; i++) hourMap[i] = 0;
 
@@ -2398,13 +2398,13 @@ const DashboardPage = ({
     }
   }, []);
 
-  // â”€â”€ Initial load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- Initial load ----------------------------------------------------------
   React.useEffect(() => {
     fetchDashboard(false);
     fetchWaiterLeaderboard();
   }, [fetchDashboard, fetchWaiterLeaderboard]);
 
-  // â”€â”€ Real-time Socket.IO + 30s background poll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- Real-time Socket.IO + 30s background poll -----------------------------
   React.useEffect(() => {
     const clubUuid = getClubUuid();
     let socket: Socket | null = null;
@@ -2451,7 +2451,7 @@ const DashboardPage = ({
   const isClub = (businessType || '').toUpperCase() === 'CLUB';
   const overviewTitle = isClub ? 'Club Overview' : 'Business Overview';
 
-  // â”€â”€ Derived metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- Derived metrics --------------------------------------------------------
   const totalOrdersNum   = Number(kpis.totalCount) || 0;
   const cancelRate       = totalOrdersNum > 0 ? Math.round((kpis.cancelledCount / totalOrdersNum) * 1000) / 10 : 0;
   const peakHour         = hourChart.length > 0 ? hourChart.reduce((mx, d) => d.n > mx.n ? d : mx, hourChart[0]) : null;
@@ -2469,12 +2469,12 @@ const DashboardPage = ({
             style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
           >
             <RefreshCcw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshingâ€¦' : 'Refresh'}
+            {refreshing ? 'Refreshing…' : 'Refresh'}
           </button>
         }
       />
 
-      {/* â”€â”€ ROW 1: Revenue KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* -- ROW 1: Revenue KPIs ------------------------------------------- */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KPI
           label="Today's Revenue"
@@ -2502,7 +2502,7 @@ const DashboardPage = ({
         />
       </div>
 
-      {/* â”€â”€ ROW 2: Orders KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* -- ROW 2: Orders KPIs -------------------------------------------- */}
       <div className="grid grid-cols-2 gap-4">
         <KPI
           label="Total Orders"
@@ -2518,7 +2518,7 @@ const DashboardPage = ({
         />
       </div>
 
-      {/* â”€â”€ Pending Alert (only visible when â‰¥1 pending) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* -- Pending Alert (only visible when ≥1 pending) ------------------ */}
       {pendingCount > 0 && (
         <div
           className="flex items-start gap-3 rounded-xl border px-4 py-3"
@@ -2534,7 +2534,7 @@ const DashboardPage = ({
           <div>
             <p className="text-sm font-bold" style={{ color: oldestPendingMins >= 10 ? '#EF4444' : '#F59E0B' }}>
               {pendingCount} Pending Order{pendingCount === 1 ? '' : 's'}
-              {oldestPendingMins >= 10 ? ' â€” Urgent!' : oldestPendingMins >= 5 ? ' â€” Getting late' : ''}
+              {oldestPendingMins >= 10 ? ' — Urgent!' : oldestPendingMins >= 5 ? ' — Getting late' : ''}
             </p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
               Oldest pending order is {oldestPendingMins} minute{oldestPendingMins === 1 ? '' : 's'} old
@@ -2543,7 +2543,7 @@ const DashboardPage = ({
         </div>
       )}
 
-      {/* â”€â”€ Charts Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* -- Charts Grid --------------------------------------------------- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Weekly Revenue Area Chart */}
         <div className="rounded-xl border p-5" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
@@ -2588,7 +2588,7 @@ const DashboardPage = ({
                 Order volume distributed across the day
                 {peakHour && peakHour.n > 0 && (
                   <span className="ml-2 font-semibold" style={{ color: '#F59E0B' }}>
-                    Â· Peak: {String(peakHour.h).padStart(2, '0')}:00 ({peakHour.n} orders)
+                    · Peak: {String(peakHour.h).padStart(2, '0')}:00 ({peakHour.n} orders)
                   </span>
                 )}
               </p>
@@ -2629,7 +2629,7 @@ const DashboardPage = ({
         </div>
       </div>
 
-      {/* â”€â”€ Waiter Leaderboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* -- Waiter Leaderboard --------------------------------------------- */}
       <div className="rounded-xl border p-5" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -2671,14 +2671,14 @@ const DashboardPage = ({
                     color: idx <= 2 ? '#fff' : 'var(--text-secondary)',
                   }}
                 >
-                  {idx === 0 ? 'ðŸ†' : idx + 1}
+                  {idx === 0 ? '🏆' : idx + 1}
                 </span>
 
                 {/* Name */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{w.fullName}</p>
                   <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                    {w.ordersCompleted} completed Â· {w.completionRate}% rate
+                    {w.ordersCompleted} completed · {w.completionRate}% rate
                   </p>
                 </div>
 
@@ -2842,7 +2842,7 @@ const ManagerSettingsPage = ({
     setSaving(true);
     try {
       localStorage.setItem('orderup_manager_notifs', JSON.stringify({ orderNotifs, soundAlerts }));
-      showToast('âœ… Settings saved successfully!', 'success');
+      showToast('✅ Settings saved successfully!', 'success');
     } catch (e: any) {
       showToast(e.message || 'Failed to save settings', 'error');
     } finally {
@@ -2872,7 +2872,7 @@ const ManagerSettingsPage = ({
         className="rounded-lg px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center gap-2"
         style={{ background: '#2563EB' }}
       >
-        {saving ? <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" /></svg> Savingâ€¦</> : 'Save Changes'}
+        {saving ? <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" /></svg> Saving…</> : 'Save Changes'}
       </button>
     </div>
   );
@@ -3018,7 +3018,7 @@ const QrCodesPage = ({
       }).catch(() => {});
     }
 
-    showToast(`Generated ${count} QR codes for ${sectionName} (Tables ${start}â€“${start + count - 1})`);
+    showToast(`Generated ${count} QR codes for ${sectionName} (Tables ${start}—${start + count - 1})`);
     setShowGenerator(false);
   };
 
@@ -3252,7 +3252,7 @@ const QrCodesPage = ({
                 type="button"
                 onClick={() =>
                   setZoomModalData({
-                    title: `${clubName} â€” Master Menu`,
+                    title: `${clubName} — Master Menu`,
                     subtitle: 'Official Venue-Wide Menu QR Code (for bar counters, entrance & flyers)',
                     url: fullBaseUrl,
                   })
@@ -3585,7 +3585,7 @@ const QrCodesPage = ({
                   }`}
                   title="Large QR Codes (Maximum visibility & scan ease)"
                 >
-                  Large âš¡
+                  Large ⚡
                 </button>
               </div>
             )}
@@ -3665,7 +3665,7 @@ const QrCodesPage = ({
             )}
           </div>
         ) : viewMode === 'grid' ? (
-          /* Cards Grid View â€” Scrollable container calibrated so at least 2 full rows show at a go */
+          /* Cards Grid View — Scrollable container calibrated so at least 2 full rows show at a go */
           <div
             className="overflow-y-auto max-h-[calc(100vh-235px)] min-h-[480px] pr-1 pb-4"
             style={{ scrollbarWidth: 'thin' }}
@@ -3719,7 +3719,7 @@ const QrCodesPage = ({
                       <div
                         onClick={() =>
                           setZoomModalData({
-                            title: `Table ${t.id} â€¢ ${t.section}`,
+                            title: `Table ${t.id} • ${t.section}`,
                             subtitle: `Direct Table Ordering QR Code for Table ${t.id}`,
                             url: tableUrl,
                             tableId: t.id,
@@ -3757,7 +3757,7 @@ const QrCodesPage = ({
                       {/* Table Details */}
                       <div className="text-center my-1.5">
                         <div className="text-xs font-black truncate" style={{ color: 'var(--text-primary)' }}>
-                          Table {t.id} Â· {t.section}
+                          Table {t.id} · {t.section}
                         </div>
                       </div>
                     </div>
@@ -3851,7 +3851,7 @@ const QrCodesPage = ({
                           <div
                             onClick={() =>
                               setZoomModalData({
-                                title: `Table ${t.id} â€¢ ${t.section}`,
+                                title: `Table ${t.id} • ${t.section}`,
                                 subtitle: `Direct Table Ordering QR Code for Table ${t.id}`,
                                 url: tableUrl,
                                 tableId: t.id,
@@ -4045,7 +4045,7 @@ const QrCodesPage = ({
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Ready to add</p>
-                    <p className="text-base font-black" style={{ color: 'var(--text-primary)' }}>Table {singleTableNum} Â· {singleTableSection}</p>
+                    <p className="text-base font-black" style={{ color: 'var(--text-primary)' }}>Table {singleTableNum} · {singleTableSection}</p>
                   </div>
                 </div>
               )}
@@ -4067,7 +4067,7 @@ const QrCodesPage = ({
                   disabled={!singleTableSection.trim() || !singleTableNum}
                   className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm font-black shadow-lg shadow-blue-500/30 transition-all"
                 >
-                  Add Table â†’
+                  Add Table ↑
                 </button>
               </div>
             </form>
@@ -4151,7 +4151,7 @@ const QrCodesPage = ({
       <div className="hidden print:block printable-qr-area">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-black">{clubName}</h2>
-          <p className="text-xs text-slate-500">Official Table QR Ordering Cards â€¢ Fold in half or cut to stand</p>
+          <p className="text-xs text-slate-500">Official Table QR Ordering Cards • Fold in half or cut to stand</p>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
@@ -4196,9 +4196,9 @@ const QrCodesPage = ({
 
                 {/* Instructions */}
                 <div className="w-full space-y-1 text-xs text-slate-600 border-t pt-2 mt-1">
-                  <p className="font-bold text-slate-800">1. Open Camera  â€¢  2. Scan QR  â€¢  3. Order & Pay</p>
+                  <p className="font-bold text-slate-800">1. Open Camera  •  2. Scan QR  •  3. Order & Pay</p>
                   <p className="text-[10px] text-slate-400 font-mono truncate">{tableUrl}</p>
-                  <p className="text-[9px] text-slate-400 font-medium">No app download required â€¢ Orders delivered to Table {t.id}</p>
+                  <p className="text-[9px] text-slate-400 font-medium">No app download required • Orders delivered to Table {t.id}</p>
                 </div>
               </div>
             );
@@ -4299,7 +4299,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
       const nowMins = now.getHours() * 60 + now.getMinutes();
       const openMins = oH * 60 + oM;
       const closeMins = cH * 60 + cM;
-      // Handle overnight (e.g. 18:00 â€“ 02:00)
+      // Handle overnight (e.g. 18:00 — 02:00)
       if (closeMins <= openMins) {
         return nowMins >= openMins || nowMins < closeMins;
       }
@@ -4360,7 +4360,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
   return (
     <div className="h-screen flex overflow-hidden" style={{ background: 'var(--bg-body)' }}>
       {toast && <Toast msg={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
-      {/* â”€â”€ Mobile Sidebar Backdrop â”€â”€ */}
+      {/* -- Mobile Sidebar Backdrop -- */}
       {mobileOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
@@ -4452,7 +4452,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="sticky top-0 z-20 flex-shrink-0 border-b px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between backdrop-blur-md" style={{ background: 'var(--bg-body)', borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2 min-w-0">
-            {/* Hamburger â€” only on mobile */}
+            {/* Hamburger — only on mobile */}
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
@@ -4470,7 +4470,7 @@ export const ManagerDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout 
           <div className="flex items-center gap-2">
             <div className={`hidden sm:flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold ${isOpenNow ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
               <div className={`h-1.5 w-1.5 rounded-full ${isOpenNow ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-              {isOpenNow ? 'Open' : 'Closed'} | {openingHours} â€“ {closingHours}
+              {isOpenNow ? 'Open' : 'Closed'} | {openingHours} — {closingHours}
             </div>
             <ThemeToggle />
 
