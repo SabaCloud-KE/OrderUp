@@ -2503,18 +2503,12 @@ const DashboardPage = ({
       </div>
 
       {/* â”€â”€ ROW 2: Orders KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <KPI
           label="Total Orders"
           value={kpis.orders}
           sub="All active & past orders"
           icon={<ClipboardList className="h-5 w-5 text-blue-500" />}
-        />
-        <KPI
-          label="Cancellation Rate"
-          value={`${cancelRate}%`}
-          sub={`${kpis.cancelledCount} cancelled order${kpis.cancelledCount === 1 ? '' : 's'}`}
-          icon={<X className="h-5 w-5 text-rose-500" />}
         />
         <KPI
           label="Completed Orders"
