@@ -249,8 +249,10 @@ export function generateStrongPassword(): string {
       return arr[0] % max;
     }
     try {
-      // Node.js crypto fallback
-      const cryptoMod = typeof require !== 'undefined' ? require('crypto') : null;
+      // Node.js crypto fallback — use Function constructor to avoid TS 'require' errors in browser-targeted tsconfigs
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const nodeRequire = new Function('m', 'return typeof require!=="undefined"?require(m):null');
+      const cryptoMod = nodeRequire('crypto') as { randomBytes?: (n: number) => { readUInt32LE(o: number): number } } | null;
       if (cryptoMod && cryptoMod.randomBytes) {
         return cryptoMod.randomBytes(4).readUInt32LE(0) % max;
       }

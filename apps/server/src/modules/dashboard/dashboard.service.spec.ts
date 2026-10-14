@@ -21,6 +21,17 @@ vi.mock('./dashboard.repository', () => ({
   getRecentOrders: vi.fn(),
   getTopMenuItems: vi.fn(),
   getSalesTrend: vi.fn(),
+  getTableUtilization: vi.fn().mockResolvedValue({
+    activeTables: 0,
+    tablesUsedToday: 0,
+    utilizationRate: 0,
+  }),
+  getPendingOrderAges: vi.fn().mockResolvedValue({
+    totalPending: 0,
+    oldestAgeMinutes: 0,
+    ordersOver5Min: 0,
+    ordersOver10Min: 0,
+  }),
 }));
 
 describe('DashboardService Unit Tests', () => {
