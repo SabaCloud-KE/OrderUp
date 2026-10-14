@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ThemeToggle, useTheme } from '@orderup/ui';
 import {
@@ -77,8 +77,9 @@ const PhoneInput = ({ error, value, onChange, placeholder }: { error?: string; v
       <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 text-sm font-medium text-slate-600 select-none">+254</span>
       <input
         type="tel"
+        maxLength={9}
         value={value}
-        onChange={e => onChange(e.target.value.replace(/^\+?254/, '').replace(/^0/, ''))}
+        onChange={e => onChange(e.target.value.replace(/^\+?254/, '').replace(/^0/, '').replace(/\D/g, '').slice(0, 9))}
         placeholder={placeholder ?? '7XX XXX XXX'}
         className={`flex-1 rounded-r-lg border px-3 py-2.5 text-sm text-slate-900 outline-none transition ${error ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-300' : 'border-slate-200 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'}`}
       />
@@ -333,6 +334,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
     if (k === 'phone') {
       if (!String(v).trim()) return 'Required';
       if (!/^\d+$/.test(String(v).trim())) return 'Numbers only';
+      if (String(v).trim().length !== 9) return 'Phone must be exactly 10 digits (e.g. 0712345678)';
     }
     if (k === 'email') {
       if (!String(v).trim()) return 'Email is required for login';
