@@ -2269,6 +2269,46 @@ export const DigitalStorefrontPage: React.FC = () => {
         </div>
       </div>
 
+      {/* ── STICKY CATEGORY BAR (stays pinned while hero scrolls away) ── */}
+      <div
+        className="sticky top-0 z-20 border-b backdrop-blur-md shadow-sm"
+        style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
+      >
+        <div className="px-4 py-2.5">
+          <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+            {categories.map((c) => {
+              const isDeals = c === '🔥 Deals' || c === 'Offers';
+              return (
+                <button
+                  key={c}
+                  onClick={() => setCat(c)}
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    isDeals && cat !== c ? 'animate-pulse' : ''
+                  }`}
+                  style={{
+                    background: cat === c
+                      ? (isDeals ? 'linear-gradient(135deg, #F59E0B, #EF4444)' : brand.primary)
+                      : (isDeals ? 'rgba(245, 158, 11, 0.15)' : 'var(--surface)'),
+                    color: cat === c ? '#fff' : (isDeals ? '#F59E0B' : 'var(--text-secondary)'),
+                    border: `1px solid ${cat === c ? 'transparent' : (isDeals ? 'rgba(245, 158, 11, 0.4)' : 'var(--border)')}`,
+                    boxShadow: isDeals && cat === c ? '0 4px 15px rgba(245, 158, 11, 0.4)' : undefined,
+                  }}
+                >
+                  {c}
+                  {isDeals && offers.length > 0 && (
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                      cat === c ? 'bg-black/30 text-white' : 'bg-amber-500 text-slate-950'
+                    }`}>
+                      {offers.length}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* ── FUTURISTIC MOVING SPECIAL DEALS & OFFERS BANNER ─────────────────────── */}
       {offers.length > 0 && (
         <div className="px-4 pt-4 fade-up">
