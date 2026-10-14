@@ -81,7 +81,7 @@ describe('AuthService Unit Tests', () => {
   });
 
   describe('resetPassword', () => {
-    it('should reset password on valid reset token', async () => {
+    it('should reset password on valid reset token and strong password', async () => {
       vi.spyOn(mockAuthRepository, 'findByResetPasswordToken').mockResolvedValue({
         userUuid: 'user-123',
       } as any);
@@ -95,6 +95,37 @@ describe('AuthService Unit Tests', () => {
           resetPasswordToken: null,
           mustChangePassword: false,
         }),
+      );
+    });
+
+    it('should reject weak password missing special symbols or uppercase', async () => {
+      vi.spyOn(mockAuthRepository, 'findByResetPasswordToken').mockResolvedValue({
+        userUuid: 'user-123',
+      } as any);
+
+      // Too short
+      await expect(authService.resetPassword('reset-token-123', 'Short1!')).rejects.toThrow(
+        /at least 8 characters/,
+      );
+
+      // Missing uppercase
+      await expect(authService.resetPassword('reset-token-123', 'lowercase123!')).rejects.toThrow(
+        /uppercase letter/,
+      );
+
+      // Missing lowercase
+      await expect(authService.resetPassword('reset-token-123', 'UPPERCASE123!')).rejects.toThrow(
+        /lowercase letter/,
+      );
+
+      // Missing number
+      await expect(authService.resetPassword('reset-token-123', 'NoNumbersHere!')).rejects.toThrow(
+        /at least one number/,
+      );
+
+      // Missing special symbol
+      await expect(authService.resetPassword('reset-token-123', 'NoSymbols1234')).rejects.toThrow(
+        /special symbol/,
       );
     });
   });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Wine, Eye, EyeOff, ChevronRight, Loader2, User, Briefcase, Shield, Timer, X } from 'lucide-react';
 import { getApiUrl } from '../config/api';
-import { getSessionExpiredNotice } from '@orderup/shared';
+import { getSessionExpiredNotice, validateStrongPassword, STRONG_PASSWORD_MESSAGE } from '@orderup/shared';
 import { PrivacyPolicyModal, TermsAndConditionsModal, BusinessAdminOnboardingModal } from '../components/LegalModals';
 
 type StaffRole = 'waiter' | 'manager' | 'admin';
@@ -142,8 +142,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     e.preventDefault();
     setError('');
 
-    if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters long.');
+    const val = validateStrongPassword(newPassword);
+    if (!val.isValid) {
+      setError(val.error || STRONG_PASSWORD_MESSAGE);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -351,6 +352,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {newPassword.length > 0 && (
+                  <div className="grid grid-cols-2 gap-1 pt-1 text-[11px]">
+                    <span className={newPassword.length >= 8 ? 'text-emerald-600 font-medium' : 'text-slate-400'}>
+                      {newPassword.length >= 8 ? '✓' : '○'} Min. 8 characters
+                    </span>
+                    <span className={/[A-Z]/.test(newPassword) ? 'text-emerald-600 font-medium' : 'text-slate-400'}>
+                      {/[A-Z]/.test(newPassword) ? '✓' : '○'} Uppercase (A-Z)
+                    </span>
+                    <span className={/[a-z]/.test(newPassword) ? 'text-emerald-600 font-medium' : 'text-slate-400'}>
+                      {/[a-z]/.test(newPassword) ? '✓' : '○'} Lowercase (a-z)
+                    </span>
+                    <span className={/\d/.test(newPassword) ? 'text-emerald-600 font-medium' : 'text-slate-400'}>
+                      {/\d/.test(newPassword) ? '✓' : '○'} Number (0-9)
+                    </span>
+                    <span className={/[^A-Za-z0-9\s]/.test(newPassword) ? 'text-emerald-600 font-medium col-span-2' : 'text-slate-400 col-span-2'}>
+                      {/[^A-Za-z0-9\s]/.test(newPassword) ? '✓' : '○'} Special symbol (!, @, #, $, etc.)
+                    </span>
+                  </div>
+                )}
+                {newPassword.length === 0 && (
+                  <p className="text-[11px] text-slate-400">
+                    Must be at least 8 characters with uppercase, lowercase, numbers, and special symbols.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">

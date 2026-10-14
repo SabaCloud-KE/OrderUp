@@ -11,7 +11,6 @@
  *   - Session + refresh token revocation on deactivation/reset/delete
  */
 
-import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { prisma } from '../../config/prisma';
 import { emailService } from '../notification/email.service';
@@ -22,7 +21,8 @@ import {
   NotFoundError,
   ConflictError,
 } from '../../common/errors/app-error';
-import { UserRole } from '@orderup/shared';
+import { UserRole, generateStrongPassword, validateStrongPassword, STRONG_PASSWORD_MESSAGE } from '@orderup/shared';
+import { BadRequestError } from '../../common/errors/app-error';
 import { WaiterRepository } from './waiter.repository';
 import {
   CreateWaiterInput,
@@ -280,10 +280,14 @@ export class WaiterService {
     }
 
     // Use provided password or generate a secure random one
-    const tempPassword =
-      input.temporaryPassword && input.temporaryPassword.trim().length >= 6
-        ? input.temporaryPassword.trim()
-        : `Wt${crypto.randomBytes(4).toString('hex')}!`;
+    const rawTemp = input.temporaryPassword?.trim();
+    if (rawTemp) {
+      const val = validateStrongPassword(rawTemp);
+      if (!val.isValid) {
+        throw new BadRequestError(val.error || STRONG_PASSWORD_MESSAGE);
+      }
+    }
+    const tempPassword = rawTemp || generateStrongPassword();
 
     const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
 

@@ -177,3 +177,97 @@ export function clearAllAuthData(): void {
     /* ignore */
   }
 }
+
+/**
+ * ─────────────────────────────────────────────────────────────
+ * Strong Password Policy Enforcement
+ * Criteria:
+ *   - At least 8 characters
+ *   - At least one uppercase letter (A-Z)
+ *   - At least one lowercase letter (a-z)
+ *   - At least one number (0-9)
+ *   - At least one special symbol (like !, @, #, or $)
+ * ─────────────────────────────────────────────────────────────
+ */
+export const STRONG_PASSWORD_MIN_LENGTH = 8;
+export const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}$/;
+export const STRONG_PASSWORD_MESSAGE =
+  'Password must be at least 8 characters long and contain uppercase letters, lowercase letters, numbers, and special symbols (like !, @, #, or $).';
+
+export interface PasswordValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
+/**
+ * Validates whether a candidate password satisfies the strong password policy.
+ */
+export function validateStrongPassword(password: string | null | undefined): PasswordValidationResult {
+  if (!password || typeof password !== 'string') {
+    return { isValid: false, error: 'Password is required' };
+  }
+  if (password.length < STRONG_PASSWORD_MIN_LENGTH) {
+    return { isValid: false, error: `Password must be at least ${STRONG_PASSWORD_MIN_LENGTH} characters long` };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one uppercase letter' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one lowercase letter' };
+  }
+  if (!/\d/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one number' };
+  }
+  if (!/[^A-Za-z0-9\s]/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one special symbol (like !, @, #, or $)' };
+  }
+  return { isValid: true };
+}
+
+/**
+ * Returns true if the password passes all strong password requirements.
+ */
+export function isStrongPassword(password: string | null | undefined): boolean {
+  return validateStrongPassword(password).isValid;
+}
+
+/**
+ * Generates a cryptographically strong random password guaranteed to satisfy all policy criteria:
+ * Uppercase, lowercase, numbers, special symbols, and 12 characters length.
+ */
+export function generateStrongPassword(): string {
+  const u = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const l = 'abcdefghjkmnpqrstuvwxyz';
+  const d = '23456789';
+  const s = '!@#$%^&*';
+  const all = u + l + d + s;
+
+  const getRandomIndex = (max: number): number => {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+      const arr = new Uint32Array(1);
+      window.crypto.getRandomValues(arr);
+      return arr[0] % max;
+    }
+    try {
+      // Node.js crypto fallback
+      const cryptoMod = typeof require !== 'undefined' ? require('crypto') : null;
+      if (cryptoMod && cryptoMod.randomBytes) {
+        return cryptoMod.randomBytes(4).readUInt32LE(0) % max;
+      }
+    } catch {
+      /* ignore */
+    }
+    return Math.floor(Math.random() * max);
+  };
+
+  const pwd = [u, l, d, s].map((c) => c[getRandomIndex(c.length)]);
+  for (let i = 0; i < 8; i++) {
+    pwd.push(all[getRandomIndex(all.length)]);
+  }
+  for (let i = pwd.length - 1; i > 0; i--) {
+    const j = getRandomIndex(i + 1);
+    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
+  }
+  return pwd.join('');
+}
+

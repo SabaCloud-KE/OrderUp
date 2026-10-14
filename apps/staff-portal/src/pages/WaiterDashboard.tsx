@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { resolveImageUrl, getApiUrl, getSocketUrl } from '../config/api';
 import { useTheme, ThemeToggle } from '@orderup/ui';
+import { validateStrongPassword, STRONG_PASSWORD_MESSAGE } from '@orderup/shared';
 
 const authHeaders = (): Record<string, string> => {
   const token = localStorage.getItem('orderup_token') || localStorage.getItem('drinkhub_token');
@@ -177,8 +178,9 @@ export const WaiterDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout }
       setPwError('Please enter your current password.');
       return;
     }
-    if (pwForm.newPassword.length < 6) {
-      setPwError('New password must be at least 6 characters.');
+    const pwdVal = validateStrongPassword(pwForm.newPassword);
+    if (!pwdVal.isValid) {
+      setPwError(pwdVal.error || STRONG_PASSWORD_MESSAGE);
       return;
     }
     if (pwForm.newPassword !== pwForm.confirmPassword) {

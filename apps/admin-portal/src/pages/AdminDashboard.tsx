@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ThemeToggle } from '@orderup/ui';
+import { validateStrongPassword, STRONG_PASSWORD_MESSAGE, generateStrongPassword } from '@orderup/shared';
 import {
   LayoutDashboard, Building2, Users, CreditCard, TrendingUp, Settings,
   Bell, LogOut, ChevronDown, ArrowUpRight, ArrowDownRight, Server,
@@ -270,25 +271,7 @@ const apiFetch = async (url: string, options: RequestInit = {}): Promise<Respons
 };
 
 const generatePassword = (): string => {
-  const u = 'ABCDEFGHJKLMNPQRSTUVWXYZ', l = 'abcdefghjkmnpqrstuvwxyz', d = '23456789', s = '@#$!';
-  const all = u + l + d + s;
-  
-  const getRandomIndex = (max: number): number => {
-    if (typeof window !== 'undefined' && window.crypto) {
-      const arr = new Uint32Array(1);
-      window.crypto.getRandomValues(arr);
-      return arr[0] % max;
-    }
-    return Math.floor(Math.random() * max);
-  };
-
-  const pwd = [u, l, d, s].map(c => c[getRandomIndex(c.length)]);
-  for (let i = 0; i < 8; i++) pwd.push(all[getRandomIndex(all.length)]);
-  for (let i = pwd.length - 1; i > 0; i--) {
-    const j = getRandomIndex(i + 1);
-    [pwd[i], pwd[j]] = [pwd[j], pwd[i]];
-  }
-  return pwd.join('');
+  return generateStrongPassword();
 };
 
 const readFile = (e: React.ChangeEvent<HTMLInputElement>, cb: (url: string) => void) => {
@@ -1276,7 +1259,8 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
     if (emErr) e.adminEmail = emErr;
     const phErr = validateAdminField('adminPhone', form.adminPhone);
     if (phErr) e.adminPhone = phErr;
-    if (form.tempPwd.length < 8) e.tempPwd = 'Password must be at least 8 characters';
+    const pwdVal = validateStrongPassword(form.tempPwd);
+    if (!pwdVal.isValid) e.tempPwd = pwdVal.error || 'Password must be at least 8 chars with uppercase, lowercase, numbers, and symbols';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -2583,6 +2567,12 @@ const CreateUserModal = ({
     }
     if (role !== 'SUPER_ADMIN' && !businessUuid) {
       setError('Please select a business for this user.');
+      return;
+    }
+
+    const pwdVal = validateStrongPassword(password);
+    if (!pwdVal.isValid) {
+      setError(pwdVal.error || STRONG_PASSWORD_MESSAGE);
       return;
     }
 

@@ -11,6 +11,7 @@ import {
   Menu, Grid, List, Smartphone, Check, ChevronUp, Maximize2, ZoomIn,
 } from 'lucide-react';
 import { resolveImageUrl, getApiUrl, getSocketUrl } from '../config/api';
+import { validateStrongPassword, STRONG_PASSWORD_MESSAGE, generateStrongPassword } from '@orderup/shared';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
@@ -245,12 +246,7 @@ const csvExport = (headers: string[], rows: (string | number | boolean)[][], fil
 };
 
 const generatePassword = (): string => {
-  const u = 'ABCDEFGHJKLMNPQRSTUVWXYZ', l = 'abcdefghjkmnpqrstuvwxyz', d = '23456789', s = '@#$!';
-  const all = u + l + d + s;
-  const pwd = [u, l, d, s].map(c => c[Math.floor(Math.random() * c.length)]);
-  for (let i = 0; i < 8; i++) pwd.push(all[Math.floor(Math.random() * all.length)]);
-  for (let i = pwd.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pwd[i], pwd[j]] = [pwd[j], pwd[i]]; }
-  return pwd.join('');
+  return generateStrongPassword();
 };
 
 const getClubUuid = (): string | null => {
@@ -360,7 +356,8 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
     const lnErr = validateField('lastName', form.lastName); if (lnErr) e.lastName = lnErr;
     const phErr = validateField('phone', form.phone); if (phErr) e.phone = phErr;
     const emErr = validateField('email', form.email); if (emErr) e.email = emErr;
-    if (form.tempPwd.length < 8) e.tempPwd = 'Min. 8 characters';
+    const pwdVal = validateStrongPassword(form.tempPwd);
+    if (!pwdVal.isValid) e.tempPwd = pwdVal.error || 'Password must be at least 8 chars with uppercase, lowercase, numbers, and symbols';
     setErrors(e); return Object.keys(e).length === 0;
   };
 

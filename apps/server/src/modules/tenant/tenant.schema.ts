@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BusinessType } from '@orderup/shared';
+import { strongPasswordSchema } from '../auth/auth.schema';
 
 const businessTypeEnum = z.nativeEnum(BusinessType).optional().default(BusinessType.RESTAURANT);
 
@@ -55,8 +56,8 @@ export const createBusinessWithAdminSchema = z.object({
     managerEmail: z.string().min(1, 'Manager email is required').optional(),
     adminPhone: z.string().optional().nullable().or(z.literal('')),
     managerPhone: z.string().optional().nullable().or(z.literal('')),
-    adminPassword: z.string().min(8, 'Temporary password must be at least 8 characters').optional(),
-    managerPassword: z.string().min(8, 'Temporary password must be at least 8 characters').optional(),
+    adminPassword: strongPasswordSchema.optional(),
+    managerPassword: strongPasswordSchema.optional(),
     // Multi-tenant M-Pesa Model B fields
     mpesaConsumerKey: z.string().optional().nullable().or(z.literal('')),
     mpesaConsumerSecret: z.string().optional().nullable().or(z.literal('')),

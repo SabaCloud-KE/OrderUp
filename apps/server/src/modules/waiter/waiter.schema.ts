@@ -8,6 +8,7 @@
  */
 
 import { z } from 'zod';
+import { strongPasswordSchema } from '../auth/auth.schema';
 
 export const createWaiterSchema = z.object({
   body: z
@@ -29,10 +30,7 @@ export const createWaiterSchema = z.object({
         .trim()
         .optional()
         .or(z.literal('')),
-      password: z
-        .string({ required_error: 'Password is required' })
-        .min(6, 'Password must be at least 6 characters')
-        .max(100, 'Password cannot exceed 100 characters'),
+      password: strongPasswordSchema,
     })
     .strict({ message: 'Unrecognized or unauthorized fields in request body' }),
 });
@@ -83,11 +81,7 @@ export const resetPasswordWaiterSchema = z.object({
   }),
   body: z
     .object({
-      temporaryPassword: z
-        .string()
-        .min(6, 'Password must be at least 6 characters')
-        .max(100, 'Password cannot exceed 100 characters')
-        .optional(),
+      temporaryPassword: strongPasswordSchema.optional(),
     })
     .strict({ message: 'Unrecognized or unauthorized fields in request body' })
     .optional(),

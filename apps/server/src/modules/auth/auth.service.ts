@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { IAuthRepository } from './auth.interface';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../common/utils/jwt';
 import { UnauthorizedError, BadRequestError, NotFoundError } from '../../common/errors/app-error';
-import { normalizeRole, UserRole } from '@orderup/shared';
+import { normalizeRole, UserRole, validateStrongPassword, STRONG_PASSWORD_MESSAGE } from '@orderup/shared';
 import { prisma } from '../../config/prisma';
 import { emailService } from '../notification/email.service';
 import { logger } from '../../config/logger';
@@ -417,6 +417,11 @@ export class AuthService {
     // SUPER_ADMIN should not have businessUuid
     const finalBusinessUuid = normalizedRole === UserRole.SUPER_ADMIN ? undefined : businessUuid;
 
+    const pwdVal = validateStrongPassword(data.password);
+    if (!pwdVal.isValid) {
+      throw new BadRequestError(pwdVal.error || STRONG_PASSWORD_MESSAGE);
+    }
+
     const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
 
@@ -510,6 +515,11 @@ export class AuthService {
       throw new BadRequestError('Password reset token is invalid or has expired');
     }
 
+    const val = validateStrongPassword(newPassword);
+    if (!val.isValid) {
+      throw new BadRequestError(val.error || STRONG_PASSWORD_MESSAGE);
+    }
+
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
     await this.authRepository.updateUser(user.userUuid, {
@@ -535,6 +545,11 @@ export class AuthService {
       throw new BadRequestError('New password must be different from your current password');
     }
 
+    const val = validateStrongPassword(newPassword);
+    if (!val.isValid) {
+      throw new BadRequestError(val.error || STRONG_PASSWORD_MESSAGE);
+    }
+
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
     await this.authRepository.updateUser(user.userUuid, {
       passwordHash,
@@ -555,6 +570,11 @@ export class AuthService {
 
     if (currentPassword === newPassword) {
       throw new BadRequestError('New password must be different from your current password');
+    }
+
+    const val = validateStrongPassword(newPassword);
+    if (!val.isValid) {
+      throw new BadRequestError(val.error || STRONG_PASSWORD_MESSAGE);
     }
 
     const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);

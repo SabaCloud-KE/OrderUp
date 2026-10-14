@@ -72,6 +72,7 @@ import {
   Legend,
 } from 'recharts';
 import { getApiUrl, resolveImageUrl } from '../config/api';
+import { validateStrongPassword, STRONG_PASSWORD_MESSAGE, generateStrongPassword } from '@orderup/shared';
 import { PrivacyPolicyModal, TermsAndConditionsModal, BusinessAdminOnboardingModal } from '../components/LegalModals';
 
 /* ─────────────────────────────────────────────────────────────
@@ -1656,12 +1657,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const [viewManagerLoading, setViewManagerLoading] = useState(false);
 
   const generateSecurePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
-    let pwd = '';
-    for (let i = 0; i < 12; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setManagerPassword(pwd);
+    setManagerPassword(generateStrongPassword());
   };
 
   /**
@@ -1727,8 +1723,9 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
       setManagerErrors({ fullName: nameErr, email: emailErr, phone: phoneErr });
       return;
     }
-    if (!managerPassword.trim()) {
-      showToast('Please fill in all required manager fields.', 'error');
+    const pwdVal = validateStrongPassword(managerPassword);
+    if (!pwdVal.isValid) {
+      showToast(pwdVal.error || STRONG_PASSWORD_MESSAGE, 'error');
       return;
     }
     try {
@@ -1837,7 +1834,13 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
    */
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetPwdTarget) return;
+    if (resetPwdCustom.trim()) {
+      const val = validateStrongPassword(resetPwdCustom.trim());
+      if (!val.isValid) {
+        showToast(val.error || STRONG_PASSWORD_MESSAGE, 'error');
+        return;
+      }
+    }
     try {
       setResetPwdBusy(true);
       const managerId = resetPwdTarget.managerUuid || resetPwdTarget.userUuid;
@@ -2802,12 +2805,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const [viewWaiterLoading, setViewWaiterLoading] = useState(false);
 
   const generateSecureWaiterPassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
-    let pwd = '';
-    for (let i = 0; i < 12; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setWaiterPassword(pwd);
+    setWaiterPassword(generateStrongPassword());
   };
 
   /**
@@ -2872,6 +2870,11 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     const phoneErr = validateWaiterField('phone', waiterPhone);
     if (nameErr || emailErr || phoneErr) {
       setWaiterErrors({ fullName: nameErr, email: emailErr, phone: phoneErr });
+      return;
+    }
+    const pwdVal = validateStrongPassword(waiterPassword);
+    if (!pwdVal.isValid) {
+      showToast(pwdVal.error || STRONG_PASSWORD_MESSAGE, 'error');
       return;
     }
     try {
@@ -2986,6 +2989,14 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const handleResetWaiterPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetWaiterPwdTarget) return;
+
+    if (resetWaiterPwdCustom.trim()) {
+      const val = validateStrongPassword(resetWaiterPwdCustom.trim());
+      if (!val.isValid) {
+        showToast(val.error || STRONG_PASSWORD_MESSAGE, 'error');
+        return;
+      }
+    }
 
     try {
       setResetWaiterPwdBusy(true);
@@ -5920,8 +5931,9 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
       showToast('Please enter both current and new passwords', 'error');
       return;
     }
-    if (newPwd.length < 8) {
-      showToast('New password must be at least 8 characters long', 'error');
+    const pwdVal = validateStrongPassword(newPwd);
+    if (!pwdVal.isValid) {
+      showToast(pwdVal.error || STRONG_PASSWORD_MESSAGE, 'error');
       return;
     }
     if (newPwd !== confirmPwd) {

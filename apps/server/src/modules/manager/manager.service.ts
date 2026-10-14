@@ -11,7 +11,6 @@
  *   - Session/token invalidation on deactivation, soft-deletion, and password reset
  */
 
-import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { prisma } from '../../config/prisma';
 import { emailService } from '../notification/email.service';
@@ -22,7 +21,8 @@ import {
   NotFoundError,
   ConflictError,
 } from '../../common/errors/app-error';
-import { UserRole } from '@orderup/shared';
+import { UserRole, generateStrongPassword, validateStrongPassword, STRONG_PASSWORD_MESSAGE } from '@orderup/shared';
+import { BadRequestError } from '../../common/errors/app-error';
 import { ManagerRepository } from './manager.repository';
 import {
   CreateManagerInput,
@@ -262,10 +262,15 @@ export class ManagerService {
       throw new NotFoundError('Manager not found');
     }
 
-    // Generate temporary password if not provided
-    const tempPassword = input.temporaryPassword && input.temporaryPassword.trim().length >= 6
-      ? input.temporaryPassword.trim()
-      : `Mg${crypto.randomBytes(4).toString('hex')}!`;
+    // Generate strong temporary password if not provided, or validate supplied password
+    const rawTemp = input.temporaryPassword?.trim();
+    if (rawTemp) {
+      const val = validateStrongPassword(rawTemp);
+      if (!val.isValid) {
+        throw new BadRequestError(val.error || STRONG_PASSWORD_MESSAGE);
+      }
+    }
+    const tempPassword = rawTemp || generateStrongPassword();
 
     const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
 
