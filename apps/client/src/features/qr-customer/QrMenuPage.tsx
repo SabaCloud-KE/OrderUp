@@ -518,75 +518,77 @@ export const QrMenuPage: React.FC = () => {
         </div>
       )}
 
-      {/* 1. WELCOME HEADER (Club Logo & Table Identifier) */}
-      <div className="relative border-b border-slate-800/80 bg-gradient-to-r from-dark-900 via-brand-950/30 to-dark-900 p-6 shadow-xl">
-        <div className="mx-auto flex max-w-2xl items-center justify-between">
-          <div className="space-y-1">
-            <div className="inline-flex items-center space-x-1.5 rounded-full bg-brand-500/20 px-3 py-1 text-xs font-extrabold text-brand-400 border border-brand-500/30">
-              <span className="h-2 w-2 rounded-full bg-brand-500 animate-ping" />
-              <span>Table #{currentTable} • Live Venue Session</span>
+      {/* 1. WELCOME HEADER + CATEGORY TABS — sticky together */}
+      <div className="sticky top-0 z-30">
+        {/* WELCOME HEADER (Club Logo & Table Identifier) */}
+        <div className="relative border-b border-slate-800/80 bg-gradient-to-r from-dark-900 via-brand-950/30 to-dark-900 px-6 py-4 shadow-xl">
+          <div className="mx-auto flex max-w-2xl items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="inline-flex items-center space-x-1.5 rounded-full bg-brand-500/20 px-3 py-1 text-xs font-extrabold text-brand-400 border border-brand-500/30">
+                <span className="h-2 w-2 rounded-full bg-brand-500 animate-ping" />
+                <span>Table #{currentTable} • Live Venue Session</span>
+              </div>
+              <h1 className="text-xl font-black text-white tracking-tight">{currentVenueName}</h1>
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">{currentVenueName}</h1>
-            <p className="text-xs text-slate-400">QR Code Menu • M-Pesa, Card & Cash Supported</p>
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 to-amber-500 p-1 shadow-xl">
+              <div className="flex h-full w-full items-center justify-center rounded-xl bg-dark-900 text-xl">
+                🍸
+              </div>
+            </div>
           </div>
 
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 to-amber-500 p-1 shadow-xl">
-            <div className="flex h-full w-full items-center justify-center rounded-xl bg-dark-900 text-2xl">
-              🍸
+          {/* OFFERS BANNER */}
+          {offers.length > 0 && (
+            <div className="mx-auto mt-3 max-w-2xl">
+              {offers.map((offer) => (
+                <div
+                  key={offer.id}
+                  className="flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-500/10 via-brand-500/10 to-amber-500/10 p-3 border border-amber-500/30 shadow-inner"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Sparkles className="h-4 w-4 text-amber-400 animate-spin" />
+                    <div>
+                      <h4 className="text-xs font-extrabold text-amber-300">{offer.title}</h4>
+                      <p className="text-[11px] text-slate-300">{offer.description}</p>
+                    </div>
+                  </div>
+                  <span className="rounded-lg bg-amber-500/20 px-2.5 py-1 text-xs font-mono font-bold text-amber-400 border border-amber-500/40">
+                    {offer.promoCode}
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
 
-        {/* OFFERS BANNER */}
-        {offers.length > 0 && (
-          <div className="mx-auto mt-4 max-w-2xl">
-            {offers.map((offer) => (
-              <div
-                key={offer.id}
-                className="flex items-center justify-between rounded-xl bg-gradient-to-r from-amber-500/10 via-brand-500/10 to-amber-500/10 p-3.5 border border-amber-500/30 shadow-inner"
-              >
-                <div className="flex items-center space-x-3">
-                  <Sparkles className="h-5 w-5 text-amber-400 animate-spin" />
-                  <div>
-                    <h4 className="text-xs font-extrabold text-amber-300">{offer.title}</h4>
-                    <p className="text-[11px] text-slate-300">{offer.description}</p>
-                  </div>
-                </div>
-                <span className="rounded-lg bg-amber-500/20 px-2.5 py-1 text-xs font-mono font-bold text-amber-400 border border-amber-500/40">
-                  {offer.promoCode}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 2. CATEGORY TABS NAV */}
-      <div className="sticky top-16 z-30 border-b border-slate-800 bg-dark-950/90 backdrop-blur-md px-4 py-3">
-        <div className="mx-auto flex max-w-2xl space-x-2 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => setSelectedCategory('ALL')}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
-              selectedCategory === 'ALL'
-                ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20'
-                : 'bg-dark-900 text-slate-400 hover:text-white border border-slate-800'
-            }`}
-          >
-            All Items
-          </button>
-          {categories.map((cat) => (
+        {/* 2. CATEGORY TABS NAV */}
+        <div className="border-b border-slate-800 bg-dark-950/95 backdrop-blur-md px-4 py-3">
+          <div className="mx-auto flex max-w-2xl space-x-2 overflow-x-auto scrollbar-none">
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => setSelectedCategory('ALL')}
               className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
-                selectedCategory === cat
+                selectedCategory === 'ALL'
                   ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20'
                   : 'bg-dark-900 text-slate-400 hover:text-white border border-slate-800'
               }`}
             >
-              {cat}
+              All Items
             </button>
-          ))}
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+                  selectedCategory === cat
+                    ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20'
+                    : 'bg-dark-900 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
