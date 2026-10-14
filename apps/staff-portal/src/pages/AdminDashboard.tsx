@@ -53,7 +53,6 @@ import {
   HelpCircle,
   Lock,
   Menu,
-  Smartphone,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -612,16 +611,8 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const [operatingSchedule, setOperatingSchedule] = useState<any>(defaultSchedule);
   const [scheduleSaving, setScheduleSaving] = useState(false);
 
-  // M-Pesa Settings State
-  const [mpesaShortcode, setMpesaShortcode] = useState('');
-  const [mpesaPasskey, setMpesaPasskey] = useState('');
-  const [mpesaTransactionType, setMpesaTransactionType] = useState<'CustomerPayBillOnline' | 'CustomerBuyGoodsOnline'>('CustomerPayBillOnline');
-  const [isMpesaActive, setIsMpesaActive] = useState(true);
-  const [showMpesaPasskey, setShowMpesaPasskey] = useState(false);
-  const [mpesaSaving, setMpesaSaving] = useState(false);
-
   // Active settings sub-tab
-  const [settingsTab, setSettingsTab] = useState<'profile' | 'branding' | 'hours' | 'payments' | 'compliance'>('profile');
+  const [settingsTab, setSettingsTab] = useState<'profile' | 'branding' | 'hours' | 'compliance'>('profile');
 
   /**
    * Load business profile from GET /api/v1/business/profile
@@ -655,10 +646,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
         if (p.operatingSchedule) {
           setOperatingSchedule(p.operatingSchedule);
         }
-        if (p.mpesaShortcode) setMpesaShortcode(p.mpesaShortcode);
-        if (p.mpesaPasskey) setMpesaPasskey(p.mpesaPasskey);
-        if (p.mpesaTransactionType) setMpesaTransactionType(p.mpesaTransactionType);
-        if (p.isMpesaActive !== undefined) setIsMpesaActive(p.isMpesaActive);
       } else {
         setProfileError(res.error?.message || 'Failed to load business profile');
       }
@@ -5403,43 +5390,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
     });
   };
 
-  /**
-   * Save M-Pesa Integration Settings via PATCH /api/v1/business/settings
-   */
-  const handleSaveMpesa = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (isMpesaActive && mpesaShortcode.trim()) {
-      if (!/^\d{5,8}$/.test(mpesaShortcode.trim())) {
-        showToast('M-Pesa Shortcode must be between 5 and 8 digits (e.g. 174379 or Till number)', 'error');
-        return;
-      }
-    }
-
-    try {
-      setMpesaSaving(true);
-      const res = await authFetch('/business/settings', {
-        method: 'PATCH',
-        body: JSON.stringify({
-          mpesaShortcode: mpesaShortcode.trim() || null,
-          mpesaPasskey: mpesaPasskey.trim() || null,
-          mpesaTransactionType,
-          isMpesaActive,
-        }),
-      });
-
-      if (res.success && res.data?.profile) {
-        setBusinessProfile(res.data.profile);
-        showToast('M-Pesa payment settings saved successfully!', 'success');
-        loadDashboardData();
-      }
-    } catch (err: any) {
-      showToast(err.message || 'Failed to update M-Pesa settings', 'error');
-    } finally {
-      setMpesaSaving(false);
-    }
-  };
-
   const renderBusinessSettings = () => {
     if (profileLoading && !businessProfile) {
       return (
@@ -5510,7 +5460,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
               { key: 'profile', label: 'Profile & Location', icon: <Building2 className="h-4 w-4" /> },
               { key: 'branding', label: 'Branding & Theme', icon: <Sparkles className="h-4 w-4" /> },
               { key: 'hours', label: 'Operating Schedule', icon: <Clock className="h-4 w-4" /> },
-              { key: 'payments', label: 'M-Pesa & Payments', icon: <Smartphone className="h-4 w-4" /> },
               { key: 'compliance', label: 'Compliance & Legal', icon: <Shield className="h-4 w-4" /> },
             ].map((tab) => (
               <button
@@ -5875,176 +5824,6 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                 className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition disabled:opacity-60"
               >
                 {scheduleSaving ? 'Saving Schedule...' : 'Save Operating Schedule'}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* ── Tab: M-Pesa & Payments ── */}
-        {settingsTab === 'payments' && (
-          <form onSubmit={handleSaveMpesa} className="p-6 rounded-2xl border space-y-6" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-            <div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                    <Smartphone className="h-4 w-4 text-emerald-500" />
-                    M-Pesa Direct Settlement Configuration
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Configure your restaurant's Safaricom Paybill or Till number. Customer STK push payments settle directly into your account in real-time.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${isMpesaActive ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
-                    {isMpesaActive ? 'Active' : 'Disabled'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Direct Settlement Info Banner */}
-            <div className="rounded-xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/20 p-4 flex items-start gap-3">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0" />
-              <div className="text-xs text-slate-600 dark:text-slate-300 space-y-1">
-                <p className="font-semibold text-slate-900 dark:text-white">
-                  Model A Architecture: Direct Paybill / Till Settlement
-                </p>
-                <p>
-                  OrderUp operates a central Daraja gateway connection. Customer payments trigger an STK prompt crediting your restaurant's Safaricom business shortcode directly. OrderUp holds no intermediary funds.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {/* Active Toggle */}
-              <label className="flex items-center gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isMpesaActive}
-                  onChange={(e) => setIsMpesaActive(e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
-                />
-                <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
-                  Enable M-Pesa Online STK Push Checkout for this venue
-                </span>
-              </label>
-
-              {/* Account Type Selection */}
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text-primary)' }}>
-                  Account / Transaction Type
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
-                      mpesaTransactionType === 'CustomerPayBillOnline'
-                        ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20'
-                        : 'border-slate-200 dark:border-slate-800'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="mpesaType"
-                      value="CustomerPayBillOnline"
-                      checked={mpesaTransactionType === 'CustomerPayBillOnline'}
-                      onChange={() => setMpesaTransactionType('CustomerPayBillOnline')}
-                      className="text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <div>
-                      <div className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>Paybill Account</div>
-                      <div className="text-[11px] text-slate-500">CustomerPayBillOnline (Uses Account Reference)</div>
-                    </div>
-                  </label>
-
-                  <label
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
-                      mpesaTransactionType === 'CustomerBuyGoodsOnline'
-                        ? 'border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20'
-                        : 'border-slate-200 dark:border-slate-800'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="mpesaType"
-                      value="CustomerBuyGoodsOnline"
-                      checked={mpesaTransactionType === 'CustomerBuyGoodsOnline'}
-                      onChange={() => setMpesaTransactionType('CustomerBuyGoodsOnline')}
-                      className="text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <div>
-                      <div className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>Till Number / Buy Goods</div>
-                      <div className="text-[11px] text-slate-500">CustomerBuyGoodsOnline</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Shortcode Input */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text-primary)' }}>
-                    Business Shortcode / Till Number
-                  </label>
-                  <input
-                    type="text"
-                    value={mpesaShortcode}
-                    onChange={(e) => setMpesaShortcode(e.target.value)}
-                    placeholder="e.g. 174379 or your Till number"
-                    maxLength={8}
-                    className="w-full px-3.5 py-2.5 rounded-xl border text-xs outline-none transition focus:ring-2 focus:ring-emerald-500"
-                    style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                  />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Your Safaricom 5 to 8-digit Paybill or Till number.
-                  </p>
-                </div>
-
-                {/* Passkey Input */}
-                <div>
-                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text-primary)' }}>
-                    Lipa Na M-Pesa Online Passkey
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showMpesaPasskey ? 'text' : 'password'}
-                      value={mpesaPasskey}
-                      onChange={(e) => setMpesaPasskey(e.target.value)}
-                      placeholder="Enter Daraja Online Passkey"
-                      className="w-full px-3.5 py-2.5 pr-10 rounded-xl border text-xs outline-none transition focus:ring-2 focus:ring-emerald-500"
-                      style={{ background: 'var(--bg-primary)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowMpesaPasskey(!showMpesaPasskey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showMpesaPasskey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Online Passkey issued by Safaricom for this Paybill / Till.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-              <button
-                type="submit"
-                disabled={mpesaSaving}
-                className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition disabled:opacity-60 flex items-center gap-2"
-              >
-                {mpesaSaving ? (
-                  <>
-                    <RefreshCcw className="h-3.5 w-3.5 animate-spin" />
-                    Saving Settings...
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-3.5 w-3.5" />
-                    Save M-Pesa Settings
-                  </>
-                )}
               </button>
             </div>
           </form>
