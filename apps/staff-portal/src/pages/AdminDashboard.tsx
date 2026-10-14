@@ -1152,7 +1152,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* 1. Today Revenue */}
             <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
               <div>
@@ -1180,35 +1180,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
               </div>
             </div>
 
-            {/* 2. Total Orders */}
-            <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500">Total Orders</span>
-                  <div className="h-8 w-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center">
-                    <ClipboardList className="h-4 w-4 text-blue-500" />
-                  </div>
-                </div>
-                <div className="my-2 flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-blue-600">
-                    {summary.todayOrders}
-                  </span>
-                  {ordTrend?.percentageChange !== null && ordTrend?.percentageChange !== undefined && (
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${ordTrend.percentageChange >= 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40' : 'bg-rose-50 text-rose-600 dark:bg-rose-950/40'}`}>
-                      {ordTrend.percentageChange >= 0 ? '+' : ''}{ordTrend.percentageChange}%
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
-                <span className="text-[11px] text-blue-600 font-semibold">
-                  {summary.completedOrders} completed
-                </span>
-                <span className="text-[10px] text-slate-400 font-medium">Today</span>
-              </div>
-            </div>
-
-            {/* 3. Consolidated Orders KPI (Pending, In Progress, Completed & Cancelled) */}
+            {/* 2. Consolidated Orders KPI (Pending, In Progress, Completed & Cancelled) */}
             <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
               <div>
                 <div className="flex items-center justify-between">
