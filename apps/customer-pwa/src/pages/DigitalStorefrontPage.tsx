@@ -2050,13 +2050,8 @@ export const DigitalStorefrontPage: React.FC = () => {
   return (
     <div className="h-screen overflow-y-auto pb-28" style={{ background: 'var(--bg)', scrollbarWidth: 'none' }}>
 
-      {/* ── STICKY TOP HEADER & CATEGORY NAVIGATION ─────────────────── */}
-      <div
-        className="sticky top-0 z-30 shadow-xl border-b border-white/10 backdrop-blur-md"
-        style={{ background: 'var(--bg)' }}
-      >
-        {/* ── HERO BANNER ─────────────────────── */}
-        <div ref={heroRef} className="relative h-44 sm:h-52 md:h-56 overflow-hidden">
+      {/* ── HERO BANNER — scrolls away ─────────────────────────────── */}
+      <div ref={heroRef} className="relative h-44 sm:h-52 md:h-56 overflow-hidden">
           {brand.bannerUrl
             ? <img
                 src={brand.bannerUrl}
@@ -2165,75 +2160,79 @@ export const DigitalStorefrontPage: React.FC = () => {
         </div>
 
 
-        {/* ── CLOSED NOTICE BANNER ── */}
-        {!venueOpen && (
-          <div className="px-4 pt-3 fade-up">
-            <div
-              className="rounded-2xl p-4 flex items-center gap-3 border"
-              style={{
-                background: 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.06) 100%)',
-                borderColor: 'rgba(239,68,68,0.3)',
-              }}
-            >
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style={{ background: 'rgba(239,68,68,0.15)' }}>🔒</div>
-              <div className="flex-1 min-w-0">
-                <p className="font-black text-sm" style={{ color: '#F87171' }}>We're Currently Closed</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                  {todayHours.displayText === 'Closed Today'
-                    ? `${brand.name} is closed today. You can still browse the menu.`
-                    : `${brand.name} is open today from ${todayHours.open} to ${todayHours.close}. You can still browse the menu.`}
+      {/* ── CLOSED NOTICE BANNER — scrolls away ───────────────────── */}
+      {!venueOpen && (
+        <div className="px-4 pt-3 fade-up">
+          <div
+            className="rounded-2xl p-4 flex items-center gap-3 border"
+            style={{
+              background: 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.06) 100%)',
+              borderColor: 'rgba(239,68,68,0.3)',
+            }}
+          >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style={{ background: 'rgba(239,68,68,0.15)' }}>🔒</div>
+            <div className="flex-1 min-w-0">
+              <p className="font-black text-sm" style={{ color: '#F87171' }}>We're Currently Closed</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                {todayHours.displayText === 'Closed Today'
+                  ? `${brand.name} is closed today. You can still browse the menu.`
+                  : `${brand.name} is open today from ${todayHours.open} to ${todayHours.close}. You can still browse the menu.`}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ACTIVE ORDER BANNER — scrolls away ────────────────────── */}
+      {activeOrder && activeOrder.status !== 'CANCELLED' && (
+        <div className="px-4 pt-3 fade-up">
+          <div
+            onClick={() => setScreen('success')}
+            className="rounded-2xl p-3.5 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] shadow-lg border"
+            style={{
+              background: 'linear-gradient(135deg, rgba(37,99,235,0.25) 0%, rgba(37,99,235,0.1) 100%)',
+              borderColor: 'rgba(37,99,235,0.4)',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-600/30 text-blue-400">
+                <Clock className="w-5 h-5 animate-spin" style={{ animationDuration: '4s' }} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-600 text-white">
+                    {activeOrder.status}
+                  </span>
+                  <p className="text-xs font-bold text-white">
+                    {activeOrder.orderNumber ? `Order #${activeOrder.orderNumber}` : 'Active Order'}
+                  </p>
+                </div>
+                <p className="text-[11px] mt-0.5 text-blue-200">
+                  {activeOrder.status === 'PENDING' ? 'Waiting for waiter to claim...' :
+                   activeOrder.status === 'CLAIMED' ? (activeOrder.waiter ? `Claimed by ${activeOrder.waiter.fullName}` : 'Claimed by waiter') :
+                   activeOrder.status === 'PREPARING' ? 'Preparing drinks & food...' :
+                   activeOrder.status === 'READY' ? 'Ready for pickup & delivery' :
+                   'Delivered to your table ✓'}
                 </p>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* ── ACTIVE ORDER BANNER ── */}
-        {activeOrder && activeOrder.status !== 'CANCELLED' && (
-          <div className="px-4 pt-3 fade-up">
-            <div
-              onClick={() => setScreen('success')}
-              className="rounded-2xl p-3.5 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] shadow-lg border"
-              style={{
-                background: 'linear-gradient(135deg, rgba(37,99,235,0.25) 0%, rgba(37,99,235,0.1) 100%)',
-                borderColor: 'rgba(37,99,235,0.4)',
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-600/30 text-blue-400">
-                  <Clock className="w-5 h-5 animate-spin" style={{ animationDuration: '4s' }} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-600 text-white">
-                      {activeOrder.status}
-                    </span>
-                    <p className="text-xs font-bold text-white">
-                      {activeOrder.orderNumber ? `Order #${activeOrder.orderNumber}` : 'Active Order'}
-                    </p>
-                  </div>
-                  <p className="text-[11px] mt-0.5 text-blue-200">
-                    {activeOrder.status === 'PENDING' ? 'Waiting for waiter to claim...' :
-                     activeOrder.status === 'CLAIMED' ? (activeOrder.waiter ? `Claimed by ${activeOrder.waiter.fullName}` : 'Claimed by waiter') :
-                     activeOrder.status === 'PREPARING' ? 'Preparing drinks & food...' :
-                     activeOrder.status === 'READY' ? 'Ready for pickup & delivery' :
-                     'Delivered to your table ✓'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-xs font-bold text-blue-400">
-                {activeOrder.status !== 'DELIVERED' && (
-                  <>
-                    <span>View Tracker</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </>
-                )}
-              </div>
+            <div className="flex items-center gap-1 text-xs font-bold text-blue-400">
+              {activeOrder.status !== 'DELIVERED' && (
+                <>
+                  <span>View Tracker</span>
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── CATEGORY PILLS ───────────────────── */}
+      {/* ── STICKY: CATEGORY PILLS ONLY ─────────────────────────────── */}
+      <div
+        className="sticky top-0 z-30 shadow-sm border-b border-white/10 backdrop-blur-md"
+        style={{ background: 'var(--bg)' }}
+      >
         <div className="px-4 pt-3.5 pb-3">
           <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
             {categories.map((c) => {
@@ -2243,46 +2242,6 @@ export const DigitalStorefrontPage: React.FC = () => {
                   key={c}
                   onClick={() => setCat(c)}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    isDeals && cat !== c ? 'animate-pulse' : ''
-                  }`}
-                  style={{
-                    background: cat === c
-                      ? (isDeals ? 'linear-gradient(135deg, #F59E0B, #EF4444)' : brand.primary)
-                      : (isDeals ? 'rgba(245, 158, 11, 0.15)' : 'var(--surface)'),
-                    color: cat === c ? '#fff' : (isDeals ? '#F59E0B' : 'var(--text-secondary)'),
-                    border: `1px solid ${cat === c ? 'transparent' : (isDeals ? 'rgba(245, 158, 11, 0.4)' : 'var(--border)')}`,
-                    boxShadow: isDeals && cat === c ? '0 4px 15px rgba(245, 158, 11, 0.4)' : undefined,
-                  }}
-                >
-                  {c}
-                  {isDeals && offers.length > 0 && (
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                      cat === c ? 'bg-black/30 text-white' : 'bg-amber-500 text-slate-950'
-                    }`}>
-                      {offers.length}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* ── STICKY CATEGORY BAR (stays pinned while hero scrolls away) ── */}
-      <div
-        className="sticky top-0 z-20 border-b backdrop-blur-md shadow-sm"
-        style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}
-      >
-        <div className="px-4 py-2.5">
-          <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-            {categories.map((c) => {
-              const isDeals = c === '🔥 Deals' || c === 'Offers';
-              return (
-                <button
-                  key={c}
-                  onClick={() => setCat(c)}
-                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
                     isDeals && cat !== c ? 'animate-pulse' : ''
                   }`}
                   style={{
