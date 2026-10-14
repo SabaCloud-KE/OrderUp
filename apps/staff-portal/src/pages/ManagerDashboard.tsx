@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { ThemeToggle, useTheme } from '@orderup/ui';
 import {
@@ -2258,6 +2258,7 @@ const DashboardPage = ({
     waiters: '0',
     avgOrder: 'KES 0',
     completedCount: 0,
+    cancelledCount: 0,
     totalCount: 0,
   });
 
@@ -2320,10 +2321,12 @@ const DashboardPage = ({
         const paidOrCompleted = raw.filter(o =>
           o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.paymentStatus === 'PAID'
         );
+        const cancelledOrders = raw.filter(o => o.status === 'CANCELLED');
         const pendingOrders   = raw.filter(o => o.status === 'PENDING');
         const totalRev = paidOrCompleted.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0)
           || Number(reportData?.kpis?.totalRevenue || 0);
         const completedCount  = paidOrCompleted.length;
+        const cancelledCount  = cancelledOrders.length;
         const avgVal = completedCount > 0 ? Math.round(totalRev / completedCount) : (reportData?.kpis?.averageOrderValue || 0);
         const activeWaitersSet = new Set(raw.map(o => o.waiterUuid || o.waiterId || o.waiter?.userUuid).filter(Boolean));
 
@@ -2333,6 +2336,7 @@ const DashboardPage = ({
           waiters: String(activeWaitersSet.size > 0 ? activeWaitersSet.size : (reportData?.kpis?.activeWaitersCount ?? 0)),
           avgOrder: `KES ${avgVal.toLocaleString()}`,
           completedCount,
+          cancelledCount,
           totalCount: raw.length,
         });
 
@@ -2448,7 +2452,9 @@ const DashboardPage = ({
   const overviewTitle = isClub ? 'Club Overview' : 'Business Overview';
 
   // â”€â”€ Derived metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const peakHour = hourChart.length > 0 ? hourChart.reduce((mx, d) => d.n > mx.n ? d : mx, hourChart[0]) : null;
+  const totalOrdersNum   = Number(kpis.totalCount) || 0;
+  const cancelRate       = totalOrdersNum > 0 ? Math.round((kpis.cancelledCount / totalOrdersNum) * 1000) / 10 : 0;
+  const peakHour         = hourChart.length > 0 ? hourChart.reduce((mx, d) => d.n > mx.n ? d : mx, hourChart[0]) : null;
 
   return (
     <div className="space-y-5">
