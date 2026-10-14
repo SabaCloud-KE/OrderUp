@@ -29,6 +29,10 @@ vi.mock('../config/prisma', () => ({
     auditLog: {
       create: vi.fn().mockResolvedValue({}),
     },
+    user: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
   },
 }));
 

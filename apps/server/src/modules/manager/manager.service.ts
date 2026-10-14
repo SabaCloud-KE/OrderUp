@@ -130,6 +130,21 @@ export class ManagerService {
       throw new ConflictError('A user account with this email address already exists.');
     }
 
+    // Check username uniqueness or auto-derive
+    let finalUsername = input.username?.trim();
+    if (finalUsername) {
+      const existingUserByUsername = await this.managerRepository.findUserByUsername(finalUsername);
+      if (existingUserByUsername) {
+        throw new ConflictError('A user account with this username already exists. Please choose a different username.');
+      }
+    } else {
+      const candidate = (input.email.split('@')[0] || input.fullName.toLowerCase().replace(/[^a-z0-9]/g, '.'))
+        .replace(/[^a-zA-Z0-9._-]/g, '')
+        .slice(0, 30);
+      const existingCandidate = await this.managerRepository.findUserByUsername(candidate);
+      finalUsername = existingCandidate ? `${candidate}${Math.floor(100 + Math.random() * 900)}` : candidate;
+    }
+
     // 2. Hash password securely
     const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
 
@@ -138,6 +153,7 @@ export class ManagerService {
       businessUuid,
       fullName: input.fullName.trim(),
       email: input.email.trim().toLowerCase(),
+      username: finalUsername,
       phone: input.phone?.trim() || undefined,
       passwordHash,
     });
@@ -151,6 +167,7 @@ export class ManagerService {
       entityUuid: createdUser.userUuid,
       newValues: {
         fullName: createdUser.fullName,
+        username: createdUser.username,
         email: createdUser.email,
         phone: createdUser.phone,
         role: createdUser.role,
@@ -175,6 +192,7 @@ export class ManagerService {
         select: { name: true },
       });
       await emailService.sendUserCredentialsEmail({
+        username: createdUser.username || finalUsername,
         email: createdUser.email,
         fullName: createdUser.fullName,
         rawPassword: input.password,

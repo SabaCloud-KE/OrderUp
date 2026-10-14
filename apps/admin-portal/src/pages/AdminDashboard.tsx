@@ -72,6 +72,7 @@ export interface PlatformUser {
   id: string;
   userUuid: string;
   fullName: string;
+  username?: string | null;
   email: string;
   phone?: string;
   role: string;
@@ -832,6 +833,7 @@ type BusinessFormState = {
   themeColor: string;
   adminFirstName: string;
   adminLastName: string;
+  adminUsername: string;
   adminEmail: string;
   adminPhone: string;
   tempPwd: string;
@@ -858,6 +860,7 @@ const defaultBusinessForm: BusinessFormState = {
   themeColor: '#2563EB',
   adminFirstName: '',
   adminLastName: '',
+  adminUsername: '',
   adminEmail: '',
   adminPhone: '',
   tempPwd: '',
@@ -961,11 +964,53 @@ const Step2 = ({ f, set, errors }: { f: BusinessFormState; set: (k: keyof Busine
       <div className="grid grid-cols-2 gap-4">
         <div>
           <FL required>Admin First Name</FL>
-          <SI value={f.adminFirstName} onChange={e => set('adminFirstName', e.target.value)} placeholder="e.g. John" error={errors.adminFirstName} />
+          <SI
+            value={f.adminFirstName}
+            onChange={e => {
+              const val = e.target.value;
+              set('adminFirstName', val);
+              if (!f.adminUsername || f.adminUsername === `${f.adminFirstName.toLowerCase()}.${f.adminLastName.toLowerCase()}`.replace(/^\.|\.$/g, '')) {
+                const auto = `${val.toLowerCase().replace(/[^a-z0-9]/g, '')}.${f.adminLastName.toLowerCase().replace(/[^a-z0-9]/g, '')}`.replace(/^\.|\.$/g, '');
+                if (auto) set('adminUsername', auto);
+              }
+            }}
+            placeholder="e.g. John"
+            error={errors.adminFirstName}
+          />
         </div>
         <div>
           <FL required>Admin Last Name</FL>
-          <SI value={f.adminLastName} onChange={e => set('adminLastName', e.target.value)} placeholder="e.g. Ochieng" error={errors.adminLastName} />
+          <SI
+            value={f.adminLastName}
+            onChange={e => {
+              const val = e.target.value;
+              set('adminLastName', val);
+              if (!f.adminUsername || f.adminUsername === `${f.adminFirstName.toLowerCase()}.${f.adminLastName.toLowerCase()}`.replace(/^\.|\.$/g, '')) {
+                const auto = `${f.adminFirstName.toLowerCase().replace(/[^a-z0-9]/g, '')}.${val.toLowerCase().replace(/[^a-z0-9]/g, '')}`.replace(/^\.|\.$/g, '');
+                if (auto) set('adminUsername', auto);
+              }
+            }}
+            placeholder="e.g. Ochieng"
+            error={errors.adminLastName}
+          />
+        </div>
+        <div className="col-span-2">
+          <FL>Admin Username (for Login)</FL>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs select-none">@</span>
+            <input
+              type="text"
+              value={f.adminUsername}
+              onChange={e => set('adminUsername', e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ''))}
+              placeholder="e.g. john.ochieng"
+              className={`w-full pl-8 rounded-xl border font-mono text-sm ${
+                errors.adminUsername
+                  ? 'border-red-400 focus:border-red-400 focus:ring-1 focus:ring-red-400 bg-red-50/30 dark:bg-red-950/20'
+                  : 'border-slate-200 dark:border-slate-700 focus:border-blue-500 bg-slate-50/50 dark:bg-slate-800/50'
+              } px-3.5 py-2.5 text-slate-900 dark:text-white outline-none transition`}
+            />
+          </div>
+          {errors.adminUsername && <p className="text-xs text-red-500 mt-1 font-medium">{errors.adminUsername}</p>}
         </div>
         <div className="col-span-2">
           <FL required>Admin Email Address</FL>
@@ -1080,6 +1125,13 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
       if (!/^[a-zA-Z\s]+$/.test(v)) return 'Name can only contain letters';
       if (v.trim().length < 2) return 'Must be at least 2 characters';
     }
+    if (k === 'adminUsername') {
+      if (v.trim()) {
+        if (!/^[a-zA-Z0-9._]+$/.test(v.trim())) return 'Only letters, numbers, dots and underscores allowed';
+        if (v.trim().length < 3) return 'Must be at least 3 characters';
+        if (v.trim().length > 30) return 'Cannot exceed 30 characters';
+      }
+    }
     if (k === 'adminEmail') {
       if (!v.trim()) return 'Email is required';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Enter a valid email address';
@@ -1096,7 +1148,7 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
   const set = (k: keyof BusinessFormState, v: any) => {
     setForm(p => ({ ...p, [k]: v }));
     setSubmitError(null);
-    if (k === 'adminFirstName' || k === 'adminLastName' || k === 'adminEmail' || k === 'adminPhone') {
+    if (k === 'adminFirstName' || k === 'adminLastName' || k === 'adminUsername' || k === 'adminEmail' || k === 'adminPhone') {
       const err = validateAdminField(k, String(v));
       setErrors(p => ({ ...p, [k]: err }));
     } else {
@@ -1125,6 +1177,8 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
     if (!fnErr && !lnErr && combinedName.replace(/\s+/g, '').length < 3) {
       e.adminFirstName = 'Full name must be at least 3 letters';
     }
+    const unErr = validateAdminField('adminUsername', form.adminUsername);
+    if (unErr) e.adminUsername = unErr;
     const emErr = validateAdminField('adminEmail', form.adminEmail);
     if (emErr) e.adminEmail = emErr;
     const phErr = validateAdminField('adminPhone', form.adminPhone);
@@ -1160,11 +1214,13 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
           logoUrl: form.logoUrl || null,
           bannerUrl: form.bannerUrl || null,
           adminFullName,
+          adminUsername: form.adminUsername.trim() || undefined,
           adminEmail: form.adminEmail.trim().toLowerCase(),
           adminPhone: form.adminPhone.trim(),
           adminPassword: form.tempPwd,
           // Compatibility aliases
           managerFullName: adminFullName,
+          managerUsername: form.adminUsername.trim() || undefined,
           managerEmail: form.adminEmail.trim().toLowerCase(),
           managerPhone: form.adminPhone.trim(),
           managerPassword: form.tempPwd,
@@ -2154,9 +2210,11 @@ const CreateUserModal = ({
   onSuccess: (message: string) => void;
 }) => {
   const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameModified, setUsernameModified] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<{ fullName?: string; email?: string; phone?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ fullName?: string; username?: string; email?: string; phone?: string }>({});
   const [role, setRole] = useState<'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'WAITER'>(defaultRole);
   const [businessUuid, setBusinessUuid] = useState(businesses[0]?.id || '');
   const [password, setPassword] = useState(generatePassword());
@@ -2165,11 +2223,17 @@ const CreateUserModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validateUserField = (field: 'fullName' | 'email' | 'phone', value: string): string => {
+  const validateUserField = (field: 'fullName' | 'username' | 'email' | 'phone', value: string): string => {
     if (field === 'fullName') {
       if (!value.trim()) return 'Full name is required';
       if (!/^[a-zA-Z\s]+$/.test(value)) return 'Name can only contain letters';
       if (value.trim().length < 3) return 'Name must be at least 3 characters';
+    }
+    if (field === 'username') {
+      if (!value.trim()) return 'Username is required';
+      if (!/^[a-zA-Z0-9._]+$/.test(value)) return 'Only letters, numbers, dots and underscores allowed';
+      if (value.trim().length < 3) return 'Username must be at least 3 characters';
+      if (value.trim().length > 30) return 'Username cannot exceed 30 characters';
     }
     if (field === 'email') {
       if (!value.trim()) return 'Email is required';
@@ -2186,10 +2250,11 @@ const CreateUserModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const nameErr = validateUserField('fullName', fullName);
+    const userErr = validateUserField('username', username);
     const emailErr = validateUserField('email', email);
     const phoneErr = validateUserField('phone', phone);
-    if (nameErr || emailErr || phoneErr) {
-      setFieldErrors({ fullName: nameErr, email: emailErr, phone: phoneErr });
+    if (nameErr || userErr || emailErr || phoneErr) {
+      setFieldErrors({ fullName: nameErr, username: userErr, email: emailErr, phone: phoneErr });
       return;
     }
     if (role !== 'SUPER_ADMIN' && !businessUuid) {
@@ -2202,6 +2267,7 @@ const CreateUserModal = ({
     try {
       const payload: any = {
         fullName: fullName.trim(),
+        username: username.trim().toLowerCase(),
         email: email.trim().toLowerCase(),
         role,
         password,
@@ -2224,7 +2290,7 @@ const CreateUserModal = ({
         throw new Error(data.error?.message || data.message || 'Failed to create user');
       }
 
-      onSuccess(`User "${fullName}" created successfully.`);
+      onSuccess(`User "${fullName}" (@${username.trim()}) created successfully.`);
       onClose();
     } catch (err: any) {
       setError(err.message || 'Error creating user');
@@ -2270,8 +2336,16 @@ const CreateUserModal = ({
                 required
                 value={fullName}
                 onChange={e => {
-                  setFullName(e.target.value);
-                  setFieldErrors(prev => ({ ...prev, fullName: validateUserField('fullName', e.target.value) }));
+                  const val = e.target.value;
+                  setFullName(val);
+                  setFieldErrors(prev => ({ ...prev, fullName: validateUserField('fullName', val) }));
+                  if (!usernameModified) {
+                    const suggested = val.toLowerCase().replace(/[^a-z0-9]/g, '.').replace(/\.+/g, '.').replace(/^\.|\.$/g, '');
+                    setUsername(suggested);
+                    if (suggested) {
+                      setFieldErrors(prev => ({ ...prev, username: validateUserField('username', suggested) }));
+                    }
+                  }
                 }}
                 placeholder="e.g. Peter Otieno"
                 className={`w-full rounded-xl border ${
@@ -2283,6 +2357,33 @@ const CreateUserModal = ({
               {fieldErrors.fullName && <p className="text-xs text-red-500 mt-1 font-medium">{fieldErrors.fullName}</p>}
             </div>
 
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Username (for Login) *</label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs select-none">@</span>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={e => {
+                    setUsernameModified(true);
+                    const clean = e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, '');
+                    setUsername(clean);
+                    setFieldErrors(prev => ({ ...prev, username: validateUserField('username', clean) }));
+                  }}
+                  placeholder="e.g. peter.otieno"
+                  className={`w-full pl-8 rounded-xl border font-mono text-sm ${
+                    fieldErrors.username
+                      ? 'border-red-400 focus:border-red-400 focus:ring-1 focus:ring-red-400 bg-red-50/30 dark:bg-red-950/20'
+                      : 'border-slate-200 dark:border-slate-700 focus:border-orange-500 bg-slate-50/50 dark:bg-slate-800/50'
+                  } px-3.5 py-2.5 text-slate-900 dark:text-white outline-none transition`}
+                />
+              </div>
+              {fieldErrors.username && <p className="text-xs text-red-500 mt-1 font-medium">{fieldErrors.username}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email Address *</label>
               <input
@@ -2302,9 +2403,7 @@ const CreateUserModal = ({
               />
               {fieldErrors.email && <p className="text-xs text-red-500 mt-1 font-medium">{fieldErrors.email}</p>}
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Phone Number (Optional)</label>
               <PhoneInput
@@ -2316,6 +2415,9 @@ const CreateUserModal = ({
                 error={fieldErrors.phone}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Platform Role *</label>
@@ -2641,6 +2743,7 @@ const PlatformUsersPage = ({
             id: u.userUuid || u.uuid,
             userUuid: u.userUuid || u.uuid,
             fullName: u.fullName || 'User',
+            username: u.username || null,
             email: u.email,
             phone: u.phone,
             role: u.role,
@@ -2670,6 +2773,7 @@ const PlatformUsersPage = ({
     return users.filter(u => {
       const matchSearch =
         u.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        (u.username && u.username.toLowerCase().includes(search.toLowerCase())) ||
         u.email.toLowerCase().includes(search.toLowerCase()) ||
         (u.phone && u.phone.includes(search));
       const matchRole = roleFilter === 'ALL' || u.role === roleFilter;
@@ -2824,8 +2928,15 @@ const PlatformUsersPage = ({
                     className="border-b last:border-0 border-slate-100 dark:border-slate-800 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition"
                   >
                     <td className="px-5 py-3.5">
-                      <div className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">
-                        {user.fullName}
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">
+                          {user.fullName}
+                        </div>
+                        {user.username && (
+                          <span className="font-mono text-[11px] font-bold text-orange-500 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
+                            @{user.username}
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-slate-400">{user.email} {user.phone && `· ${user.phone}`}</div>
                     </td>

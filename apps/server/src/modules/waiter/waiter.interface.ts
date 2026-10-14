@@ -22,6 +22,7 @@ export interface WaiterActivitySummary {
 
 export interface WaiterListItem {
   waiterUuid: string;
+  username?: string | null;
   fullName: string;
   email: string;
   phone: string | null;
@@ -46,6 +47,7 @@ export interface WaiterDetail extends WaiterListItem {
 export interface CreateWaiterInput {
   fullName: string;
   email: string;
+  username?: string;
   phone?: string;
   password: string;
 }
@@ -53,6 +55,7 @@ export interface CreateWaiterInput {
 export interface UpdateWaiterInput {
   fullName?: string;
   email?: string;
+  username?: string;
   phone?: string;
 }
 

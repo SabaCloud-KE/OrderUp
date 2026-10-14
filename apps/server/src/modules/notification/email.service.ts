@@ -4,6 +4,7 @@ import { logger } from '../../config/logger';
 
 export interface UserCredentialsEmailParams {
   email: string;
+  username?: string;
   fullName: string;
   rawPassword: string;
   role: string;
@@ -60,7 +61,7 @@ export class EmailService {
    * Business Admin (Owner), Manager, and Waiter all log into the unified Staff Portal.
    * Only Platform Super Admin uses the dedicated Admin Portal.
    */
-  private resolvePortalUrl(role: string, email?: string): { url: string; portalName: string } {
+  private resolvePortalUrl(role: string, email?: string, username?: string): { url: string; portalName: string } {
     const normalized = (role || '').toUpperCase();
 
     if (normalized === 'SUPER_ADMIN') {
@@ -71,24 +72,28 @@ export class EmailService {
     }
 
     const baseStaffUrl = (env.STAFF_PORTAL_URL || 'https://order-up-staffportal.vercel.app').replace(/\/+$/, '');
-    const emailParam = email ? `&email=${encodeURIComponent(email)}` : '';
+    const userParam = username
+      ? `&username=${encodeURIComponent(username)}`
+      : email
+      ? `&email=${encodeURIComponent(email)}`
+      : '';
 
     if (normalized === 'ADMIN' || normalized === 'CLUB_ADMIN' || normalized === 'TENANT_ADMIN') {
       return {
-        url: `${baseStaffUrl}?role=admin${emailParam}`,
+        url: `${baseStaffUrl}?role=admin${userParam}`,
         portalName: 'Staff Portal (Admin)',
       };
     }
 
     if (normalized === 'MANAGER') {
       return {
-        url: `${baseStaffUrl}?role=manager${emailParam}`,
+        url: `${baseStaffUrl}?role=manager${userParam}`,
         portalName: 'Staff Portal (Manager)',
       };
     }
 
     return {
-      url: `${baseStaffUrl}?role=waiter${emailParam}`,
+      url: `${baseStaffUrl}?role=waiter${userParam}`,
       portalName: 'Staff Portal (Waiter)',
     };
   }
@@ -138,7 +143,7 @@ export class EmailService {
     const cleanEmail = (params.email || '').trim().toLowerCase();
     const cleanName = (params.fullName || '').trim() || 'Team Member';
     const readableRole = this.formatRole(params.role);
-    const { url: defaultUrl, portalName } = this.resolvePortalUrl(params.role, cleanEmail);
+    const { url: defaultUrl, portalName } = this.resolvePortalUrl(params.role, cleanEmail, params.username);
     const portalUrl = params.loginUrl || defaultUrl;
     const businessLabel = params.businessName ? params.businessName.trim() : null;
 
@@ -316,9 +321,15 @@ export class EmailService {
         <div class="card-title">Your Login Credentials</div>
 
         <div style="margin-bottom: 12px;">
-          <div style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Login Email / Username:</div>
-          <div class="credential-value" style="width: calc(100% - 22px);">${cleanEmail}</div>
+          <div style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Username:</div>
+          <div class="credential-value" style="width: calc(100% - 22px);">${params.username || cleanEmail}</div>
         </div>
+
+        ${params.username ? `
+        <div style="margin-bottom: 12px;">
+          <div style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Email:</div>
+          <div style="font-size: 13px; color: #334155; font-weight: 500;">${cleanEmail}</div>
+        </div>` : ''}
 
         <div style="margin-bottom: 12px;">
           <div style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 4px;">Temporary Password:</div>

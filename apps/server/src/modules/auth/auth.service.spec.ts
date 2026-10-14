@@ -10,6 +10,8 @@ describe('AuthService Unit Tests', () => {
   beforeEach(() => {
     mockAuthRepository = {
       findByEmail: vi.fn(),
+      findByUsername: vi.fn(),
+      findByIdentifier: vi.fn(),
       findById: vi.fn(),
       findByEmailVerificationToken: vi.fn(),
       findByResetPasswordToken: vi.fn(),
@@ -31,6 +33,7 @@ describe('AuthService Unit Tests', () => {
       const mockUser: any = {
         userUuid: 'user-uuid-123',
         email: 'waiter@alchemist.co.ke',
+        username: 'waiter.kamau',
         passwordHash: hashedPassword,
         fullName: 'John Waiter',
         role: 'WAITER',
@@ -40,6 +43,7 @@ describe('AuthService Unit Tests', () => {
         clubUuid: 'club-uuid-123',
       };
 
+      vi.spyOn(mockAuthRepository, 'findByIdentifier').mockResolvedValue(mockUser);
       vi.spyOn(mockAuthRepository, 'findByEmail').mockResolvedValue(mockUser);
       vi.spyOn(mockAuthRepository, 'createSession').mockResolvedValue({ sessionUuid: 'sess-123' } as any);
       vi.spyOn(mockAuthRepository, 'createRefreshToken').mockResolvedValue({ tokenUuid: 'token-123' } as any);
@@ -53,13 +57,15 @@ describe('AuthService Unit Tests', () => {
 
     it('should throw UnauthorizedError on invalid password', async () => {
       const hashedPassword = await bcrypt.hash('Password123!', 12);
-      vi.spyOn(mockAuthRepository, 'findByEmail').mockResolvedValue({
+      const mockUser: any = {
         passwordHash: hashedPassword,
         isActive: true,
-      } as any);
+      };
+      vi.spyOn(mockAuthRepository, 'findByIdentifier').mockResolvedValue(mockUser);
+      vi.spyOn(mockAuthRepository, 'findByEmail').mockResolvedValue(mockUser);
 
       await expect(authService.login('waiter@alchemist.co.ke', 'WrongPassword')).rejects.toThrow(
-        'Invalid email or password',
+        'Invalid username or password',
       );
     });
   });

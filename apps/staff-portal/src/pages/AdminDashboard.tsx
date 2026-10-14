@@ -1614,17 +1614,24 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
 
   // Create manager state
   const [managerFullName, setManagerFullName] = useState('');
+  const [managerUsername, setManagerUsername] = useState('');
+  const [managerUsernameTouched, setManagerUsernameTouched] = useState(false);
   const [managerEmail, setManagerEmail] = useState('');
   const [managerPhone, setManagerPhone] = useState('');
   const [managerPassword, setManagerPassword] = useState('');
   const [managerCreating, setManagerCreating] = useState(false);
-  const [managerErrors, setManagerErrors] = useState<{ fullName?: string; email?: string; phone?: string }>({});
+  const [managerErrors, setManagerErrors] = useState<{ fullName?: string; username?: string; email?: string; phone?: string }>({});
 
   const validateManagerField = (field: string, value: string): string => {
     if (field === 'fullName') {
       if (!value.trim()) return 'Full name is required';
       if (!/^[a-zA-Z\s]+$/.test(value)) return 'Name can only contain letters';
       if (value.trim().length < 3) return 'Name must be at least 3 characters';
+    }
+    if (field === 'username') {
+      if (!value.trim()) return 'Username is required';
+      if (value.trim().length < 2) return 'Username must be at least 2 characters';
+      if (!/^[a-zA-Z0-9._-]+$/.test(value.trim())) return 'Letters, numbers, dots, and hyphens only';
     }
     if (field === 'email') {
       if (!value.trim()) return 'Email is required';
@@ -1734,10 +1741,11 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const handleCreateManagerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const nameErr = validateManagerField('fullName', managerFullName);
+    const userErr = validateManagerField('username', managerUsername);
     const emailErr = validateManagerField('email', managerEmail);
     const phoneErr = validateManagerField('phone', managerPhone);
-    if (nameErr || emailErr || phoneErr) {
-      setManagerErrors({ fullName: nameErr, email: emailErr, phone: phoneErr });
+    if (nameErr || userErr || emailErr || phoneErr) {
+      setManagerErrors({ fullName: nameErr, username: userErr, email: emailErr, phone: phoneErr });
       return;
     }
     if (!managerPassword.trim()) {
@@ -1750,6 +1758,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
         method: 'POST',
         body: JSON.stringify({
           fullName: managerFullName.trim(),
+          username: managerUsername.trim().toLowerCase(),
           email: managerEmail.trim(),
           ...(managerPhone.trim() ? { phone: managerPhone.trim() } : {}),
           password: managerPassword,
@@ -1758,6 +1767,8 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
       showToast(`Manager ${managerFullName} created successfully!`, 'success');
       setCreateManagerOpen(false);
       setManagerFullName('');
+      setManagerUsername('');
+      setManagerUsernameTouched(false);
       setManagerEmail('');
       setManagerPhone('');
       setManagerPassword('');
@@ -2146,6 +2157,9 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                             </div>
                             <div>
                               <div>{m.fullName}</div>
+                              {m.username && (
+                                <div className="text-[11px] font-mono text-blue-600 dark:text-blue-400 font-semibold">@{m.username}</div>
+                              )}
                               {m.mustChangePassword && (
                                 <span className="text-[9px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded-full inline-block mt-0.5">
                                   Password Change Required
@@ -2305,13 +2319,48 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                 placeholder="e.g. Samuel Mutua"
                 value={managerFullName}
                 onChange={(e) => {
-                  setManagerFullName(e.target.value);
-                  setManagerErrors(prev => ({ ...prev, fullName: validateManagerField('fullName', e.target.value) }));
+                  const val = e.target.value;
+                  setManagerFullName(val);
+                  setManagerErrors(prev => ({ ...prev, fullName: validateManagerField('fullName', val) }));
+                  if (!managerUsernameTouched) {
+                    const suggested = val.toLowerCase().trim().replace(/[^a-z0-9]+/g, '.').replace(/(^\.|\.$)/g, '');
+                    setManagerUsername(suggested);
+                    if (suggested) {
+                      setManagerErrors(prev => ({ ...prev, username: validateManagerField('username', suggested) }));
+                    }
+                  }
                 }}
                 className={`w-full rounded-xl border p-2.5 text-xs outline-none focus:ring-2 ${managerErrors.fullName ? 'border-red-400 focus:ring-red-400' : 'focus:ring-blue-500'}`}
                 style={{ background: 'var(--bg-body)', borderColor: managerErrors.fullName ? undefined : 'var(--border)', color: 'var(--text-primary)' }}
               />
               {managerErrors.fullName && <p className="text-[10px] text-red-500 mt-0.5 font-semibold">{managerErrors.fullName}</p>}
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-500">Username *</label>
+                <span className="text-[10px] text-slate-400">Used by Manager to log in</span>
+              </div>
+              <div className="flex">
+                <span className="inline-flex items-center px-2.5 rounded-l-xl border border-r-0 text-xs font-semibold select-none" style={{ background: 'var(--bg-body)', borderColor: managerErrors.username ? '#f87171' : 'var(--border)', color: 'var(--text-muted)' }}>
+                  @
+                </span>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. samuel.mutua"
+                  value={managerUsername}
+                  onChange={(e) => {
+                    const val = e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '');
+                    setManagerUsername(val);
+                    setManagerUsernameTouched(true);
+                    setManagerErrors(prev => ({ ...prev, username: validateManagerField('username', val) }));
+                  }}
+                  className={`w-full rounded-r-xl border p-2.5 text-xs outline-none focus:ring-2 ${managerErrors.username ? 'border-red-400 focus:ring-red-400' : 'focus:ring-blue-500'}`}
+                  style={{ background: 'var(--bg-body)', borderColor: managerErrors.username ? undefined : 'var(--border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+              {managerErrors.username && <p className="text-[10px] text-red-500 mt-0.5 font-semibold">{managerErrors.username}</p>}
             </div>
 
             <div className="space-y-1">
@@ -2760,17 +2809,24 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   // Create waiter state
   const [createWaiterOpen, setCreateWaiterOpen] = useState(false);
   const [waiterFullName, setWaiterFullName] = useState('');
+  const [waiterUsername, setWaiterUsername] = useState('');
+  const [waiterUsernameTouched, setWaiterUsernameTouched] = useState(false);
   const [waiterEmail, setWaiterEmail] = useState('');
   const [waiterPhone, setWaiterPhone] = useState('');
   const [waiterPassword, setWaiterPassword] = useState('');
   const [waiterCreating, setWaiterCreating] = useState(false);
-  const [waiterErrors, setWaiterErrors] = useState<{ fullName?: string; email?: string; phone?: string }>({});
+  const [waiterErrors, setWaiterErrors] = useState<{ fullName?: string; username?: string; email?: string; phone?: string }>({});
 
   const validateWaiterField = (field: string, value: string): string => {
     if (field === 'fullName') {
       if (!value.trim()) return 'Full name is required';
       if (!/^[a-zA-Z\s]+$/.test(value)) return 'Name can only contain letters';
       if (value.trim().length < 3) return 'Name must be at least 3 characters';
+    }
+    if (field === 'username') {
+      if (!value.trim()) return 'Username is required';
+      if (value.trim().length < 2) return 'Username must be at least 2 characters';
+      if (!/^[a-zA-Z0-9._-]+$/.test(value.trim())) return 'Letters, numbers, dots, and hyphens only';
     }
     if (field === 'email') {
       if (!value.trim()) return 'Email is required';
@@ -2881,10 +2937,11 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
   const handleCreateWaiterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const nameErr = validateWaiterField('fullName', waiterFullName);
+    const userErr = validateWaiterField('username', waiterUsername);
     const emailErr = validateWaiterField('email', waiterEmail);
     const phoneErr = validateWaiterField('phone', waiterPhone);
-    if (nameErr || emailErr || phoneErr) {
-      setWaiterErrors({ fullName: nameErr, email: emailErr, phone: phoneErr });
+    if (nameErr || userErr || emailErr || phoneErr) {
+      setWaiterErrors({ fullName: nameErr, username: userErr, email: emailErr, phone: phoneErr });
       return;
     }
     try {
@@ -2893,6 +2950,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
         method: 'POST',
         body: JSON.stringify({
           fullName: waiterFullName.trim(),
+          username: waiterUsername.trim().toLowerCase(),
           email: waiterEmail.trim().toLowerCase(),
           phone: waiterPhone.trim() || undefined,
           password: waiterPassword,
@@ -2906,6 +2964,8 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
       showToast(`Waiter "${waiterFullName}" created successfully!`, 'success');
       setCreateWaiterOpen(false);
       setWaiterFullName('');
+      setWaiterUsername('');
+      setWaiterUsernameTouched(false);
       setWaiterEmail('');
       setWaiterPhone('');
       setWaiterPassword('');
@@ -3321,6 +3381,9 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                             </div>
                             <div>
                               <div>{w.fullName}</div>
+                              {w.username && (
+                                <div className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">@{w.username}</div>
+                              )}
                               {w.mustChangePassword && (
                                 <span className="text-[9px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded-full inline-block mt-0.5">
                                   Password Change Required
@@ -3483,13 +3546,48 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                 placeholder="e.g. Kelvin Mutua"
                 value={waiterFullName}
                 onChange={(e) => {
-                  setWaiterFullName(e.target.value);
-                  setWaiterErrors(prev => ({ ...prev, fullName: validateWaiterField('fullName', e.target.value) }));
+                  const val = e.target.value;
+                  setWaiterFullName(val);
+                  setWaiterErrors(prev => ({ ...prev, fullName: validateWaiterField('fullName', val) }));
+                  if (!waiterUsernameTouched) {
+                    const suggested = val.toLowerCase().trim().replace(/[^a-z0-9]+/g, '.').replace(/(^\.|\.$)/g, '');
+                    setWaiterUsername(suggested);
+                    if (suggested) {
+                      setWaiterErrors(prev => ({ ...prev, username: validateWaiterField('username', suggested) }));
+                    }
+                  }
                 }}
                 className={`w-full rounded-xl border p-2.5 text-xs outline-none focus:ring-2 ${waiterErrors.fullName ? 'border-red-400 focus:ring-red-400' : 'focus:ring-emerald-500'}`}
                 style={{ background: 'var(--bg-body)', borderColor: waiterErrors.fullName ? undefined : 'var(--border)', color: 'var(--text-primary)' }}
               />
               {waiterErrors.fullName && <p className="text-[10px] text-red-500 mt-0.5 font-semibold">{waiterErrors.fullName}</p>}
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-500">Username *</label>
+                <span className="text-[10px] text-slate-400">Used by Waiter to log in</span>
+              </div>
+              <div className="flex">
+                <span className="inline-flex items-center px-2.5 rounded-l-xl border border-r-0 text-xs font-semibold select-none" style={{ background: 'var(--bg-body)', borderColor: waiterErrors.username ? '#f87171' : 'var(--border)', color: 'var(--text-muted)' }}>
+                  @
+                </span>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. kelvin.mutua"
+                  value={waiterUsername}
+                  onChange={(e) => {
+                    const val = e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '');
+                    setWaiterUsername(val);
+                    setWaiterUsernameTouched(true);
+                    setWaiterErrors(prev => ({ ...prev, username: validateWaiterField('username', val) }));
+                  }}
+                  className={`w-full rounded-r-xl border p-2.5 text-xs outline-none focus:ring-2 ${waiterErrors.username ? 'border-red-400 focus:ring-red-400' : 'focus:ring-emerald-500'}`}
+                  style={{ background: 'var(--bg-body)', borderColor: waiterErrors.username ? undefined : 'var(--border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+              {waiterErrors.username && <p className="text-[10px] text-red-500 mt-0.5 font-semibold">{waiterErrors.username}</p>}
             </div>
 
             <div className="space-y-1">

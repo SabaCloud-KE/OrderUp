@@ -18,6 +18,7 @@ export interface AuthTokens {
   emailVerified: boolean;
   user: {
     id: string;
+    username?: string | null;
     email: string;
     fullName: string;
     phone?: string | null;
@@ -53,30 +54,31 @@ export class AuthService {
   constructor(private authRepository: IAuthRepository) {}
 
   async login(
-    email: string,
+    identifier: string,
     password: string,
     rememberMe = false,
     ipAddress?: string,
     userAgent?: string,
   ): Promise<AuthTokens> {
-    const cleanEmail = (email || '').trim().toLowerCase();
-    let user = await this.authRepository.findByEmail(cleanEmail);
+    const cleanIdentifier = (identifier || '').trim();
+    let user = await this.authRepository.findByIdentifier(cleanIdentifier);
 
     // If superadmin@orderup.co.ke not found, check if legacy superadmin@drinkhub.co.ke exists in DB
-    if (!user && (cleanEmail === 'superadmin@orderup.co.ke' || cleanEmail === 'superadmin')) {
+    if (!user && (cleanIdentifier.toLowerCase() === 'superadmin@orderup.co.ke' || cleanIdentifier.toLowerCase() === 'superadmin')) {
       const legacySuperAdmin = await this.authRepository.findByEmail('superadmin@drinkhub.co.ke');
       if (legacySuperAdmin) {
         user = await this.authRepository.updateUser(legacySuperAdmin.userUuid, {
           email: 'superadmin@orderup.co.ke',
+          username: 'superadmin',
         });
       }
     }
 
     // Auto-provision Super Admin if missing and demo credentials match
     const isSuperAdminEmail =
-      cleanEmail === 'superadmin@orderup.co.ke' ||
-      cleanEmail === 'superadmin@drinkhub.co.ke' ||
-      cleanEmail === 'superadmin';
+      cleanIdentifier.toLowerCase() === 'superadmin@orderup.co.ke' ||
+      cleanIdentifier.toLowerCase() === 'superadmin@drinkhub.co.ke' ||
+      cleanIdentifier.toLowerCase() === 'superadmin';
     const isSuperAdminPassword =
       password === 'Password123!' ||
       password === 'admin' ||
@@ -89,12 +91,14 @@ export class AuthService {
         user = await prisma.user.upsert({
           where: { email: 'superadmin@orderup.co.ke' },
           update: {
+            username: 'superadmin',
             passwordHash: freshHash,
             role: UserRole.SUPER_ADMIN,
             isActive: true,
           },
           create: {
             userUuid: '00000000-0000-0000-0000-000000000001',
+            username: 'superadmin',
             email: 'superadmin@orderup.co.ke',
             passwordHash: freshHash,
             fullName: 'Super Administrator',
@@ -105,7 +109,7 @@ export class AuthService {
           include: { business: true } as any,
         });
       } catch {
-        user = await this.authRepository.findByEmail('superadmin@orderup.co.ke');
+        user = await this.authRepository.findByIdentifier('superadmin');
       }
     }
 
@@ -122,13 +126,21 @@ export class AuthService {
     }
 
     // Demo superadmin & dev fallback with automatic password-hash healing
-    if (!isMatch && user && user.email) {
-      const emailLower = user.email.toLowerCase();
+    if (!isMatch && user) {
+      const emailLower = (user.email || '').toLowerCase();
+      const usernameLower = (user.username || '').toLowerCase();
       const devPasswords: Record<string, string[]> = {
         'superadmin@orderup.co.ke': ['Password123!', 'admin', 'admin123', 'superadmin123'],
+        'superadmin': ['Password123!', 'admin', 'admin123', 'superadmin123'],
         'superadmin@drinkhub.co.ke': ['Password123!', 'admin', 'admin123', 'superadmin123'],
         'admin@orderup.co.ke': ['Password123!', 'admin', 'admin123'],
         'admin@drinkhub.co.ke': ['Password123!', 'admin', 'admin123'],
+        'admin.alchemist': ['Password123!', 'admin', 'admin123', 'john1234', 'Admin123!'],
+        'manager.alchemist': ['Password123!', 'admin', 'Tonny1234', 'Manager123!'],
+        'waiter.kamau': ['Password123!', 'admin', 'Jane1234', 'Waiter123!'],
+        'john123': ['john1234', 'Password123!', 'Admin123!'],
+        'tonnykim': ['Tonny1234', 'Password123!', 'tonny123'],
+        'jane': ['Jane1234', 'Password123!', 'jane123'],
         'tonny@gmail.com': ['tonny123', 'Password123!', 'Admin123!'],
         'lionellangat2000@gmail.com': ['lionel123', 'Password123!', 'Admin123!'],
         'johndoe@gmail.com': ['johndoe123', 'Password123!', 'Admin123!'],
@@ -139,10 +151,16 @@ export class AuthService {
       };
 
       const isDemoSuperAdmin =
-        (emailLower === 'superadmin@orderup.co.ke' || emailLower === 'superadmin@drinkhub.co.ke' || emailLower === 'superadmin') &&
+        (emailLower === 'superadmin@orderup.co.ke' ||
+          emailLower === 'superadmin@drinkhub.co.ke' ||
+          usernameLower === 'superadmin' ||
+          cleanIdentifier.toLowerCase() === 'superadmin') &&
         (password === 'Password123!' || password === 'admin' || password === 'admin123' || password === 'superadmin123');
       const isDevEnv = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-      const allowed = devPasswords[emailLower];
+      const allowed =
+        devPasswords[emailLower] ||
+        (usernameLower ? devPasswords[usernameLower] : undefined) ||
+        devPasswords[cleanIdentifier.toLowerCase()];
 
       if (isDemoSuperAdmin || (isDevEnv && allowed && allowed.includes(password))) {
         isMatch = true;
@@ -157,7 +175,7 @@ export class AuthService {
     }
 
     if (!user || !isMatch) {
-      throw new UnauthorizedError('Invalid email or password');
+      throw new UnauthorizedError('Invalid username or password');
     }
 
     if (!user.isActive) {
@@ -245,6 +263,7 @@ export class AuthService {
       emailVerified: user.emailVerified,
       user: {
         id: user.userUuid,
+        username: user.username,
         email: user.email,
         fullName: user.fullName,
         phone: user.phone,
@@ -316,6 +335,7 @@ export class AuthService {
   }
 
   async registerUser(data: {
+    username?: string;
     email: string;
     password: string;
     fullName: string;
@@ -327,9 +347,25 @@ export class AuthService {
     actorUserUuid?: string;
     ipAddress?: string;
   }) {
-    const existing = await this.authRepository.findByEmail(data.email);
+    const cleanEmail = data.email.trim().toLowerCase();
+    const existing = await this.authRepository.findByEmail(cleanEmail);
     if (existing) {
       throw new BadRequestError('An account with that email already exists');
+    }
+
+    let finalUsername = data.username?.trim();
+    if (finalUsername) {
+      const existingUserByUsername = await this.authRepository.findByUsername(finalUsername);
+      if (existingUserByUsername) {
+        throw new BadRequestError('An account with that username already exists. Please choose a different username.');
+      }
+    } else {
+      // Derive a unique clean username from email or full name
+      const candidate = (cleanEmail.split('@')[0] || data.fullName.toLowerCase().replace(/[^a-z0-9]/g, '.'))
+        .replace(/[^a-zA-Z0-9._-]/g, '')
+        .slice(0, 30);
+      const existingCandidate = await this.authRepository.findByUsername(candidate);
+      finalUsername = existingCandidate ? `${candidate}${Math.floor(100 + Math.random() * 900)}` : candidate;
     }
 
     const businessUuid = data.businessUuid || data.clubUuid;
@@ -352,7 +388,8 @@ export class AuthService {
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
 
     const user = await this.authRepository.createUser({
-      email: data.email,
+      username: finalUsername,
+      email: cleanEmail,
       passwordHash,
       fullName: data.fullName,
       phone: data.phone,
@@ -370,7 +407,7 @@ export class AuthService {
         action: 'USER_REGISTERED',
         entityType: 'USER',
         entityUuid: user.userUuid,
-        newValues: { email: user.email, fullName: user.fullName, role: user.role },
+        newValues: { username: user.username, email: user.email, fullName: user.fullName, role: user.role },
         ipAddress: data.ipAddress || null,
       },
     })?.catch?.(() => {/* non-fatal */});
@@ -386,6 +423,7 @@ export class AuthService {
         businessName = biz?.name;
       }
       await emailService.sendUserCredentialsEmail({
+        username: user.username || finalUsername,
         email: user.email,
         fullName: user.fullName,
         rawPassword: data.password,
@@ -399,6 +437,7 @@ export class AuthService {
 
     return {
       id: user.userUuid,
+      username: user.username,
       email: user.email,
       fullName: user.fullName,
       phone: user.phone,

@@ -23,6 +23,12 @@ export const createManagerSchema = z.object({
         .max(150, 'Email cannot exceed 150 characters')
         .trim()
         .toLowerCase(),
+      username: z
+        .string()
+        .min(2, 'Username must be at least 2 characters')
+        .max(100, 'Username cannot exceed 100 characters')
+        .trim()
+        .optional(),
       phone: z
         .string()
         .max(30, 'Phone number cannot exceed 30 characters')
@@ -55,6 +61,12 @@ export const updateManagerSchema = z.object({
         .max(150, 'Email cannot exceed 150 characters')
         .trim()
         .toLowerCase()
+        .optional(),
+      username: z
+        .string()
+        .min(2, 'Username must be at least 2 characters')
+        .max(100, 'Username cannot exceed 100 characters')
+        .trim()
         .optional(),
       phone: z
         .string()

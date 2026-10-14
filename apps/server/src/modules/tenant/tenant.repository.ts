@@ -252,6 +252,7 @@ export class TenantRepository implements ITenantRepository {
           data: {
             businessUuid: business.businessUuid,
             email: data.adminEmail,
+            username: data.adminUsername,
             passwordHash: data.adminPasswordHash,
             fullName: data.adminFullName,
             phone: data.adminPhone,

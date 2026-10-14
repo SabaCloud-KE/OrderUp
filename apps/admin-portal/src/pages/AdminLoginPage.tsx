@@ -38,7 +38,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
       const res = await fetch(getApiUrl('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanUser, password }),
+        body: JSON.stringify({ username: cleanUser, email: cleanUser, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
@@ -118,12 +118,12 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onLogin }) => {
             <button
               type="button"
               onClick={() => {
-                setUsername('superadmin@orderup.co.ke');
+                setUsername('superadmin');
                 setPassword('Password123!');
               }}
               className="mt-1 text-[11px] underline text-blue-600 hover:text-blue-800 font-medium"
             >
-              Click to fill: superadmin@orderup.co.ke / Password123!
+              Click to fill: superadmin / Password123!
             </button>
           </div>
         </div>

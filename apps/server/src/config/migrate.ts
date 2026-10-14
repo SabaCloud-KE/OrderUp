@@ -165,12 +165,18 @@ export async function autoMigrateDatabase(): Promise<void> {
     try {
       await prisma.$executeRawUnsafe(`
         ALTER TABLE users
+          ADD COLUMN IF NOT EXISTS username VARCHAR(100),
           ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false,
           ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT false,
           ADD COLUMN IF NOT EXISTS email_verification_token TEXT,
           ADD COLUMN IF NOT EXISTS reset_password_token TEXT,
           ADD COLUMN IF NOT EXISTS reset_password_expires TIMESTAMPTZ(6);
 
+        UPDATE users
+        SET username = LOWER(REGEXP_REPLACE(SPLIT_PART(email, '@', 1), '[^a-zA-Z0-9_.]', '', 'g'))
+        WHERE username IS NULL OR username = '';
+
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
         CREATE INDEX IF NOT EXISTS idx_users_biz_role_active_del ON users(club_uuid, role, is_active, deleted_at);
         CREATE INDEX IF NOT EXISTS idx_users_biz_role_del ON users(club_uuid, role, deleted_at);
       `);
@@ -218,6 +224,7 @@ export async function autoMigrateDatabase(): Promise<void> {
         await prisma.user.create({
           data: {
             userUuid: '00000000-0000-0000-0000-000000000001',
+            username: 'superadmin',
             email: 'superadmin@orderup.co.ke',
             passwordHash: superAdminPasswordHash,
             fullName: 'Super Administrator',
@@ -226,7 +233,12 @@ export async function autoMigrateDatabase(): Promise<void> {
             isActive: true,
           },
         });
-        logger.info('👤 Auto-provisioned default Super Administrator: superadmin@orderup.co.ke');
+        logger.info('👤 Auto-provisioned default Super Administrator: superadmin (superadmin@orderup.co.ke)');
+      } else if (!existingSuperAdmin.username) {
+        await prisma.user.update({
+          where: { userUuid: existingSuperAdmin.userUuid },
+          data: { username: 'superadmin' },
+        });
       }
     } catch (err: any) {
       logger.warn(`Superadmin auto-provision warning: ${err.message}`);

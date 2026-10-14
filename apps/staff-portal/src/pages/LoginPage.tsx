@@ -52,7 +52,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       const res = await fetch(getApiUrl('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanUser, password }),
+        body: JSON.stringify({ username: cleanUser, email: cleanUser, password }),
       });
       const data = await res.json().catch(() => ({}));
 
@@ -259,8 +259,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setUsername('john123@gmail.com');
-                  setPassword('john1234');
+                  setUsername('admin.alchemist');
+                  setPassword('Admin123!');
                   setError('');
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
@@ -271,8 +271,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setUsername('tonnykim@gmail.com');
-                  setPassword('Tonny1234');
+                  setUsername('manager.alchemist');
+                  setPassword('Manager123!');
                   setError('');
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
@@ -283,8 +283,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setUsername('jane@gmail.com');
-                  setPassword('Jane1234');
+                  setUsername('waiter.kamau');
+                  setPassword('Waiter123!');
                   setError('');
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
@@ -382,11 +382,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Email or Username
+                  Username
                 </label>
                 <input
                   type="text"
-                  placeholder="name@orderup.co.ke or username"
+                  placeholder="e.g. admin.alchemist, manager.alchemist, or waiter.kamau"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   autoComplete="username"

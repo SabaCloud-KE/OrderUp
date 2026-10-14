@@ -1,15 +1,22 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-  body: z.object({
-    email: z.string().min(1, 'Username or email is required'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-    rememberMe: z.boolean().optional().default(false),
-  }),
+  body: z
+    .object({
+      username: z.string().optional(),
+      email: z.string().optional(),
+      password: z.string().min(6, 'Password must be at least 6 characters'),
+      rememberMe: z.boolean().optional().default(false),
+    })
+    .refine((data) => !!(data.username?.trim() || data.email?.trim()), {
+      message: 'Username or email is required',
+      path: ['username'],
+    }),
 });
 
 export const registerSchema = z.object({
   body: z.object({
+    username: z.string().min(2, 'Username must be at least 2 characters').max(100).optional(),
     email: z.string().min(1, 'Username or email is required'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     fullName: z.string().min(2, 'Full name must be at least 2 characters'),

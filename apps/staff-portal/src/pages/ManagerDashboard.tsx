@@ -334,19 +334,34 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
       if (!/^[a-zA-Z\s]+$/.test(String(v))) return 'Letters only';
       if (String(v).trim().length < 2) return 'Min 2 characters';
     }
+    if (k === 'username') {
+      if (!String(v).trim()) return 'Username is required for login';
+      if (String(v).trim().length < 2) return 'Min 2 characters';
+      if (!/^[a-zA-Z0-9._-]+$/.test(String(v).trim())) return 'Letters, numbers, dots, and hyphens only';
+    }
     if (k === 'phone') {
       if (!String(v).trim()) return 'Required';
       if (!/^\d+$/.test(String(v).trim())) return 'Numbers only';
     }
     if (k === 'email') {
-      if (!String(v).trim()) return 'Email is required for login';
+      if (!String(v).trim()) return 'Email is required';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v))) return 'Enter a valid email address';
     }
     return '';
   };
 
   const set = (k: keyof WaiterForm, v: string | boolean) => {
-    setForm(p => ({ ...p, [k]: v }));
+    setForm(p => {
+      const next = { ...p, [k]: v };
+      // Auto-suggest username if user hasn't typed one manually yet
+      if ((k === 'firstName' || k === 'lastName') && (!p.username || p.username === `${p.firstName}.${p.lastName}`.toLowerCase().replace(/[^a-z0-9.]/g, ''))) {
+        const fn = k === 'firstName' ? String(v) : p.firstName;
+        const ln = k === 'lastName' ? String(v) : p.lastName;
+        const candidate = `${fn}.${ln}`.toLowerCase().trim().replace(/[^a-z0-9]+/g, '.').replace(/(^\.|\.$)/g, '');
+        next.username = candidate;
+      }
+      return next;
+    });
     if (typeof v === 'string') {
       setErrors(p => ({ ...p, [k]: validateField(k, v) }));
     } else {
@@ -358,6 +373,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
     const e: Partial<Record<keyof WaiterForm, string>> = {};
     const fnErr = validateField('firstName', form.firstName); if (fnErr) e.firstName = fnErr;
     const lnErr = validateField('lastName', form.lastName); if (lnErr) e.lastName = lnErr;
+    const usErr = validateField('username', form.username); if (usErr) e.username = usErr;
     const phErr = validateField('phone', form.phone); if (phErr) e.phone = phErr;
     const emErr = validateField('email', form.email); if (emErr) e.email = emErr;
     if (form.tempPwd.length < 8) e.tempPwd = 'Min. 8 characters';
@@ -374,6 +390,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
         headers: authHeaders(),
         body: JSON.stringify({
           email: form.email.trim().toLowerCase(),
+          username: form.username.trim().toLowerCase(),
           password: form.tempPwd,
           fullName: `${form.firstName.trim()} ${form.lastName.trim()}`,
           phone: form.phone.trim() || undefined,
@@ -395,7 +412,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
         lastName: parts.slice(1).join(' ') || form.lastName,
         phone: form.phone.trim(),
         email: u.email ?? form.email,
-        username: u.email?.split('@')[0] ?? form.username,
+        username: u.username ?? form.username,
         employeeNo: form.employeeNo || `EMP-${idx}`,
         status: 'Active' as Waiter['status'],
         shift: form.shift,
@@ -426,6 +443,7 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
           <div className="grid grid-cols-2 gap-3">
             <div><FL required>First Name</FL><SI value={form.firstName} onChange={e => set('firstName', e.target.value)} placeholder="Jane" error={errors.firstName} /></div>
             <div><FL required>Last Name</FL><SI value={form.lastName} onChange={e => set('lastName', e.target.value)} placeholder="Wanjiku" error={errors.lastName} /></div>
+            <div><FL required>Username</FL><SI value={form.username} onChange={e => set('username', e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))} placeholder="jane.wanjiku" error={errors.username} /></div>
             <div><FL required>Phone Number</FL><PhoneInput value={form.phone} onChange={v => set('phone', v)} error={errors.phone} /></div>
             <div><FL required>Email</FL><SI type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="jane@club.co.ke" error={errors.email} /></div>
             <div><FL>Employee No. <span className="text-slate-400 font-normal normal-case">(optional)</span></FL><SI value={form.employeeNo} onChange={e => set('employeeNo', e.target.value)} placeholder="EMP-006" /></div>
