@@ -199,6 +199,56 @@ async function main() {
     },
   });
 
+  // Demo Credentials for Staff Portal
+  const adminHash = await bcrypt.hash('Lionel123', 12);
+  const managerHash = await bcrypt.hash('Langat123', 12);
+  const waiterHash = await bcrypt.hash('Jane1234', 12);
+
+  await prisma.user.upsert({
+    where: { email: 'langatlionel@gmail.com' },
+    update: { passwordHash: adminHash, role: UserRole.ADMIN, businessUuid: alchemist.businessUuid, isActive: true },
+    create: {
+      userUuid: '11111111-1111-1111-1111-000000000009',
+      businessUuid: alchemist.businessUuid,
+      email: 'langatlionel@gmail.com',
+      passwordHash: adminHash,
+      fullName: 'Lionel Langat (Admin)',
+      phone: '+254711000111',
+      role: UserRole.ADMIN,
+      isActive: true,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'lionellangat2000@gmail.com' },
+    update: { passwordHash: managerHash, role: UserRole.MANAGER, businessUuid: alchemist.businessUuid, isActive: true },
+    create: {
+      userUuid: '11111111-1111-1111-1111-000000000010',
+      businessUuid: alchemist.businessUuid,
+      email: 'lionellangat2000@gmail.com',
+      passwordHash: managerHash,
+      fullName: 'Lionel Langat (Manager)',
+      phone: '+254711000222',
+      role: UserRole.MANAGER,
+      isActive: true,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'llangat325@gmail.com' },
+    update: { passwordHash: waiterHash, role: UserRole.WAITER, businessUuid: alchemist.businessUuid, isActive: true },
+    create: {
+      userUuid: '11111111-1111-1111-1111-000000000011',
+      businessUuid: alchemist.businessUuid,
+      email: 'llangat325@gmail.com',
+      passwordHash: waiterHash,
+      fullName: 'Lionel Langat (Waiter)',
+      phone: '+254711000333',
+      role: UserRole.WAITER,
+      isActive: true,
+    },
+  });
+
   console.info('✅ Users seeded');
 
   // 3. Seed Venue Tables

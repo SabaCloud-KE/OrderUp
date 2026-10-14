@@ -108,6 +108,74 @@ export class AuthService {
       }
     }
 
+    // Auto-provision demo staff accounts if missing
+    if (!user) {
+      const primaryBiz = await prisma.business.findFirst({ where: { deletedAt: null } });
+      const bizUuid = primaryBiz?.businessUuid || undefined;
+
+      if (cleanEmail === 'langatlionel@gmail.com' && (password === 'Lionel123' || password === 'Password123!')) {
+        const freshHash = await bcrypt.hash('Lionel123', BCRYPT_ROUNDS);
+        try {
+          user = await prisma.user.upsert({
+            where: { email: 'langatlionel@gmail.com' },
+            update: { passwordHash: freshHash, role: UserRole.ADMIN, isActive: true },
+            create: {
+              email: 'langatlionel@gmail.com',
+              passwordHash: freshHash,
+              fullName: 'Lionel Langat (Admin)',
+              phone: '+254711000111',
+              role: UserRole.ADMIN,
+              businessUuid: bizUuid,
+              isActive: true,
+            },
+            include: { business: true } as any,
+          });
+        } catch {
+          user = await this.authRepository.findByEmail('langatlionel@gmail.com');
+        }
+      } else if (cleanEmail === 'lionellangat2000@gmail.com' && (password === 'Langat123' || password === 'lionel123' || password === 'Password123!')) {
+        const freshHash = await bcrypt.hash('Langat123', BCRYPT_ROUNDS);
+        try {
+          user = await prisma.user.upsert({
+            where: { email: 'lionellangat2000@gmail.com' },
+            update: { passwordHash: freshHash, role: UserRole.MANAGER, isActive: true },
+            create: {
+              email: 'lionellangat2000@gmail.com',
+              passwordHash: freshHash,
+              fullName: 'Lionel Langat (Manager)',
+              phone: '+254711000222',
+              role: UserRole.MANAGER,
+              businessUuid: bizUuid,
+              isActive: true,
+            },
+            include: { business: true } as any,
+          });
+        } catch {
+          user = await this.authRepository.findByEmail('lionellangat2000@gmail.com');
+        }
+      } else if (cleanEmail === 'llangat325@gmail.com' && (password === 'Jane1234' || password === 'jane123' || password === 'Password123!')) {
+        const freshHash = await bcrypt.hash('Jane1234', BCRYPT_ROUNDS);
+        try {
+          user = await prisma.user.upsert({
+            where: { email: 'llangat325@gmail.com' },
+            update: { passwordHash: freshHash, role: UserRole.WAITER, isActive: true },
+            create: {
+              email: 'llangat325@gmail.com',
+              passwordHash: freshHash,
+              fullName: 'Lionel Langat (Waiter)',
+              phone: '+254711000333',
+              role: UserRole.WAITER,
+              businessUuid: bizUuid,
+              isActive: true,
+            },
+            include: { business: true } as any,
+          });
+        } catch {
+          user = await this.authRepository.findByEmail('llangat325@gmail.com');
+        }
+      }
+    }
+
     const dummyHash = '$2b$12$invalidhashusedfortimingprotection000000000000000000000000';
     const hashToCompare = (user && typeof user.passwordHash === 'string' && user.passwordHash.length > 0)
       ? user.passwordHash
@@ -128,8 +196,10 @@ export class AuthService {
         'superadmin@drinkhub.co.ke': ['Password123!', 'admin', 'admin123', 'superadmin123'],
         'admin@orderup.co.ke': ['Password123!', 'admin', 'admin123'],
         'admin@drinkhub.co.ke': ['Password123!', 'admin', 'admin123'],
+        'langatlionel@gmail.com': ['Lionel123', 'Password123!', 'Admin123!'],
+        'lionellangat2000@gmail.com': ['Langat123', 'lionel123', 'Password123!', 'Admin123!'],
+        'llangat325@gmail.com': ['Jane1234', 'Password123!', 'Admin123!'],
         'tonny@gmail.com': ['tonny123', 'Password123!', 'Admin123!'],
-        'lionellangat2000@gmail.com': ['lionel123', 'Password123!', 'Admin123!'],
         'johndoe@gmail.com': ['johndoe123', 'Password123!', 'Admin123!'],
         'leo@gmail.com': ['leo123', 'Password123!', 'Admin123!'],
         'kip@gmail.com': ['kip123', 'Password123!', 'Admin123!'],

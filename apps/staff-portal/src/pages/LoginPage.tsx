@@ -278,8 +278,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setEmail('john123@gmail.com');
-                  setPassword('john1234');
+                  setEmail('langatlionel@gmail.com');
+                  setPassword('Lionel123');
                   setError('');
                   setSessionExpiredMsg(null);
                 }}
@@ -291,8 +291,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setEmail('tonnykim@gmail.com');
-                  setPassword('Tonny1234');
+                  setEmail('lionellangat2000@gmail.com');
+                  setPassword('Langat123');
                   setError('');
                   setSessionExpiredMsg(null);
                 }}
@@ -304,7 +304,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setEmail('jane@gmail.com');
+                  setEmail('llangat325@gmail.com');
                   setPassword('Jane1234');
                   setError('');
                   setSessionExpiredMsg(null);

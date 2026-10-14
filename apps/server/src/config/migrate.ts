@@ -230,8 +230,69 @@ export async function autoMigrateDatabase(): Promise<void> {
         });
         logger.info('👤 Auto-provisioned default Super Administrator: superadmin@orderup.co.ke');
       }
+
+      // Step C: Ensure demo staff accounts (Business Admin, Manager, Waiter) exist
+      const primaryBiz = await prisma.business.findFirst({ where: { deletedAt: null } });
+      const bizUuid = primaryBiz?.businessUuid || undefined;
+
+      const adminUser = await prisma.user.findFirst({
+        where: { email: { equals: 'langatlionel@gmail.com', mode: 'insensitive' }, deletedAt: null },
+      });
+      if (!adminUser) {
+        const adminHash = await bcrypt.hash('Lionel123', 12);
+        await prisma.user.create({
+          data: {
+            email: 'langatlionel@gmail.com',
+            passwordHash: adminHash,
+            fullName: 'Lionel Langat (Admin)',
+            phone: '+254711000111',
+            role: 'ADMIN' as any,
+            businessUuid: bizUuid,
+            isActive: true,
+          },
+        });
+        logger.info('👤 Auto-provisioned default Business Admin: langatlionel@gmail.com');
+      }
+
+      const managerUser = await prisma.user.findFirst({
+        where: { email: { equals: 'lionellangat2000@gmail.com', mode: 'insensitive' }, deletedAt: null },
+      });
+      if (!managerUser) {
+        const managerHash = await bcrypt.hash('Langat123', 12);
+        await prisma.user.create({
+          data: {
+            email: 'lionellangat2000@gmail.com',
+            passwordHash: managerHash,
+            fullName: 'Lionel Langat (Manager)',
+            phone: '+254711000222',
+            role: 'MANAGER' as any,
+            businessUuid: bizUuid,
+            isActive: true,
+          },
+        });
+        logger.info('👤 Auto-provisioned default Manager: lionellangat2000@gmail.com');
+      }
+
+      const waiterUser = await prisma.user.findFirst({
+        where: { email: { equals: 'llangat325@gmail.com', mode: 'insensitive' }, deletedAt: null },
+      });
+      if (!waiterUser) {
+        const waiterHash = await bcrypt.hash('Jane1234', 12);
+        await prisma.user.create({
+          data: {
+            email: 'llangat325@gmail.com',
+            passwordHash: waiterHash,
+            fullName: 'Lionel Langat (Waiter)',
+            phone: '+254711000333',
+            role: 'WAITER' as any,
+            businessUuid: bizUuid,
+            isActive: true,
+          },
+        });
+        logger.info('👤 Auto-provisioned default Waiter: llangat325@gmail.com');
+      }
     } catch (err: any) {
-      logger.warn(`Superadmin auto-provision warning: ${err.message}`);
+      logger.warn(`User auto-provision warning: ${err.message}`);
     }
 
     migrationAlreadyCompleted = true;
