@@ -5,11 +5,31 @@ import { NotFoundError, BadRequestError } from '../../common/errors/app-error';
 import { prisma } from '../../config/prisma';
 import { emailService } from '../notification/email.service';
 import { logger } from '../../config/logger';
+import { encryptCredential, maskCredential } from '../../utils/crypto';
 
 const BCRYPT_ROUNDS = 12;
 
 export class TenantService {
   constructor(private tenantRepository: ITenantRepository) {}
+
+  public maskBusinessSecrets<T extends Partial<Business>>(b: T): T {
+    if (!b) return b;
+    const clone = { ...b } as any;
+    if (clone.mpesaConsumerSecret) {
+      clone.mpesaConsumerSecret = maskCredential(clone.mpesaConsumerSecret);
+    }
+    if (clone.mpesaPasskey) {
+      clone.mpesaPasskey = maskCredential(clone.mpesaPasskey);
+    }
+    clone.hasMpesaConfig = Boolean(
+      clone.isMpesaActive &&
+      clone.mpesaConsumerKey &&
+      clone.mpesaConsumerSecret &&
+      clone.mpesaShortcode &&
+      clone.mpesaPasskey
+    );
+    return clone;
+  }
 
   async getTenantBySlug(slug: string): Promise<Business> {
     let tenant = await this.tenantRepository.findBySlug(slug);
@@ -22,7 +42,7 @@ export class TenantService {
     if (!tenant) {
       throw new NotFoundError(`Business with slug '${slug}' not found`);
     }
-    return tenant;
+    return this.maskBusinessSecrets(tenant);
   }
 
   async getTenantById(businessUuid: string): Promise<Business> {
@@ -30,11 +50,12 @@ export class TenantService {
     if (!tenant) {
       throw new NotFoundError(`Business not found`);
     }
-    return tenant;
+    return this.maskBusinessSecrets(tenant);
   }
 
   async getAllTenants(): Promise<Business[]> {
-    return this.tenantRepository.findAll();
+    const list = await this.tenantRepository.findAll();
+    return list.map(b => this.maskBusinessSecrets(b));
   }
 
   async getPlatformStats() {
@@ -46,7 +67,10 @@ export class TenantService {
     if (!summary) {
       throw new NotFoundError('Business not found');
     }
-    return summary;
+    return {
+      ...summary,
+      business: this.maskBusinessSecrets(summary.business),
+    };
   }
 
   async createTenant(data: Partial<Business>): Promise<Business> {
@@ -87,6 +111,14 @@ export class TenantService {
     managerPhone?: string;
     adminPassword?: string;
     managerPassword?: string;
+    // Multi-tenant M-Pesa Model B fields
+    mpesaConsumerKey?: string | null;
+    mpesaConsumerSecret?: string | null;
+    mpesaShortcode?: string | null;
+    mpesaPasskey?: string | null;
+    mpesaTransactionType?: string | null;
+    mpesaEnvironment?: string | null;
+    isMpesaActive?: boolean;
   }) {
     // Ensure slug is clean and guaranteed unique across all database records
     const baseSlug = (data.slug || data.name || 'business')
@@ -122,6 +154,13 @@ export class TenantService {
 
     const adminPasswordHash = await bcrypt.hash(rawPassword, BCRYPT_ROUNDS);
 
+    const encryptedConsumerSecret = data.mpesaConsumerSecret
+      ? encryptCredential(data.mpesaConsumerSecret)
+      : null;
+    const encryptedPasskey = data.mpesaPasskey
+      ? encryptCredential(data.mpesaPasskey)
+      : null;
+
     const result = await this.tenantRepository.createBusinessWithAdmin({
       name: data.name,
       slug: finalSlug,
@@ -142,6 +181,13 @@ export class TenantService {
       adminFullName: (data.adminFullName || data.managerFullName || 'Admin').trim(),
       adminEmail: (data.adminEmail || data.managerEmail || '').trim().toLowerCase(),
       adminPhone: data.adminPhone || data.managerPhone,
+      mpesaConsumerKey: data.mpesaConsumerKey || null,
+      mpesaConsumerSecret: encryptedConsumerSecret,
+      mpesaShortcode: data.mpesaShortcode || null,
+      mpesaPasskey: encryptedPasskey,
+      mpesaTransactionType: data.mpesaTransactionType || 'CustomerPayBillOnline',
+      mpesaEnvironment: data.mpesaEnvironment || 'sandbox',
+      isMpesaActive: Boolean(data.isMpesaActive),
     });
 
     // Dispatch welcome email with credentials via Resend (fire-and-forget)
@@ -160,7 +206,10 @@ export class TenantService {
         });
     }
 
-    return result;
+    return {
+      business: this.maskBusinessSecrets(result.business),
+      admin: result.admin,
+    };
   }
 
   // Alias for backward compatibility
@@ -170,7 +219,35 @@ export class TenantService {
 
   async updateTenant(businessUuid: string, data: Partial<Business>): Promise<Business> {
     await this.getTenantById(businessUuid);
-    return this.tenantRepository.update(businessUuid, data);
+    const updateData: any = { ...data };
+
+    // Encrypt sensitive M-Pesa credentials if updated
+    if ('mpesaConsumerSecret' in data) {
+      const val = data.mpesaConsumerSecret;
+      if (val && typeof val === 'string' && !val.includes('•')) {
+        updateData.mpesaConsumerSecret = encryptCredential(val);
+      } else if (val && typeof val === 'string' && val.includes('•')) {
+        // Keep existing secret if mask placeholder sent
+        delete updateData.mpesaConsumerSecret;
+      } else {
+        updateData.mpesaConsumerSecret = null;
+      }
+    }
+
+    if ('mpesaPasskey' in data) {
+      const val = data.mpesaPasskey;
+      if (val && typeof val === 'string' && !val.includes('•')) {
+        updateData.mpesaPasskey = encryptCredential(val);
+      } else if (val && typeof val === 'string' && val.includes('•')) {
+        // Keep existing passkey if mask placeholder sent
+        delete updateData.mpesaPasskey;
+      } else {
+        updateData.mpesaPasskey = null;
+      }
+    }
+
+    const updated = await this.tenantRepository.update(businessUuid, updateData);
+    return this.maskBusinessSecrets(updated);
   }
 
   async suspendTenant(businessUuid: string): Promise<Business> {

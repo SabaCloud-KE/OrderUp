@@ -245,6 +245,13 @@ export class TenantRepository implements ITenantRepository {
             status: BusinessStatus.ACTIVE,
             subscriptionStatus: SubscriptionStatus.ACTIVE,
             isActive: true,
+            mpesaConsumerKey: data.mpesaConsumerKey || null,
+            mpesaConsumerSecret: data.mpesaConsumerSecret || null,
+            mpesaShortcode: data.mpesaShortcode || null,
+            mpesaPasskey: data.mpesaPasskey || null,
+            mpesaTransactionType: data.mpesaTransactionType || 'CustomerPayBillOnline',
+            mpesaEnvironment: data.mpesaEnvironment || 'sandbox',
+            isMpesaActive: Boolean(data.isMpesaActive),
           },
         });
 
@@ -296,6 +303,13 @@ export class TenantRepository implements ITenantRepository {
       adminFullName: data.managerFullName || data.adminFullName,
       adminPasswordHash: data.managerPasswordHash || data.adminPasswordHash,
       adminPhone: data.managerPhone || data.adminPhone,
+      mpesaConsumerKey: data.mpesaConsumerKey,
+      mpesaConsumerSecret: data.mpesaConsumerSecret,
+      mpesaShortcode: data.mpesaShortcode,
+      mpesaPasskey: data.mpesaPasskey,
+      mpesaTransactionType: data.mpesaTransactionType,
+      mpesaEnvironment: data.mpesaEnvironment,
+      isMpesaActive: data.isMpesaActive,
     });
     return { club: res.business, manager: res.admin, business: res.business, admin: res.admin };
   }

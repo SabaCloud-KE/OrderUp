@@ -4,6 +4,7 @@ import { getIO } from '../../config/socket';
 import { logger } from '../../config/logger';
 import { BadRequestError } from '../../common/errors/app-error';
 import { prisma } from '../../config/prisma';
+import { decryptCredential } from '../../utils/crypto';
 
 export class PaymentService {
   private mpesaAdapter: MpesaAdapter;
@@ -19,7 +20,7 @@ export class PaymentService {
     orderUuid: string;
     phoneNumber: string;
     amount: number;
-    accountReference: string;
+    accountReference?: string;
   }) {
     let businessUuid = params.businessUuid || params.clubUuid;
     if (!businessUuid && params.orderUuid) {
@@ -35,29 +36,42 @@ export class PaymentService {
       throw new BadRequestError('Could not resolve businessUuid for order payment');
     }
 
-    // Model A: Look up the specific venue's M-Pesa Shortcode & Passkey
+    // Model B: Look up the specific venue's independent M-Pesa credentials
     const business = await prisma.business.findUnique({
       where: { businessUuid },
       select: {
         name: true,
+        mpesaConsumerKey: true,
+        mpesaConsumerSecret: true,
         mpesaShortcode: true,
         mpesaPasskey: true,
         mpesaTransactionType: true,
+        mpesaEnvironment: true,
         isMpesaActive: true,
       },
     });
 
+    const decryptedConsumerSecret = business?.mpesaConsumerSecret
+      ? decryptCredential(business.mpesaConsumerSecret)
+      : null;
+    const decryptedPasskey = business?.mpesaPasskey
+      ? decryptCredential(business.mpesaPasskey)
+      : null;
+
     const isVenueMpesaConfigured = !!(
       business?.isMpesaActive &&
       business?.mpesaShortcode &&
-      business?.mpesaPasskey
+      decryptedPasskey
     );
 
-    const venueConfig = isVenueMpesaConfigured
+    const venueConfig = (isVenueMpesaConfigured && business?.mpesaShortcode && decryptedPasskey)
       ? {
-          shortcode: business.mpesaShortcode,
-          passkey: business.mpesaPasskey,
+          consumerKey: business.mpesaConsumerKey?.trim() || null,
+          consumerSecret: decryptedConsumerSecret?.trim() || null,
+          shortcode: business.mpesaShortcode.trim(),
+          passkey: decryptedPasskey.trim(),
           transactionType: business.mpesaTransactionType || 'CustomerPayBillOnline',
+          environment: (business.mpesaEnvironment as 'sandbox' | 'production') || 'sandbox',
         }
       : undefined;
 

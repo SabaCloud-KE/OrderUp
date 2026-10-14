@@ -22,6 +22,14 @@ export interface CreateBusinessWithAdminInput {
   adminFullName: string;
   adminEmail: string;
   adminPhone?: string;
+  // Multi-tenant M-Pesa Model B fields
+  mpesaConsumerKey?: string | null;
+  mpesaConsumerSecret?: string | null;
+  mpesaShortcode?: string | null;
+  mpesaPasskey?: string | null;
+  mpesaTransactionType?: string | null;
+  mpesaEnvironment?: string | null;
+  isMpesaActive?: boolean;
 }
 
 export interface BusinessWithAdmin {

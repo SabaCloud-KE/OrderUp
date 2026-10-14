@@ -57,6 +57,14 @@ export const createBusinessWithAdminSchema = z.object({
     managerPhone: z.string().optional().nullable().or(z.literal('')),
     adminPassword: z.string().min(8, 'Temporary password must be at least 8 characters').optional(),
     managerPassword: z.string().min(8, 'Temporary password must be at least 8 characters').optional(),
+    // Multi-tenant M-Pesa Model B fields
+    mpesaConsumerKey: z.string().optional().nullable().or(z.literal('')),
+    mpesaConsumerSecret: z.string().optional().nullable().or(z.literal('')),
+    mpesaShortcode: z.string().optional().nullable().or(z.literal('')),
+    mpesaPasskey: z.string().optional().nullable().or(z.literal('')),
+    mpesaTransactionType: z.enum(['CustomerPayBillOnline', 'CustomerBuyGoodsOnline']).optional(),
+    mpesaEnvironment: z.enum(['sandbox', 'production']).optional(),
+    isMpesaActive: z.boolean().optional(),
   }),
 });
 
@@ -85,9 +93,12 @@ export const updateBusinessSchema = z.object({
     openingHours: z.string().optional(),
     closingHours: z.string().optional(),
     isActive: z.boolean().optional(),
+    mpesaConsumerKey: z.string().optional().nullable().or(z.literal('')),
+    mpesaConsumerSecret: z.string().optional().nullable().or(z.literal('')),
     mpesaShortcode: z.string().optional().nullable().or(z.literal('')),
     mpesaPasskey: z.string().optional().nullable().or(z.literal('')),
     mpesaTransactionType: z.enum(['CustomerPayBillOnline', 'CustomerBuyGoodsOnline']).optional(),
+    mpesaEnvironment: z.enum(['sandbox', 'production']).optional(),
     isMpesaActive: z.boolean().optional(),
   }),
 });

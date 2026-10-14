@@ -48,6 +48,15 @@ export interface Business {
   trialDays: number;
   startDate: string;
   expiryDate: string;
+  // Model B: Independent Daraja M-Pesa Credentials
+  mpesaConsumerKey?: string | null;
+  mpesaConsumerSecret?: string | null;
+  mpesaShortcode?: string | null;
+  mpesaPasskey?: string | null;
+  mpesaTransactionType?: 'CustomerPayBillOnline' | 'CustomerBuyGoodsOnline';
+  mpesaEnvironment?: 'sandbox' | 'production';
+  isMpesaActive?: boolean;
+  hasMpesaConfig?: boolean;
 }
 
 export interface BusinessAdmin {
@@ -792,6 +801,7 @@ const STEPS = [
   { n: 1, label: 'Business Information', icon: <Building2 className="h-4 w-4" /> },
   { n: 2, label: 'Admin Account', icon: <UserCog className="h-4 w-4" /> },
   { n: 3, label: 'Subscription', icon: <CreditCard className="h-4 w-4" /> },
+  { n: 4, label: 'M-Pesa Gateway', icon: <Zap className="h-4 w-4" /> },
 ];
 
 const StepProgress = ({ current }: { current: number }) => (
@@ -840,6 +850,14 @@ type BusinessFormState = {
   subStatus: string;
   startDate: string;
   expiryDate: string;
+  // Model B: Independent Daraja M-Pesa Credentials
+  isMpesaActive: boolean;
+  mpesaEnvironment: 'sandbox' | 'production';
+  mpesaTransactionType: 'CustomerPayBillOnline' | 'CustomerBuyGoodsOnline';
+  mpesaShortcode: string;
+  mpesaConsumerKey: string;
+  mpesaConsumerSecret: string;
+  mpesaPasskey: string;
 };
 
 const defaultBusinessForm: BusinessFormState = {
@@ -866,6 +884,13 @@ const defaultBusinessForm: BusinessFormState = {
   subStatus: 'Trial',
   startDate: new Date().toISOString().split('T')[0],
   expiryDate: '',
+  isMpesaActive: false,
+  mpesaEnvironment: 'sandbox',
+  mpesaTransactionType: 'CustomerPayBillOnline',
+  mpesaShortcode: '',
+  mpesaConsumerKey: '',
+  mpesaConsumerSecret: '',
+  mpesaPasskey: '',
 };
 
 /* Step 1 */
@@ -1066,6 +1091,128 @@ const Step3 = ({ f, set }: { f: BusinessFormState; set: (k: keyof BusinessFormSt
   </div>
 );
 
+/* Step 4: Daraja Model B Gateway */
+const Step4 = ({ f, set }: { f: BusinessFormState; set: (k: keyof BusinessFormState, v: any) => void }) => {
+  const [showSecret, setShowSecret] = useState(false);
+  const [showPasskey, setShowPasskey] = useState(false);
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3.5 flex gap-3">
+        <Zap className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+            Model B: Independent Daraja Credentials
+          </p>
+          <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+            Configure this venue's Safaricom Daraja M-Pesa account. Consumer Secret and Passkey are encrypted using <strong>AES-256-GCM authenticated encryption</strong> before being stored in the database. Super Admin can update these credentials at any time.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+        <div>
+          <span className="text-sm font-black text-slate-900 dark:text-white block">Enable M-Pesa STK Push Gateway</span>
+          <span className="text-xs text-slate-500">Allow customers to pay via automated M-Pesa prompt routed to this venue's Till or PayBill</span>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={f.isMpesaActive}
+            onChange={e => set('isMpesaActive', e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+        </label>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <FL>Daraja Environment</FL>
+          <SS
+            value={f.mpesaEnvironment}
+            onChange={e => set('mpesaEnvironment', e.target.value as 'sandbox' | 'production')}
+            options={[
+              { v: 'sandbox', l: 'Sandbox (Testing / Simulator)' },
+              { v: 'production', l: 'Production (Live Safaricom)' },
+            ]}
+          />
+        </div>
+
+        <div>
+          <FL>Transaction Type</FL>
+          <SS
+            value={f.mpesaTransactionType}
+            onChange={e => set('mpesaTransactionType', e.target.value as 'CustomerPayBillOnline' | 'CustomerBuyGoodsOnline')}
+            options={[
+              { v: 'CustomerPayBillOnline', l: 'PayBill (CustomerPayBillOnline)' },
+              { v: 'CustomerBuyGoodsOnline', l: 'Buy Goods / Till (CustomerBuyGoodsOnline)' },
+            ]}
+          />
+        </div>
+
+        <div className="col-span-2 sm:col-span-1">
+          <FL>Business Shortcode / Till Number</FL>
+          <SI
+            value={f.mpesaShortcode}
+            onChange={e => set('mpesaShortcode', e.target.value.trim())}
+            placeholder="e.g. 174379 (Sandbox) or 7-digit Till"
+          />
+        </div>
+
+        <div className="col-span-2 sm:col-span-1">
+          <FL>Consumer Key</FL>
+          <SI
+            value={f.mpesaConsumerKey}
+            onChange={e => set('mpesaConsumerKey', e.target.value.trim())}
+            placeholder="Safaricom App Consumer Key"
+          />
+        </div>
+
+        <div className="col-span-2">
+          <FL>Consumer Secret</FL>
+          <div className="relative">
+            <SI
+              type={showSecret ? 'text' : 'password'}
+              value={f.mpesaConsumerSecret}
+              onChange={e => set('mpesaConsumerSecret', e.target.value.trim())}
+              placeholder="Safaricom App Consumer Secret"
+            />
+            <button
+              type="button"
+              onClick={() => setShowSecret(v => !v)}
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-1">Encrypted with AES-256-GCM before saving in the database.</p>
+        </div>
+
+        <div className="col-span-2">
+          <FL>Online Passkey (Lipa Na M-Pesa Online Passkey)</FL>
+          <div className="relative">
+            <SI
+              type={showPasskey ? 'text' : 'password'}
+              value={f.mpesaPasskey}
+              onChange={e => set('mpesaPasskey', e.target.value.trim())}
+              placeholder="bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPasskey(v => !v)}
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              {showPasskey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-1">Provided in Daraja portal under Lipa Na M-Pesa Online. Encrypted with AES-256-GCM.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Business, a: BusinessAdmin) => void; onCancel: () => void }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -1137,7 +1284,11 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
   const handleSubmit = async () => {
     if (step === 1 && !validate1()) return;
     if (step === 2 && !validate2()) return;
-    if (step === 3) {
+    if (step < 4) {
+      setStep(s => s + 1);
+      return;
+    }
+    if (step === 4) {
       setLoading(true);
       setSubmitError(null);
       try {
@@ -1168,6 +1319,14 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
           managerEmail: form.adminEmail.trim().toLowerCase(),
           managerPhone: form.adminPhone.trim(),
           managerPassword: form.tempPwd,
+          // Model B: Independent Daraja M-Pesa Credentials
+          mpesaConsumerKey: form.mpesaConsumerKey.trim() || null,
+          mpesaConsumerSecret: form.mpesaConsumerSecret.trim() || null,
+          mpesaShortcode: form.mpesaShortcode.trim() || null,
+          mpesaPasskey: form.mpesaPasskey.trim() || null,
+          mpesaTransactionType: form.mpesaTransactionType,
+          mpesaEnvironment: form.mpesaEnvironment,
+          isMpesaActive: form.isMpesaActive,
         };
 
         const res = await apiFetch(getApiUrl('/tenants/provision'), {
@@ -1213,6 +1372,15 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
           trialDays: parseInt(form.trialDays, 10) || 14,
           startDate: form.startDate,
           expiryDate: form.expiryDate,
+          // Model B fields
+          mpesaConsumerKey: bData.mpesaConsumerKey || form.mpesaConsumerKey,
+          mpesaConsumerSecret: bData.mpesaConsumerSecret || form.mpesaConsumerSecret,
+          mpesaShortcode: bData.mpesaShortcode || form.mpesaShortcode,
+          mpesaPasskey: bData.mpesaPasskey || form.mpesaPasskey,
+          mpesaTransactionType: bData.mpesaTransactionType || form.mpesaTransactionType,
+          mpesaEnvironment: bData.mpesaEnvironment || form.mpesaEnvironment,
+          isMpesaActive: bData.isMpesaActive ?? form.isMpesaActive,
+          hasMpesaConfig: Boolean(form.mpesaConsumerKey && form.mpesaShortcode && form.isMpesaActive),
         };
 
         const newAdmin: BusinessAdmin = {
@@ -1269,12 +1437,13 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
 
         <div className="mb-5 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <h3 className="text-base font-black text-slate-900 dark:text-white">{STEPS[step - 1].label}</h3>
-          <span className="text-xs font-bold text-slate-400">Step {step} of 3</span>
+          <span className="text-xs font-bold text-slate-400">Step {step} of {STEPS.length}</span>
         </div>
 
         {step === 1 && <Step1 f={form} set={set} errors={errors} />}
         {step === 2 && <Step2 f={form} set={set} errors={errors} />}
         {step === 3 && <Step3 f={form} set={set} />}
+        {step === 4 && <Step4 f={form} set={set} />}
 
         <div className="flex items-center justify-between mt-7 pt-5 border-t border-slate-100 dark:border-slate-800">
           <button onClick={onCancel} className="text-sm font-medium text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
@@ -1295,7 +1464,7 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
             >
               {loading ? (
                 <><RefreshCcw className="h-4 w-4 animate-spin" /> Provisioning…</>
-              ) : step === 3 ? (
+              ) : step === STEPS.length ? (
                 <><Check className="h-4 w-4" /> Complete Registration</>
               ) : (
                 <>Next Step <ChevronDown className="h-4 w-4 -rotate-90" /></>
@@ -1338,7 +1507,16 @@ const EditBusinessModal = ({
     themeColor: '#2563EB',
     logoUrl: '',
     bannerUrl: '',
+    mpesaConsumerKey: '',
+    mpesaConsumerSecret: '',
+    mpesaShortcode: '',
+    mpesaPasskey: '',
+    mpesaTransactionType: 'CustomerPayBillOnline' as 'CustomerPayBillOnline' | 'CustomerBuyGoodsOnline',
+    mpesaEnvironment: 'sandbox' as 'sandbox' | 'production',
+    isMpesaActive: false,
   });
+  const [showSecret, setShowSecret] = useState(false);
+  const [showPasskey, setShowPasskey] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -1357,7 +1535,16 @@ const EditBusinessModal = ({
         themeColor: business.themeColor || '#2563EB',
         logoUrl: business.logoUrl || '',
         bannerUrl: business.bannerUrl || '',
+        mpesaConsumerKey: business.mpesaConsumerKey || '',
+        mpesaConsumerSecret: business.mpesaConsumerSecret || '',
+        mpesaShortcode: business.mpesaShortcode || '',
+        mpesaPasskey: business.mpesaPasskey || '',
+        mpesaTransactionType: business.mpesaTransactionType || 'CustomerPayBillOnline',
+        mpesaEnvironment: business.mpesaEnvironment || 'sandbox',
+        isMpesaActive: business.isMpesaActive ?? false,
       });
+      setShowSecret(false);
+      setShowPasskey(false);
     }
   }, [business]);
 
@@ -1389,6 +1576,14 @@ const EditBusinessModal = ({
           brandColor: form.themeColor,
           logoUrl: form.logoUrl.trim() || null,
           bannerUrl: form.bannerUrl.trim() || null,
+          // Model B: Independent Daraja M-Pesa Credentials
+          mpesaConsumerKey: form.mpesaConsumerKey.trim() || null,
+          mpesaConsumerSecret: form.mpesaConsumerSecret.trim() || null,
+          mpesaShortcode: form.mpesaShortcode.trim() || null,
+          mpesaPasskey: form.mpesaPasskey.trim() || null,
+          mpesaTransactionType: form.mpesaTransactionType,
+          mpesaEnvironment: form.mpesaEnvironment,
+          isMpesaActive: form.isMpesaActive,
         }),
       });
 
@@ -1412,6 +1607,14 @@ const EditBusinessModal = ({
         themeColor: form.themeColor,
         logoUrl: form.logoUrl.trim(),
         bannerUrl: form.bannerUrl.trim(),
+        mpesaConsumerKey: form.mpesaConsumerKey.trim() || null,
+        mpesaConsumerSecret: form.mpesaConsumerSecret.trim() || null,
+        mpesaShortcode: form.mpesaShortcode.trim() || null,
+        mpesaPasskey: form.mpesaPasskey.trim() || null,
+        mpesaTransactionType: form.mpesaTransactionType,
+        mpesaEnvironment: form.mpesaEnvironment,
+        isMpesaActive: form.isMpesaActive,
+        hasMpesaConfig: Boolean(form.mpesaConsumerKey && form.mpesaShortcode && form.isMpesaActive),
       };
 
       onSaved(updated);
@@ -1485,6 +1688,116 @@ const EditBusinessModal = ({
               <FL>Banner</FL>
               <UploadBox label="Banner" preview={form.bannerUrl} onUpload={e => readFile(e, v => setForm(p => ({ ...p, bannerUrl: v })))} />
             </div>
+          </div>
+        </div>
+
+        {/* M-Pesa Payment Gateway (Daraja Model B) */}
+        <div className="border-t pt-4 border-slate-100 dark:border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-emerald-500" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">
+                M-Pesa Payment Gateway (Daraja Model B)
+              </h4>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+              AES-256-GCM Encrypted
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
+            <div>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Enable M-Pesa STK Push</span>
+              <span className="text-[11px] text-slate-400">Activate independent Daraja credential routing for this venue</span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isMpesaActive}
+                onChange={e => setForm(p => ({ ...p, isMpesaActive: e.target.checked }))}
+                className="sr-only peer"
+              />
+              <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <FG>
+              <FL>Environment</FL>
+              <SS
+                value={form.mpesaEnvironment}
+                onChange={e => setForm(p => ({ ...p, mpesaEnvironment: e.target.value as 'sandbox' | 'production' }))}
+                options={[
+                  { v: 'sandbox', l: 'Sandbox (Testing)' },
+                  { v: 'production', l: 'Production (Live)' },
+                ]}
+              />
+            </FG>
+            <FG>
+              <FL>Transaction Type</FL>
+              <SS
+                value={form.mpesaTransactionType}
+                onChange={e => setForm(p => ({ ...p, mpesaTransactionType: e.target.value as 'CustomerPayBillOnline' | 'CustomerBuyGoodsOnline' }))}
+                options={[
+                  { v: 'CustomerPayBillOnline', l: 'PayBill (CustomerPayBillOnline)' },
+                  { v: 'CustomerBuyGoodsOnline', l: 'Buy Goods / Till (CustomerBuyGoodsOnline)' },
+                ]}
+              />
+            </FG>
+            <FG>
+              <FL>Shortcode / Till</FL>
+              <SI
+                value={form.mpesaShortcode}
+                onChange={e => setForm(p => ({ ...p, mpesaShortcode: e.target.value.trim() }))}
+                placeholder="e.g. 174379 or Till Number"
+              />
+            </FG>
+            <FG>
+              <FL>Consumer Key</FL>
+              <SI
+                value={form.mpesaConsumerKey}
+                onChange={e => setForm(p => ({ ...p, mpesaConsumerKey: e.target.value.trim() }))}
+                placeholder="Daraja App Consumer Key"
+              />
+            </FG>
+            <FG span={2}>
+              <FL>Consumer Secret</FL>
+              <div className="relative">
+                <SI
+                  type={showSecret ? 'text' : 'password'}
+                  value={form.mpesaConsumerSecret}
+                  onChange={e => setForm(p => ({ ...p, mpesaConsumerSecret: e.target.value.trim() }))}
+                  placeholder="•••••••••••• (Leave as is to retain existing encrypted secret)"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecret(v => !v)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Leave masked bullets to keep currently stored encrypted secret.</p>
+            </FG>
+            <FG span={2}>
+              <FL>Lipa Na M-Pesa Passkey</FL>
+              <div className="relative">
+                <SI
+                  type={showPasskey ? 'text' : 'password'}
+                  value={form.mpesaPasskey}
+                  onChange={e => setForm(p => ({ ...p, mpesaPasskey: e.target.value.trim() }))}
+                  placeholder="•••••••••••• (Leave as is to retain existing encrypted passkey)"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasskey(v => !v)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPasskey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Leave masked bullets to keep currently stored encrypted passkey.</p>
+            </FG>
           </div>
         </div>
 
@@ -1601,33 +1914,91 @@ const BusinessDetailsView = ({
             </dl>
           </div>
 
-          {/* Business Admin */}
-          <div className="rounded-xl border p-5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4">Primary Business Admin</h3>
-            {admin ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-black text-sm flex items-center justify-center">
-                    {admin.fullName.slice(0, 2).toUpperCase()}
+            {/* Primary Business Admin */}
+            <div className="rounded-xl border p-5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white mb-4">Primary Business Admin</h3>
+              {admin ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-black text-sm flex items-center justify-center">
+                      {admin.fullName.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-slate-900 dark:text-white">{admin.fullName}</div>
+                      <div className="text-xs text-slate-400">{admin.email}</div>
+                    </div>
+                    <div className="ml-auto">
+                      <StatusBadge status={admin.status} />
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white">{admin.fullName}</div>
-                    <div className="text-xs text-slate-400">{admin.email}</div>
-                  </div>
-                  <div className="ml-auto">
-                    <StatusBadge status={admin.status} />
+                  <div className="grid grid-cols-2 gap-3 text-xs pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <div><span className="text-slate-400 font-bold block">Phone</span><span className="font-semibold text-slate-700 dark:text-slate-300">{admin.phone || '—'}</span></div>
+                    <div><span className="text-slate-400 font-bold block">Last Login</span><span className="font-semibold text-slate-700 dark:text-slate-300">{admin.lastLogin}</span></div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-xs pt-3 border-t border-slate-100 dark:border-slate-800">
-                  <div><span className="text-slate-400 font-bold block">Phone</span><span className="font-semibold text-slate-700 dark:text-slate-300">{admin.phone || '—'}</span></div>
-                  <div><span className="text-slate-400 font-bold block">Last Login</span><span className="font-semibold text-slate-700 dark:text-slate-300">{admin.lastLogin}</span></div>
+              ) : (
+                <p className="text-xs text-slate-400">No primary admin assigned yet.</p>
+              )}
+            </div>
+
+            {/* M-Pesa Payment Gateway (Daraja Model B) */}
+            <div className="rounded-xl border p-5 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-emerald-500" />
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">M-Pesa Gateway (Daraja Model B)</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1.5 ${business.isMpesaActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${business.isMpesaActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                    {business.isMpesaActive ? 'Gateway Active' : 'Gateway Inactive'}
+                  </span>
+                  <button
+                    onClick={() => setShowEdit(true)}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    <Edit2 className="h-3 w-3" /> Edit Credentials
+                  </button>
                 </div>
               </div>
-            ) : (
-              <p className="text-xs text-slate-400">No primary admin assigned yet.</p>
-            )}
+
+              <dl className="grid grid-cols-2 gap-4">
+                <div>
+                  <dt className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Environment</dt>
+                  <dd className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${business.mpesaEnvironment === 'production' ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800'}`}>
+                      {business.mpesaEnvironment === 'production' ? 'Live Production' : 'Sandbox Simulator'}
+                    </span>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Transaction Type</dt>
+                  <dd className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    {business.mpesaTransactionType === 'CustomerBuyGoodsOnline' ? 'Buy Goods (Till Number)' : 'PayBill (CustomerPayBillOnline)'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Business Shortcode</dt>
+                  <dd className="text-sm font-mono font-bold text-slate-800 dark:text-slate-200">
+                    {business.mpesaShortcode || 'Not Configured'}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Consumer Key</dt>
+                  <dd className="text-sm font-mono font-semibold text-slate-800 dark:text-slate-200 truncate">
+                    {business.mpesaConsumerKey ? `${business.mpesaConsumerKey.slice(0, 8)}••••••••` : 'Not Configured'}
+                  </dd>
+                </div>
+                <div className="col-span-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                    <span>Consumer Secret & Passkey are secured with <strong>AES-256-GCM authenticated encryption</strong></span>
+                  </div>
+                  <span className="font-mono text-[11px] text-slate-400">Model B Independent Routing</span>
+                </div>
+              </dl>
+            </div>
           </div>
-        </div>
 
         {/* Right Column: High-Level Activity */}
         <div className="space-y-5">
@@ -1969,8 +2340,8 @@ const BusinessesPage = ({
             <button
               onClick={() => {
                 csvExport(
-                  ['Business Name', 'Type', 'City', 'County', 'Plan', 'Status', 'Orders', 'Created Date'],
-                  filtered.map(b => [b.name, b.businessType, b.city, b.county, b.plan, b.status, b.orders, b.createdAt]),
+                  ['Business Name', 'Type', 'City', 'County', 'Plan', 'M-Pesa Gateway', 'Shortcode', 'Status', 'Orders', 'Created Date'],
+                  filtered.map(b => [b.name, b.businessType, b.city, b.county, b.plan, b.isMpesaActive ? 'Active' : 'Inactive', b.mpesaShortcode || '—', b.status, b.orders, b.createdAt]),
                   'businesses-export.csv'
                 );
                 showToast('Businesses exported to CSV');
@@ -1994,6 +2365,7 @@ const BusinessesPage = ({
                 <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 whitespace-nowrap bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-sm">Location</th>
                 <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 whitespace-nowrap bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-sm">Admin</th>
                 <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 whitespace-nowrap bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-sm">Plan</th>
+                <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 whitespace-nowrap bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-sm">M-Pesa Gateway</th>
                 <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 whitespace-nowrap bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-sm">Status</th>
                 <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 whitespace-nowrap bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-sm">Created</th>
                 <th className="px-5 py-3 text-right text-xs font-bold text-slate-400 whitespace-nowrap bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-sm">Actions</th>
@@ -2002,7 +2374,7 @@ const BusinessesPage = ({
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-xs text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-xs text-slate-400">
                     No businesses match your search filters
                   </td>
                 </tr>
@@ -2041,6 +2413,23 @@ const BusinessesPage = ({
                         {admin ? admin.fullName : '—'}
                       </td>
                       <td className="px-5 py-3.5"><StatusBadge status={business.plan} /></td>
+                      <td className="px-5 py-3.5">
+                        {business.isMpesaActive ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                              <Zap className="h-3 w-3 text-emerald-600 fill-emerald-500" />
+                              {business.mpesaShortcode || 'Active'}
+                            </span>
+                            <span className="text-[10px] uppercase font-bold text-slate-400">
+                              {business.mpesaEnvironment === 'production' ? 'Live' : 'Sandbox'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                            Inactive
+                          </span>
+                        )}
+                      </td>
                       <td className="px-5 py-3.5"><StatusBadge status={business.status} /></td>
                       <td className="px-5 py-3.5 text-xs text-slate-400">{business.createdAt}</td>
                       <td className="px-5 py-3.5 text-right">
@@ -3427,6 +3816,15 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
             trialDays: 14,
             startDate: '',
             expiryDate: '',
+            // Model B: Independent Daraja M-Pesa Credentials
+            mpesaConsumerKey: t.mpesaConsumerKey ?? null,
+            mpesaConsumerSecret: t.mpesaConsumerSecret ?? null,
+            mpesaShortcode: t.mpesaShortcode ?? null,
+            mpesaPasskey: t.mpesaPasskey ?? null,
+            mpesaTransactionType: t.mpesaTransactionType ?? 'CustomerPayBillOnline',
+            mpesaEnvironment: t.mpesaEnvironment ?? 'sandbox',
+            isMpesaActive: Boolean(t.isMpesaActive),
+            hasMpesaConfig: Boolean(t.hasMpesaConfig ?? (t.mpesaConsumerKey && t.mpesaShortcode && t.isMpesaActive)),
           };
         });
         setBusinesses(parsedBusinesses);

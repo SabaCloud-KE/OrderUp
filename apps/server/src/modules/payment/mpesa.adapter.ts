@@ -2,16 +2,21 @@ import axios from 'axios';
 import { env } from '../../config/env';
 import { logger } from '../../config/logger';
 
+export interface VenueMpesaConfig {
+  consumerKey?: string | null;
+  consumerSecret?: string | null;
+  shortcode?: string | null;
+  passkey?: string | null;
+  transactionType?: string | null;
+  environment?: 'sandbox' | 'production' | null;
+}
+
 export interface StkPushParams {
   phoneNumber: string;
   amount: number;
-  accountReference: string;
-  transactionDesc: string;
-  venueConfig?: {
-    shortcode?: string | null;
-    passkey?: string | null;
-    transactionType?: string | null;
-  };
+  accountReference?: string;
+  transactionDesc?: string;
+  venueConfig?: VenueMpesaConfig;
 }
 
 export interface StkPushResponse {
@@ -38,10 +43,16 @@ export class MpesaAdapter {
     return phone;
   }
 
-  public async getOAuthToken(): Promise<{ token: string; simulated: boolean }> {
-    const consumerKey = env.MPESA_CONSUMER_KEY;
-    const consumerSecret = env.MPESA_CONSUMER_SECRET;
-    const isProduction = env.MPESA_ENVIRONMENT === 'production';
+  public async getOAuthToken(venueConfig?: VenueMpesaConfig): Promise<{ token: string; simulated: boolean }> {
+    const isProduction = venueConfig?.environment
+      ? venueConfig.environment === 'production'
+      : env.MPESA_ENVIRONMENT === 'production';
+    const activeBaseUrl = isProduction
+      ? 'https://api.safaricom.co.ke'
+      : 'https://sandbox.safaricom.co.ke';
+
+    const consumerKey = venueConfig?.consumerKey?.trim() || env.MPESA_CONSUMER_KEY;
+    const consumerSecret = venueConfig?.consumerSecret?.trim() || env.MPESA_CONSUMER_SECRET;
 
     const isMissingConfig =
       !consumerKey ||
@@ -51,20 +62,20 @@ export class MpesaAdapter {
 
     if (isMissingConfig) {
       if (isProduction) {
-        const errorMsg = 'MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET must be configured for production Daraja.';
+        const errorMsg = 'M-Pesa Consumer Key and Secret must be configured for production Daraja.';
         logger.error(`[M-Pesa Production] ${errorMsg}`);
         throw new Error(errorMsg);
       }
-      logger.warn('[M-Pesa Sandbox] MPESA_CONSUMER_KEY or MPESA_CONSUMER_SECRET not configured. Using simulated mode.');
+      logger.warn('[M-Pesa Sandbox] M-Pesa Consumer Key or Secret not configured. Using simulated mode.');
       return { token: 'simulated_access_token_12345', simulated: true };
     }
 
     const auth = Buffer.from(`${consumerKey.trim()}:${consumerSecret.trim()}`).toString('base64');
 
     try {
-      logger.info(`[M-Pesa OAuth] Requesting token from ${this.baseUrl} (${isProduction ? 'PRODUCTION' : 'SANDBOX'})...`);
+      logger.info(`[M-Pesa OAuth] Requesting token from ${activeBaseUrl} (${isProduction ? 'PRODUCTION' : 'SANDBOX'})...`);
       const response = await axios.get(
-        `${this.baseUrl}/oauth/v1/generate?grant_type=client_credentials`,
+        `${activeBaseUrl}/oauth/v1/generate?grant_type=client_credentials`,
         {
           headers: {
             Authorization: `Basic ${auth}`,
@@ -78,16 +89,22 @@ export class MpesaAdapter {
         error.response?.data?.errorMessage ||
         error.response?.data?.error ||
         error.message;
-      logger.error(`[M-Pesa OAuth Error] Authentication failed on ${this.baseUrl}: ${errMsg}`, error.response?.data);
+      logger.error(`[M-Pesa OAuth Error] Authentication failed on ${activeBaseUrl}: ${errMsg}`, error.response?.data);
       throw new Error(
-        `Safaricom M-Pesa OAuth authentication failed (${isProduction ? 'Production' : 'Sandbox'}): ${errMsg}. Please verify MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET.`
+        `Safaricom M-Pesa OAuth authentication failed (${isProduction ? 'Production' : 'Sandbox'}): ${errMsg}. Please verify your M-Pesa Consumer Key and Secret.`
       );
     }
   }
 
   public async initiateStkPush(params: StkPushParams): Promise<StkPushResponse> {
-    const isProduction = env.MPESA_ENVIRONMENT === 'production';
-    const { token, simulated } = await this.getOAuthToken();
+    const isProduction = params.venueConfig?.environment
+      ? params.venueConfig.environment === 'production'
+      : env.MPESA_ENVIRONMENT === 'production';
+    const activeBaseUrl = isProduction
+      ? 'https://api.safaricom.co.ke'
+      : 'https://sandbox.safaricom.co.ke';
+
+    const { token, simulated } = await this.getOAuthToken(params.venueConfig);
 
     let shortcode = params.venueConfig?.shortcode?.trim() || env.MPESA_SHORTCODE || '174379';
     let passkey = params.venueConfig?.passkey?.trim() || env.MPESA_PASSKEY || 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
@@ -183,7 +200,7 @@ export class MpesaAdapter {
       );
 
       const response = await axios.post(
-        `${this.baseUrl}/mpesa/stkpush/v1/processrequest`,
+        `${activeBaseUrl}/mpesa/stkpush/v1/processrequest`,
         payload,
         {
           headers: {

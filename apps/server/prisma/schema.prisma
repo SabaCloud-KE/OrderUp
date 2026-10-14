@@ -139,10 +139,13 @@ model Business {
   subscriptionStatus SubscriptionStatus @default(ACTIVE) @map("subscription_status")
   isActive           Boolean            @default(true) @map("is_active")
 
-  // Multi-Tenant M-Pesa Configuration (Model A: Per-venue Shortcode + Passkey)
+  // Multi-Tenant M-Pesa Configuration (Model B: Independent Credentials)
+  mpesaConsumerKey     String?            @map("mpesa_consumer_key")
+  mpesaConsumerSecret  String?            @map("mpesa_consumer_secret")
   mpesaShortcode       String?            @map("mpesa_shortcode")
   mpesaPasskey         String?            @map("mpesa_passkey")
   mpesaTransactionType String?            @default("CustomerPayBillOnline") @map("mpesa_transaction_type")
+  mpesaEnvironment     String?            @default("sandbox") @map("mpesa_environment")
   isMpesaActive        Boolean            @default(false) @map("is_mpesa_active")
 
   createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)

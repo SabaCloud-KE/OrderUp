@@ -80,10 +80,12 @@ export async function autoMigrateDatabase(): Promise<void> {
           ADD COLUMN IF NOT EXISTS operating_schedule JSONB,
           ADD COLUMN IF NOT EXISTS business_status business_status_enum NOT NULL DEFAULT 'ACTIVE',
           ADD COLUMN IF NOT EXISTS subscription_status subscription_status_enum NOT NULL DEFAULT 'ACTIVE',
-          ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
-          ADD COLUMN IF NOT EXISTS mpesa_shortcode VARCHAR(20),
+          ADD COLUMN IF NOT EXISTS mpesa_consumer_key TEXT,
+          ADD COLUMN IF NOT EXISTS mpesa_consumer_secret TEXT,
+          ADD COLUMN IF NOT EXISTS mpesa_shortcode VARCHAR(50),
           ADD COLUMN IF NOT EXISTS mpesa_passkey TEXT,
           ADD COLUMN IF NOT EXISTS mpesa_transaction_type VARCHAR(50) DEFAULT 'CustomerPayBillOnline',
+          ADD COLUMN IF NOT EXISTS mpesa_environment VARCHAR(20) DEFAULT 'sandbox',
           ADD COLUMN IF NOT EXISTS is_mpesa_active BOOLEAN DEFAULT false,
           ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ(6);
       `);
