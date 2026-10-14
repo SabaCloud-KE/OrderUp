@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Wine, Eye, EyeOff, ChevronRight, Loader2, User, Briefcase, Shield, Timer } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Wine, Eye, EyeOff, ChevronRight, Loader2, User, Briefcase, Shield, Timer, X } from 'lucide-react';
 import { getApiUrl } from '../config/api';
 import { getSessionExpiredNotice } from '@orderup/shared';
 import { PrivacyPolicyModal, TermsAndConditionsModal, BusinessAdminOnboardingModal } from '../components/LegalModals';
@@ -24,9 +24,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [sessionExpiredMsg] = useState<string | null>(() => getSessionExpiredNotice());
-
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
+  const [sessionExpiredMsg, setSessionExpiredMsg] = useState<string | null>(() => getSessionExpiredNotice());
+
+  // Auto-dismiss session expired alert after 5 seconds
+  useEffect(() => {
+    if (!sessionExpiredMsg) return;
+    const timer = setTimeout(() => {
+      setSessionExpiredMsg(null);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [sessionExpiredMsg]);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [tempPassword, setTempPassword] = useState('');
@@ -241,12 +249,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
           {/* Session Inactivity Timeout Notice */}
           {sessionExpiredMsg && (
-            <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-3.5 text-xs text-red-900 shadow-sm animate-in fade-in">
-              <Timer className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <span className="font-extrabold block text-red-800">Session Expired</span>
-                <span className="text-red-700">{sessionExpiredMsg}</span>
+            <div className="flex items-start justify-between gap-3 rounded-xl border border-red-300 bg-red-50 p-3.5 text-xs text-red-900 shadow-sm animate-in fade-in transition-all duration-300">
+              <div className="flex items-start gap-3">
+                <Timer className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <span className="font-extrabold block text-red-800">Session Expired</span>
+                  <span className="text-red-700">{sessionExpiredMsg}</span>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setSessionExpiredMsg(null)}
+                className="p-1 text-red-400 hover:text-red-700 hover:bg-red-100/60 rounded-lg transition-colors flex-shrink-0"
+                title="Dismiss notice"
+                aria-label="Dismiss notice"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
           )}
 
@@ -262,6 +281,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   setEmail('john123@gmail.com');
                   setPassword('john1234');
                   setError('');
+                  setSessionExpiredMsg(null);
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
               >
@@ -274,6 +294,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   setEmail('tonnykim@gmail.com');
                   setPassword('Tonny1234');
                   setError('');
+                  setSessionExpiredMsg(null);
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
               >
@@ -286,6 +307,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   setEmail('jane@gmail.com');
                   setPassword('Jane1234');
                   setError('');
+                  setSessionExpiredMsg(null);
                 }}
                 className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border border-blue-200 bg-white hover:bg-blue-100/60 font-semibold text-blue-900 transition shadow-sm text-[11px]"
               >
@@ -388,7 +410,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   type="email"
                   placeholder="name@orderup.co.ke"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (sessionExpiredMsg) setSessionExpiredMsg(null);
+                  }}
                   autoComplete="email"
                   className="w-full rounded-lg border px-3.5 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
                   style={{
@@ -408,7 +433,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (sessionExpiredMsg) setSessionExpiredMsg(null);
+                    }}
                     className="w-full rounded-lg border px-3.5 py-2.5 pr-11 text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500"
                     style={{
                       background: 'var(--bg-card)',

@@ -4,7 +4,7 @@
  */
 
 export const IDLE_TIMEOUT_MS = 20 * 60 * 1000;       // 20 minutes idle timeout
-export const WARN_BEFORE_TIMEOUT_MS = 2 * 60 * 1000; // warn 2 minutes before timeout
+export const WARN_BEFORE_TIMEOUT_MS = 30 * 1000;      // warn 30 seconds before timeout
 export const MAX_SESSION_MS = 24 * 60 * 60 * 1000;   // 24 hours max session (full day shift)
 
 export const DEFAULT_SESSION_EXPIRED_MSG =
