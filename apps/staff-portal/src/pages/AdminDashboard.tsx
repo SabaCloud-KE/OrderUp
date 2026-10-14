@@ -1152,7 +1152,7 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* 1. Today Revenue */}
             <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
               <div>
@@ -1292,6 +1292,27 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
               <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
                 <span className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold">Active floor</span>
                 <span className="text-[10px] text-slate-400 font-medium">Service</span>
+              </div>
+            </div>
+
+            {/* 5. Total Orders (All-Time) */}
+            <div className="p-4 rounded-2xl border flex flex-col justify-between" style={{ background: 'var(--bg-card)', borderColor: 'var(--border)' }}>
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500">Total Orders</span>
+                  <div className="h-8 w-8 rounded-xl bg-orange-50 dark:bg-orange-950/50 flex items-center justify-center">
+                    <ClipboardList className="h-4 w-4 text-orange-500" />
+                  </div>
+                </div>
+                <div className="my-2.5">
+                  <div className="text-2xl font-black text-orange-600">
+                    {businessSummary?.totalOrders ?? dbTotalOrders}
+                  </div>
+                </div>
+              </div>
+              <div className="pt-2.5 border-t flex items-center justify-between text-xs" style={{ borderColor: 'var(--border)' }}>
+                <span className="text-[11px] text-orange-600 dark:text-orange-400 font-semibold">All-time orders</span>
+                <span className="text-[10px] text-slate-400 font-medium">Lifetime</span>
               </div>
             </div>
           </div>
