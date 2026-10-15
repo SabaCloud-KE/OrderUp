@@ -70,6 +70,74 @@ const SS = ({ options, ...p }: React.SelectHTMLAttributes<HTMLSelectElement> & {
   </select>
 );
 
+/* ─── Shift Management ────────────────────────────────────────────────────── */
+
+/** A shift template defined by the manager (stored in localStorage). */
+interface ShiftDefinition {
+  id: string;
+  name: string;
+  startTime: string; // "HH:mm" 24h
+  endTime: string;   // "HH:mm" 24h
+  color: string;     // tailwind colour token: 'blue' | 'emerald' | 'amber' | 'purple' | 'rose' | 'indigo' | 'teal'
+}
+
+const SHIFT_COLORS = ['blue', 'emerald', 'amber', 'purple', 'rose', 'indigo', 'teal'] as const;
+type ShiftColor = typeof SHIFT_COLORS[number];
+
+const shiftColorMap: Record<ShiftColor, { bg: string; text: string; dot: string }> = {
+  blue:    { bg: 'bg-blue-100',    text: 'text-blue-700',    dot: 'bg-blue-500' },
+  emerald: { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  amber:   { bg: 'bg-amber-100',   text: 'text-amber-700',   dot: 'bg-amber-500' },
+  purple:  { bg: 'bg-purple-100',  text: 'text-purple-700',  dot: 'bg-purple-500' },
+  rose:    { bg: 'bg-rose-100',    text: 'text-rose-700',    dot: 'bg-rose-500' },
+  indigo:  { bg: 'bg-indigo-100',  text: 'text-indigo-700',  dot: 'bg-indigo-500' },
+  teal:    { bg: 'bg-teal-100',    text: 'text-teal-700',    dot: 'bg-teal-500' },
+};
+
+const LS_SHIFTS_KEY = 'orderup_manager_shifts_v1';
+
+const DEFAULT_SHIFTS: ShiftDefinition[] = [
+  { id: 'shift-morning',   name: 'Morning',   startTime: '06:00', endTime: '14:00', color: 'amber' },
+  { id: 'shift-afternoon', name: 'Afternoon', startTime: '14:00', endTime: '22:00', color: 'blue' },
+  { id: 'shift-evening',   name: 'Evening',   startTime: '18:00', endTime: '02:00', color: 'indigo' },
+  { id: 'shift-night',     name: 'Night',     startTime: '22:00', endTime: '06:00', color: 'purple' },
+];
+
+function useShifts() {
+  const [shifts, setShifts] = React.useState<ShiftDefinition[]>(() => {
+    try {
+      const raw = localStorage.getItem(LS_SHIFTS_KEY);
+      if (raw) return JSON.parse(raw) as ShiftDefinition[];
+    } catch { /* ignore */ }
+    return DEFAULT_SHIFTS;
+  });
+
+  const persist = (next: ShiftDefinition[]) => {
+    setShifts(next);
+    try { localStorage.setItem(LS_SHIFTS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  };
+
+  const addShift = (s: Omit<ShiftDefinition, 'id'>) =>
+    persist([...shifts, { ...s, id: `shift-${Date.now()}` }]);
+
+  const updateShift = (id: string, patch: Partial<Omit<ShiftDefinition, 'id'>>) =>
+    persist(shifts.map(s => s.id === id ? { ...s, ...patch } : s));
+
+  const deleteShift = (id: string) => persist(shifts.filter(s => s.id !== id));
+
+  const resetToDefaults = () => persist(DEFAULT_SHIFTS);
+
+  return { shifts, addShift, updateShift, deleteShift, resetToDefaults };
+}
+
+/** Format "HH:mm" → "6:00 AM" style label */
+function fmt24to12(t: string): string {
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
 /* Phone field with +254 prefix */
 const PhoneInput = ({ error, value, onChange, placeholder }: { error?: string; value: string; onChange: (v: string) => void; placeholder?: string }) => (
   <div>
@@ -301,6 +369,206 @@ type MenuItem = {
 
 
 
+/* ------------------------------------------------
+   MANAGE SHIFTS MODAL
+------------------------------------------------ */
+interface ShiftForm { name: string; startTime: string; endTime: string; color: ShiftColor }
+const defaultShiftForm: ShiftForm = { name: '', startTime: '08:00', endTime: '16:00', color: 'blue' };
+
+const ManageShiftsModal = ({
+  open, onClose, shifts, onAdd, onUpdate, onDelete, onReset,
+}: {
+  open: boolean;
+  onClose: () => void;
+  shifts: ShiftDefinition[];
+  onAdd: (s: Omit<ShiftDefinition, 'id'>) => void;
+  onUpdate: (id: string, patch: Partial<Omit<ShiftDefinition, 'id'>>) => void;
+  onDelete: (id: string) => void;
+  onReset: () => void;
+}) => {
+  const [form, setForm] = React.useState<ShiftForm>({ ...defaultShiftForm });
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [formErrors, setFormErrors] = React.useState<Partial<Record<keyof ShiftForm, string>>>({});
+  const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
+
+  // When entering edit mode pre-fill the form
+  const startEdit = (s: ShiftDefinition) => {
+    setEditingId(s.id);
+    setForm({ name: s.name, startTime: s.startTime, endTime: s.endTime, color: s.color as ShiftColor });
+    setFormErrors({});
+  };
+
+  const cancelEdit = () => { setEditingId(null); setForm({ ...defaultShiftForm }); setFormErrors({}); };
+
+  const validateForm = (): boolean => {
+    const e: Partial<Record<keyof ShiftForm, string>> = {};
+    if (!form.name.trim()) e.name = 'Shift name is required';
+    else if (form.name.trim().length < 2) e.name = 'Min 2 characters';
+    else if (form.name.trim().length > 30) e.name = 'Max 30 characters';
+    if (!form.startTime) e.startTime = 'Required';
+    if (!form.endTime) e.endTime = 'Required';
+    setFormErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSave = () => {
+    if (!validateForm()) return;
+    if (editingId) {
+      onUpdate(editingId, { name: form.name.trim(), startTime: form.startTime, endTime: form.endTime, color: form.color });
+      cancelEdit();
+    } else {
+      onAdd({ name: form.name.trim(), startTime: form.startTime, endTime: form.endTime, color: form.color });
+      setForm({ ...defaultShiftForm });
+      setFormErrors({});
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose} title="Manage Shifts" size="lg">
+      <div className="space-y-5">
+
+        {/* Existing shifts list */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              Defined Shifts ({shifts.length})
+            </h4>
+            <button
+              onClick={() => { if (confirm('Reset to the 4 default shifts? Your custom shifts will be lost.')) { onReset(); cancelEdit(); } }}
+              className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 transition-colors underline underline-offset-2"
+            >
+              Reset to defaults
+            </button>
+          </div>
+
+          {shifts.length === 0 ? (
+            <div className="text-center py-6 rounded-xl border-2 border-dashed border-slate-200 text-sm text-slate-400">
+              No shifts defined yet — add one below.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {shifts.map(s => {
+                const c = shiftColorMap[s.color as ShiftColor] ?? shiftColorMap.blue;
+                const isEditing = editingId === s.id;
+                return (
+                  <div key={s.id} className={`rounded-xl border p-3 transition-all ${isEditing ? 'border-blue-300 bg-blue-50/50' : 'border-slate-100 hover:border-slate-200'}`} style={{ background: isEditing ? undefined : 'var(--bg-card)' }}>
+                    {isEditing ? (
+                      /* Inline edit form */
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <FL>Shift Name</FL>
+                            <SI value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Morning" error={formErrors.name} />
+                          </div>
+                          <div>
+                            <FL>Colour</FL>
+                            <div className="flex items-center gap-2 mt-1">
+                              {SHIFT_COLORS.map(col => {
+                                const cm = shiftColorMap[col];
+                                return (
+                                  <button key={col} type="button"
+                                    onClick={() => setForm(p => ({ ...p, color: col }))}
+                                    className={`h-6 w-6 rounded-full ${cm.dot} ring-offset-1 transition-all ${form.color === col ? 'ring-2 ring-blue-500 scale-110' : 'opacity-60 hover:opacity-100'}`}
+                                    title={col}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div>
+                            <FL>Start Time</FL>
+                            <SI type="time" value={form.startTime} onChange={e => setForm(p => ({ ...p, startTime: e.target.value }))} error={formErrors.startTime} />
+                          </div>
+                          <div>
+                            <FL>End Time</FL>
+                            <SI type="time" value={form.endTime} onChange={e => setForm(p => ({ ...p, endTime: e.target.value }))} error={formErrors.endTime} />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={handleSave} className="flex-1 rounded-lg py-2 text-xs font-bold text-white transition-opacity hover:opacity-90" style={{ background: '#2563EB' }}>Save Changes</button>
+                          <button onClick={cancelEdit} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Row display */
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className={`h-3 w-3 rounded-full flex-shrink-0 ${c.dot}`} />
+                          <div className="min-w-0">
+                            <div className="font-bold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{s.name}</div>
+                            <div className="text-[11px] font-medium text-slate-400">{fmt24to12(s.startTime)} – {fmt24to12(s.endTime)}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${c.bg} ${c.text}`}>{s.color}</span>
+                          {confirmDeleteId === s.id ? (
+                            <>
+                              <button onClick={() => { onDelete(s.id); setConfirmDeleteId(null); }} className="text-[11px] font-bold text-red-600 px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100 transition-colors">Confirm</button>
+                              <button onClick={() => setConfirmDeleteId(null)} className="text-[11px] font-semibold text-slate-500 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors">Cancel</button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => startEdit(s)} className="p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Edit shift"><Edit2 className="h-3.5 w-3.5 text-blue-500" /></button>
+                              <button onClick={() => setConfirmDeleteId(s.id)} className="p-1.5 rounded-lg hover:bg-red-50 transition-colors" title="Delete shift"><Trash2 className="h-3.5 w-3.5 text-red-400" /></button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Add new shift form */}
+        {!editingId && (
+          <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/40 p-4 space-y-3">
+            <h4 className="text-xs font-black uppercase tracking-wider text-blue-700">Add New Shift</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <FL>Shift Name</FL>
+                <SI value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Split Shift" error={formErrors.name} />
+              </div>
+              <div>
+                <FL>Colour</FL>
+                <div className="flex items-center gap-2 mt-1">
+                  {SHIFT_COLORS.map(col => {
+                    const cm = shiftColorMap[col];
+                    return (
+                      <button key={col} type="button"
+                        onClick={() => setForm(p => ({ ...p, color: col }))}
+                        className={`h-6 w-6 rounded-full ${cm.dot} ring-offset-1 transition-all ${form.color === col ? 'ring-2 ring-blue-500 scale-110' : 'opacity-50 hover:opacity-90'}`}
+                        title={col}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <FL>Start Time</FL>
+                <SI type="time" value={form.startTime} onChange={e => setForm(p => ({ ...p, startTime: e.target.value }))} error={formErrors.startTime} />
+              </div>
+              <div>
+                <FL>End Time</FL>
+                <SI type="time" value={form.endTime} onChange={e => setForm(p => ({ ...p, endTime: e.target.value }))} error={formErrors.endTime} />
+              </div>
+            </div>
+            <button onClick={handleSave} className="w-full rounded-xl py-2.5 text-sm font-bold text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2" style={{ background: '#2563EB' }}>
+              <Plus className="h-4 w-4" /> Add Shift
+            </button>
+          </div>
+        )}
+
+        <div className="flex justify-end pt-1 border-t" style={{ borderColor: '#E2E8F0' }}>
+          <button onClick={onClose} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">Done</button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 /* ------------------------------------------------ 
    ADD WAITER MODAL
 ------------------------------------------------ */
@@ -314,11 +582,12 @@ const defaultWaiterForm: WaiterForm = {
   tempPwd: '', requirePwdChange: true, status: 'Active', shift: 'Evening', notes: '',
 };
 
-const AddWaiterModal = ({ open, onClose, onAdd }: {
+const AddWaiterModal = ({ open, onClose, onAdd, shifts }: {
   open: boolean;
   onClose: () => void;
   onAdd: (w: Waiter) => void;
   onError?: (msg: string) => void;
+  shifts: ShiftDefinition[];
 }) => {
   const [form, setForm] = React.useState<WaiterForm>({ ...defaultWaiterForm, tempPwd: generatePassword() });
   const [errors, setErrors] = React.useState<Partial<Record<keyof WaiterForm | 'api', string>>>({});
@@ -479,7 +748,10 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
             </div>
             <div>
               <FL>Shift <span className="text-slate-400 font-normal normal-case">(optional)</span></FL>
-              <SS value={form.shift} onChange={e => set('shift', e.target.value)} options={[{ v: '', l: '    Not assigned    ' }, { v: 'Morning', l: 'Morning (6am   2pm)' }, { v: 'Afternoon', l: 'Afternoon (2pm   10pm)' }, { v: 'Evening', l: 'Evening (6pm   2am)' }, { v: 'Night', l: 'Night (10pm   6am)' }]} />
+              <SS value={form.shift} onChange={e => set('shift', e.target.value)} options={[
+                { v: '', l: '— Not assigned —' },
+                ...shifts.map(s => ({ v: s.name, l: `${s.name}  (${fmt24to12(s.startTime)} – ${fmt24to12(s.endTime)})` })),
+              ]} />
             </div>
             <div className="col-span-2">
               <FL>Notes <span className="text-slate-400 font-normal normal-case">(optional)</span></FL>
@@ -513,11 +785,12 @@ interface EditWaiterForm {
   employeeNo: string; status: string; shift: string; notes: string;
 }
 
-const EditWaiterModal = ({ open, waiter, onClose, onSave }: {
+const EditWaiterModal = ({ open, waiter, onClose, onSave, shifts }: {
   open: boolean;
   waiter: Waiter | null;
   onClose: () => void;
   onSave: (updated: Waiter) => void;
+  shifts: ShiftDefinition[];
 }) => {
   const [form, setForm] = React.useState<EditWaiterForm>({
     firstName: '', lastName: '', phone: '', email: '',
@@ -650,7 +923,10 @@ const EditWaiterModal = ({ open, waiter, onClose, onSave }: {
             </div>
             <div>
               <FL>Shift <span className="text-slate-400 font-normal normal-case">(optional)</span></FL>
-              <SS value={form.shift} onChange={e => set('shift', e.target.value)} options={[{ v: '', l: '— Not assigned —' }, { v: 'Morning', l: 'Morning (6am – 2pm)' }, { v: 'Afternoon', l: 'Afternoon (2pm – 10pm)' }, { v: 'Evening', l: 'Evening (6pm – 2am)' }, { v: 'Night', l: 'Night (10pm – 6am)' }]} />
+              <SS value={form.shift} onChange={e => set('shift', e.target.value)} options={[
+                { v: '', l: '— Not assigned —' },
+                ...shifts.map(s => ({ v: s.name, l: `${s.name}  (${fmt24to12(s.startTime)} – ${fmt24to12(s.endTime)})` })),
+              ]} />
             </div>
             <div className="col-span-2">
               <FL>Notes <span className="text-slate-400 font-normal normal-case">(optional)</span></FL>
@@ -686,6 +962,9 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
   const [statusFilter, setStatusFilter] = React.useState('All');
   const [showAdd, setShowAdd] = React.useState(false);
   const [editTarget, setEditTarget] = React.useState<Waiter | null>(null);
+  const [showShifts, setShowShifts] = React.useState(false);
+
+  const { shifts, addShift, updateShift, deleteShift, resetToDefaults } = useShifts();
 
   /* Fetch staff from API with live polling */
   const fetchStaff = React.useCallback(async (showLoading = false) => {
@@ -797,9 +1076,14 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
       {/* Top section: Title, KPIs, Filters */}
       <div className="flex-shrink-0 space-y-4">
         <SectionHeader title="Staff Management" subtitle="Manage waiters for your venue — only managers can create staff" action={
-          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold text-white hover:opacity-90 transition-opacity" style={{ background: '#2563EB' }}>
-            <Plus className="h-3.5 w-3.5" /> Add Waiter
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowShifts(true)} className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold border hover:bg-slate-50 transition-colors" style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>
+              <Clock className="h-3.5 w-3.5" /> Manage Shifts
+            </button>
+            <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-bold text-white hover:opacity-90 transition-opacity" style={{ background: '#2563EB' }}>
+              <Plus className="h-3.5 w-3.5" /> Add Waiter
+            </button>
+          </div>
         } />
 
         {/* Stats */}
@@ -897,10 +1181,20 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
         </p>
       </div>
 
-      <AddWaiterModal open={showAdd} onClose={() => setShowAdd(false)} onAdd={(w) => { setWaiters(p => [w, ...p]); showToast(`${w.firstName} ${w.lastName} added successfully`); }} />
+      <ManageShiftsModal
+        open={showShifts}
+        onClose={() => setShowShifts(false)}
+        shifts={shifts}
+        onAdd={s => { addShift(s); showToast(`Shift "${s.name}" created`); }}
+        onUpdate={(id, patch) => { updateShift(id, patch); showToast('Shift updated'); }}
+        onDelete={id => { deleteShift(id); showToast('Shift removed'); }}
+        onReset={() => { resetToDefaults(); showToast('Shifts reset to defaults'); }}
+      />
+      <AddWaiterModal open={showAdd} onClose={() => setShowAdd(false)} shifts={shifts} onAdd={(w) => { setWaiters(p => [w, ...p]); showToast(`${w.firstName} ${w.lastName} added successfully`); }} />
       <EditWaiterModal
         open={editTarget !== null}
         waiter={editTarget}
+        shifts={shifts}
         onClose={() => setEditTarget(null)}
         onSave={(updated) => {
           setWaiters(prev => prev.map(w => w.id === updated.id ? updated : w));
