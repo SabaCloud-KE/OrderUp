@@ -1204,8 +1204,8 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                   )}
                 </div>
 
-                {/* All 4 Order Status Stats inside this single KPI */}
-                <div className="grid grid-cols-2 gap-1.5 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+                {/* Order Status Stats — Pending / In Progress / Completed */}
+                <div className="grid grid-cols-3 gap-1.5 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
                   <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
                     <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                       <Clock className="h-3 w-3 text-amber-500" /> Pending
