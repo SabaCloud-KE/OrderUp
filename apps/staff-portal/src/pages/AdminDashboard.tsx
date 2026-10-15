@@ -1204,27 +1204,27 @@ export const AdminDashboard: React.FC<{ onLogout: () => void }> = ({ onLogout })
                   )}
                 </div>
 
-                {/* Order Status Stats — Pending / In Progress / Completed */}
+                {/* Order Status Stats — Pending / Active / Done */}
                 <div className="grid grid-cols-3 gap-1.5 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                      <Clock className="h-3 w-3 text-amber-500" /> Pending
+                  <div className="flex flex-col gap-0.5 px-2 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1 truncate">
+                      <Clock className="h-3 w-3 text-amber-500 shrink-0" /> Pending
                     </span>
-                    <span className="text-xs font-black text-amber-600 dark:text-amber-300">{summary.pendingOrders}</span>
+                    <span className="text-sm font-black text-amber-600 dark:text-amber-300 leading-none">{summary.pendingOrders}</span>
                   </div>
 
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                    <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
-                      <Sliders className="h-3 w-3 text-indigo-500" /> In Progress
+                  <div className="flex flex-col gap-0.5 px-2 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                    <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 flex items-center gap-1 truncate">
+                      <Sliders className="h-3 w-3 text-indigo-500 shrink-0" /> Active
                     </span>
-                    <span className="text-xs font-black text-indigo-600 dark:text-indigo-300">{summary.inProgressOrders}</span>
+                    <span className="text-sm font-black text-indigo-600 dark:text-indigo-300 leading-none">{summary.inProgressOrders}</span>
                   </div>
 
-                  <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Completed
+                  <div className="flex flex-col gap-0.5 px-2 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 truncate">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" /> Done
                     </span>
-                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-300">{summary.completedOrders}</span>
+                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-300 leading-none">{summary.completedOrders}</span>
                   </div>
                 </div>
               </div>
