@@ -12,9 +12,21 @@ import { ThemeToggleSimple } from '@orderup/ui';
 /* ─────────────────────────────────────────────
    API CONFIG
 ───────────────────────────────────────────── */
+const CLOUD_API_URL = 'https://orderup-jo8h.onrender.com/api/v1';
+
 const getApiUrl = (path: string): string => {
-  const envUrl = import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL;
-  let base = envUrl ? envUrl.trim() : 'http://localhost:5000/api/v1';
+  const envUrl = ((import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL) || '').trim();
+  let base = envUrl;
+
+  const isProductionHost =
+    typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1';
+
+  if (!base || (isProductionHost && (base.includes('localhost') || base.includes('127.0.0.1')))) {
+    base = isProductionHost ? CLOUD_API_URL : 'http://localhost:5000/api/v1';
+  }
+
   if (base.endsWith('/')) base = base.slice(0, -1);
   if (!base.includes('/api/v1')) base = `${base}/api/v1`;
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
@@ -131,9 +143,16 @@ const resolveImageUrl = (url?: string | null): string => {
   }
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
   const envUrl = ((import.meta.env?.VITE_API_URL || (import.meta as any).env?.VITE_API_URL) || '').trim();
-  const base = envUrl
-    ? envUrl.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '')
-    : 'http://localhost:5000';
+  const isProductionHost =
+    typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost' &&
+    window.location.hostname !== '127.0.0.1';
+
+  let base = envUrl;
+  if (!base || (isProductionHost && (base.includes('localhost') || base.includes('127.0.0.1')))) {
+    base = isProductionHost ? CLOUD_API_URL : 'http://localhost:5000';
+  }
+  base = base.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
   return `${base}${cleanPath}`;
 };
 
@@ -440,15 +459,11 @@ export const DigitalStorefrontPage: React.FC = () => {
         setLoadError(null);
 
         // Fire tenant and menu fetches IN PARALLEL — menu request starts immediately
-        // without waiting for the tenant response. The tenant UUID is needed for the
-        // menu's X-Tenant-Id header, but we can use venueSlug as a fallback key and
-        // then re-fetch the menu with UUID if the first attempt fails.
-        // This cuts the sequential 3-fetch waterfall down to 2 parallel fetches.
+        // using the ?slug= query parameter. This is a standard GET request that does
+        // not require custom headers, preventing CORS preflight failures.
         const [tenantRes, menuRes] = await Promise.all([
-          fetch(getApiUrl(`/tenants/${venueSlug}`)),
-          fetch(getApiUrl('/menu'), {
-            headers: { 'X-Venue-Slug': venueSlug },
-          }),
+          fetch(getApiUrl(`/tenants/${encodeURIComponent(venueSlug)}`)),
+          fetch(getApiUrl(`/menu?slug=${encodeURIComponent(venueSlug)}`)),
         ]);
 
         // ── Process tenant response ───────────────────────────────────────────
@@ -517,9 +532,7 @@ export const DigitalStorefrontPage: React.FC = () => {
         // If the parallel menu fetch (using venueSlug) failed, retry with the resolved UUID
         let menuData: any;
         if (!menuRes.ok && resolvedClubUuid) {
-          const retryRes = await fetch(getApiUrl('/menu'), {
-            headers: { 'X-Tenant-Id': resolvedClubUuid },
-          });
+          const retryRes = await fetch(getApiUrl(`/menu?businessUuid=${encodeURIComponent(resolvedClubUuid)}`));
           if (!retryRes.ok) throw new Error('Failed to load the menu. Please try again.');
           menuData = await retryRes.json();
         } else if (!menuRes.ok) {

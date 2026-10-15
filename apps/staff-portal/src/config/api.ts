@@ -1,7 +1,7 @@
 export type ApiTarget = 'local' | 'cloud';
 
 export const LOCAL_API_URL = 'http://localhost:5000/api/v1';
-export const CLOUD_API_URL = 'https://orderup-ke.onrender.com/api/v1';
+export const CLOUD_API_URL = 'https://orderup-jo8h.onrender.com/api/v1';
 
 export const getApiTarget = (): ApiTarget => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
