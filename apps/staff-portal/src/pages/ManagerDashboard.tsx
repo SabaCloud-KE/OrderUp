@@ -505,6 +505,177 @@ const AddWaiterModal = ({ open, onClose, onAdd }: {
   );
 };
 
+/* ------------------------------------------------
+   EDIT WAITER MODAL
+------------------------------------------------ */
+interface EditWaiterForm {
+  firstName: string; lastName: string; phone: string; email: string;
+  employeeNo: string; status: string; shift: string; notes: string;
+}
+
+const EditWaiterModal = ({ open, waiter, onClose, onSave }: {
+  open: boolean;
+  waiter: Waiter | null;
+  onClose: () => void;
+  onSave: (updated: Waiter) => void;
+}) => {
+  const [form, setForm] = React.useState<EditWaiterForm>({
+    firstName: '', lastName: '', phone: '', email: '',
+    employeeNo: '', status: 'Active', shift: '', notes: '',
+  });
+  const [errors, setErrors] = React.useState<Partial<Record<keyof EditWaiterForm | 'api', string>>>({});
+  const [saving, setSaving] = React.useState(false);
+
+  // Populate form whenever a different waiter is selected
+  React.useEffect(() => {
+    if (waiter) {
+      setForm({
+        firstName: waiter.firstName,
+        lastName: waiter.lastName,
+        phone: waiter.phone,
+        email: waiter.email,
+        employeeNo: waiter.employeeNo,
+        status: waiter.status,
+        shift: waiter.shift,
+        notes: waiter.notes,
+      });
+      setErrors({});
+    }
+  }, [waiter]);
+
+  const validateField = (k: keyof EditWaiterForm, v: string): string => {
+    if (k === 'firstName' || k === 'lastName') {
+      if (!String(v).trim()) return 'Required';
+      if (!/^[a-zA-Z\s]+$/.test(String(v))) return 'Letters only';
+      if (String(v).trim().length < 2) return 'Min 2 characters';
+    }
+    if (k === 'phone') {
+      if (!String(v).trim()) return 'Required';
+      if (!/^\d+$/.test(String(v).trim())) return 'Numbers only';
+      if (String(v).trim().length !== 9) return 'Phone must be exactly 10 digits (e.g. 0712345678)';
+    }
+    if (k === 'email') {
+      if (!String(v).trim()) return 'Email is required for login';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v))) return 'Enter a valid email address';
+    }
+    return '';
+  };
+
+  const set = (k: keyof EditWaiterForm, v: string) => {
+    setForm(p => ({ ...p, [k]: v }));
+    setErrors(p => ({ ...p, [k]: validateField(k, v) }));
+  };
+
+  const validate = () => {
+    const e: Partial<Record<keyof EditWaiterForm, string>> = {};
+    const fnErr = validateField('firstName', form.firstName); if (fnErr) e.firstName = fnErr;
+    const lnErr = validateField('lastName', form.lastName); if (lnErr) e.lastName = lnErr;
+    const phErr = validateField('phone', form.phone); if (phErr) e.phone = phErr;
+    const emErr = validateField('email', form.email); if (emErr) e.email = emErr;
+    setErrors(e); return Object.keys(e).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!waiter || !validate()) return;
+    setSaving(true);
+    setErrors({});
+    try {
+      const res = await fetch(getApiUrl(`/auth/users/${waiter.id}`), {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          fullName: `${form.firstName.trim()} ${form.lastName.trim()}`,
+          phone: form.phone.trim() || undefined,
+          email: form.email.trim().toLowerCase(),
+          isActive: form.status === 'Active',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({ api: data?.error?.message ?? data?.message ?? 'Failed to update waiter' });
+        return;
+      }
+      onSave({
+        ...waiter,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim().toLowerCase(),
+        employeeNo: form.employeeNo || waiter.employeeNo,
+        status: form.status as Waiter['status'],
+        shift: form.shift,
+        notes: form.notes,
+      });
+      onClose();
+    } catch {
+      setErrors({ api: 'Network error — please try again' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!waiter) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title="Edit Waiter Details" size="lg">
+      <div className="space-y-6">
+
+        {/* Section 1 — Personal Information */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-6 w-6 rounded-md bg-blue-100 flex items-center justify-center"><Users className="h-3.5 w-3.5 text-blue-600" /></div>
+            <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">Personal Information</h4>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><FL required>First Name</FL><SI value={form.firstName} onChange={e => set('firstName', e.target.value)} placeholder="Jane" error={errors.firstName} /></div>
+            <div><FL required>Last Name</FL><SI value={form.lastName} onChange={e => set('lastName', e.target.value)} placeholder="Wanjiku" error={errors.lastName} /></div>
+            <div><FL required>Phone Number</FL><PhoneInput value={form.phone} onChange={v => set('phone', v)} error={errors.phone} /></div>
+            <div><FL required>Email</FL><SI type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="jane@club.co.ke" error={errors.email} /></div>
+            <div><FL>Employee No. <span className="text-slate-400 font-normal normal-case">(optional)</span></FL><SI value={form.employeeNo} onChange={e => set('employeeNo', e.target.value)} placeholder="EMP-006" /></div>
+          </div>
+        </div>
+
+        <div className="border-t" style={{ borderColor: '#E2E8F0' }} />
+
+        {/* Section 2 — Employment */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-6 w-6 rounded-md bg-emerald-100 flex items-center justify-center"><Briefcase className="h-3.5 w-3.5 text-emerald-600" /></div>
+            <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">Employment</h4>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <FL>Employment Status</FL>
+              <SS value={form.status} onChange={e => set('status', e.target.value)} options={[{ v: 'Active', l: 'Active' }, { v: 'Inactive', l: 'Inactive' }, { v: 'On Leave', l: 'On Leave' }]} />
+            </div>
+            <div>
+              <FL>Shift <span className="text-slate-400 font-normal normal-case">(optional)</span></FL>
+              <SS value={form.shift} onChange={e => set('shift', e.target.value)} options={[{ v: '', l: '— Not assigned —' }, { v: 'Morning', l: 'Morning (6am – 2pm)' }, { v: 'Afternoon', l: 'Afternoon (2pm – 10pm)' }, { v: 'Evening', l: 'Evening (6pm – 2am)' }, { v: 'Night', l: 'Night (10pm – 6am)' }]} />
+            </div>
+            <div className="col-span-2">
+              <FL>Notes <span className="text-slate-400 font-normal normal-case">(optional)</span></FL>
+              <STA value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} placeholder="Any additional notes about this staff member…" />
+            </div>
+          </div>
+        </div>
+
+        {errors.api && (
+          <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+            <p className="text-xs font-medium text-red-700">{errors.api}</p>
+          </div>
+        )}
+        <div className="flex gap-3 pt-2 border-t" style={{ borderColor: '#E2E8F0' }}>
+          <button onClick={onClose} disabled={saving} className="flex-1 rounded-xl border py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50" style={{ borderColor: '#E2E8F0' }}>Cancel</button>
+          <button onClick={handleSubmit} disabled={saving} className="flex-1 rounded-xl py-2.5 text-sm font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-60" style={{ background: '#2563EB' }}>
+            {saving ? 'Saving…' : <><Edit2 className="h-4 w-4 inline mr-1.5" />Save Changes</>}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 /*                                                                                                                   
    STAFF MANAGEMENT PAGE
                                                                                                                    */
@@ -514,6 +685,7 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
   const [search, setSearch] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('All');
   const [showAdd, setShowAdd] = React.useState(false);
+  const [editTarget, setEditTarget] = React.useState<Waiter | null>(null);
 
   /* Fetch staff from API with live polling */
   const fetchStaff = React.useCallback(async (showLoading = false) => {
@@ -696,6 +868,9 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
                   <td className="px-4 py-3.5 text-xs border-b" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>{w.lastLogin}</td>
                   <td className="px-4 py-3.5 border-b" style={{ borderColor: 'var(--border)' }}>
                     <div className="flex items-center gap-1.5">
+                      <button onClick={() => setEditTarget(w)} className="p-1.5 rounded-lg hover:bg-blue-50 transition-colors" title="Edit Details">
+                        <Edit2 className="h-3.5 w-3.5 text-blue-500" />
+                      </button>
                       <button onClick={() => handleResetPassword(w)} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors" title="Reset Password">
                         <Key className="h-3.5 w-3.5" style={{ color: 'var(--text-secondary)' }} />
                       </button>
@@ -723,6 +898,16 @@ const StaffManagementPage = ({ showToast }: { showToast: (m: string) => void }) 
       </div>
 
       <AddWaiterModal open={showAdd} onClose={() => setShowAdd(false)} onAdd={(w) => { setWaiters(p => [w, ...p]); showToast(`${w.firstName} ${w.lastName} added successfully`); }} />
+      <EditWaiterModal
+        open={editTarget !== null}
+        waiter={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSave={(updated) => {
+          setWaiters(prev => prev.map(w => w.id === updated.id ? updated : w));
+          setEditTarget(null);
+          showToast(`${updated.firstName} ${updated.lastName} updated successfully`);
+        }}
+      />
     </div>
   );
 };
