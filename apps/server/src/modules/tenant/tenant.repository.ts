@@ -314,10 +314,14 @@ export class TenantRepository implements ITenantRepository {
     return { club: res.business, manager: res.admin, business: res.business, admin: res.admin };
   }
 
-  async update(businessUuid: string, data: Partial<Business>): Promise<Business> {
+  async update(businessUuid: string, data: Partial<Business> & { brandColor?: string }): Promise<Business> {
+    const { brandColor, ...cleanData } = data as any;
+    if (brandColor && !cleanData.themeColor) {
+      cleanData.themeColor = brandColor;
+    }
     return prisma.business.update({
       where: { businessUuid },
-      data: data as any,
+      data: cleanData,
     });
   }
 

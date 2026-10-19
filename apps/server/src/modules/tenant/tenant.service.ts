@@ -221,6 +221,13 @@ export class TenantService {
     await this.getTenantById(businessUuid);
     const updateData: any = { ...data };
 
+    if ('brandColor' in updateData) {
+      if (!updateData.themeColor && updateData.brandColor) {
+        updateData.themeColor = updateData.brandColor;
+      }
+      delete updateData.brandColor;
+    }
+
     // Encrypt sensitive M-Pesa credentials if updated
     if ('mpesaConsumerSecret' in data) {
       const val = data.mpesaConsumerSecret;

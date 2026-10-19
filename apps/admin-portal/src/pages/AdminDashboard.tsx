@@ -331,20 +331,29 @@ const BUSINESS_TYPE_ICONS: Record<BusinessType, React.ReactNode> = {
 /* ─── Toast ─── */
 const Toast = ({ msg, type = 'success', onDone }: { msg: string; type?: 'success' | 'error'; onDone: () => void }) => {
   useEffect(() => {
-    const t = setTimeout(onDone, 3500);
+    const t = setTimeout(onDone, 4000);
     return () => clearTimeout(t);
   }, [onDone]);
+
+  // Sanitize any raw Prisma or base64 dumps that might slip into error messages
+  const cleanMsg = (msg || '')
+    .replace(/data:image\/[a-zA-Z0-9+.-]+;base64,[a-zA-Z0-9+/=]+/g, '[image]')
+    .replace(/Invalid `prisma\.[^`]+` invocation:[\s\S]*?(?=(Unknown argument|Argument|Invalid|\n\n|$))/gi, '')
+    .trim();
+
   return (
     <div
-      className="fixed bottom-6 right-6 z-[999] flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-2xl animate-in fade-in slide-in-from-bottom-3"
+      onClick={onDone}
+      className="fixed bottom-6 right-6 z-[999] flex items-start gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-2xl animate-in fade-in slide-in-from-bottom-3 max-w-md break-words cursor-pointer transition-all hover:opacity-95"
       style={{ background: type === 'success' ? '#0F172A' : '#7F1D1D', border: '1px solid rgba(255,255,255,0.1)', minWidth: 280 }}
     >
       {type === 'success' ? (
-        <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+        <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
       ) : (
-        <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+        <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
       )}
-      <span>{msg}</span>
+      <span className="flex-1 text-xs leading-relaxed">{cleanMsg || 'An error occurred'}</span>
+      <button onClick={(e) => { e.stopPropagation(); onDone(); }} className="text-white/60 hover:text-white text-xs ml-1 flex-shrink-0">✕</button>
     </div>
   );
 };
@@ -1291,6 +1300,7 @@ const CreateBusinessStepper = ({ onSuccess, onCancel }: { onSuccess: (b: Busines
           email: form.email.trim(),
           openingHours: form.openingTime,
           closingHours: form.closingTime,
+          themeColor: form.themeColor,
           brandColor: form.themeColor,
           logoUrl: form.logoUrl || null,
           bannerUrl: form.bannerUrl || null,
@@ -1550,6 +1560,7 @@ const EditBusinessModal = ({
         body: JSON.stringify({
           name: form.name.trim(),
           businessType: form.businessType,
+          description: form.description.trim() || null,
           address: form.address.trim(),
           city: form.city.trim(),
           county: form.county.trim(),
@@ -1557,7 +1568,7 @@ const EditBusinessModal = ({
           email: form.email.trim(),
           openingHours: form.openingTime,
           closingHours: form.closingTime,
-          brandColor: form.themeColor,
+          themeColor: form.themeColor,
           logoUrl: form.logoUrl.trim() || null,
           bannerUrl: form.bannerUrl.trim() || null,
           // Model B: Independent Daraja M-Pesa Credentials
@@ -2794,6 +2805,394 @@ const CreateUserModal = ({
 };
 
 /* ══════════════════════════════════════
+   EDIT USER / ADMIN MODAL
+══════════════════════════════════════ */
+const EditUserModal = ({
+  user,
+  businesses,
+  isBusinessAdminContext = false,
+  onClose,
+  onSuccess,
+  showToast,
+}: {
+  user: {
+    userUuid: string;
+    fullName: string;
+    email: string;
+    phone?: string;
+    role: string;
+    businessUuid?: string;
+    businessName?: string;
+    isActive: boolean;
+  } | null;
+  businesses: Business[];
+  isBusinessAdminContext?: boolean;
+  onClose: () => void;
+  onSuccess: (message: string) => void;
+  showToast: (m: string, t?: 'success' | 'error') => void;
+}) => {
+  if (!user) return null;
+
+  const [fullName, setFullName] = useState(user.fullName || '');
+  const [email, setEmail] = useState(user.email || '');
+  const [phone, setPhone] = useState(
+    user.phone ? user.phone.replace(/^\+?254/, '').replace(/^0+/, '').replace(/\D/g, '').slice(0, 9) : ''
+  );
+  const [fieldErrors, setFieldErrors] = useState<{ fullName?: string; email?: string; phone?: string }>({});
+  const [role, setRole] = useState<string>(user.role || (isBusinessAdminContext ? 'ADMIN' : 'WAITER'));
+  const [businessUuid, setBusinessUuid] = useState(user.businessUuid || (businesses[0]?.id || ''));
+  const [isActive, setIsActive] = useState<boolean>(user.isActive !== false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateUserField = (field: 'fullName' | 'email' | 'phone', value: string): string => {
+    if (field === 'fullName') {
+      if (!value.trim()) return 'Full name is required';
+      if (!/^[a-zA-Z\s]+$/.test(value)) return 'Name can only contain letters and spaces';
+      if (value.trim().length < 3) return 'Name must be at least 3 characters';
+    }
+    if (field === 'email') {
+      if (!value.trim()) return 'Email is required';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address';
+    }
+    if (field === 'phone' && value.trim()) {
+      const digits = value.replace(/\D/g, '');
+      if (!/^\d+$/.test(digits)) return 'Phone must contain numbers only';
+      if (digits.length !== 9) return 'Phone number must be exactly 9 digits (e.g. 712345678)';
+    }
+    return '';
+  };
+
+  const handleGeneratePassword = () => {
+    try {
+      const pwd = generatePassword();
+      setPassword(pwd);
+      setShowPassword(true);
+    } catch {
+      setPassword('Admin@OrderUp2026!');
+      setShowPassword(true);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const nameErr = validateUserField('fullName', fullName);
+    const emailErr = validateUserField('email', email);
+    const phoneErr = validateUserField('phone', phone);
+    if (nameErr || emailErr || phoneErr) {
+      setFieldErrors({ fullName: nameErr, email: emailErr, phone: phoneErr });
+      return;
+    }
+
+    if (role !== 'SUPER_ADMIN' && !businessUuid) {
+      setError('Please select an assigned business for this user.');
+      return;
+    }
+
+    if (password.trim()) {
+      const pwdVal = validateStrongPassword(password);
+      if (!pwdVal.isValid) {
+        setError(pwdVal.error || STRONG_PASSWORD_MESSAGE);
+        return;
+      }
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const payload: any = {
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        role,
+        businessUuid: role === 'SUPER_ADMIN' ? (businessUuid || null) : businessUuid,
+        isActive,
+      };
+      if (phone.trim()) {
+        payload.phone = phone.trim();
+      } else {
+        payload.phone = null;
+      }
+      if (password.trim()) {
+        payload.password = password.trim();
+      }
+
+      const res = await apiFetch(getApiUrl(`/auth/users/${user.userUuid}`), {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || data.message || 'Failed to update user');
+      }
+
+      onSuccess(`${isBusinessAdminContext ? 'Business Admin' : 'User'} "${fullName}" updated successfully.`);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Error updating user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    setDeleting(true);
+    try {
+      const res = await apiFetch(getApiUrl(`/auth/users/${user.userUuid}`), {
+        method: 'DELETE',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || data.message || 'Failed to delete account');
+      }
+      showToast(`Account for "${fullName}" was deleted successfully.`);
+      onSuccess(`Account deleted.`);
+      onClose();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to delete account', 'error');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-lg rounded-2xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+              <Edit2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Edit {isBusinessAdminContext ? 'Business Admin' : 'Platform User'}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Update account profile, business assignment, role, or credentials
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+          {error && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs font-semibold text-red-500 flex items-center justify-between">
+              <span>{error}</span>
+              <button type="button" onClick={() => setError(null)} className="text-xs underline text-red-400">
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Full Name *</label>
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={e => {
+                  setFullName(e.target.value);
+                  setFieldErrors(prev => ({ ...prev, fullName: validateUserField('fullName', e.target.value) }));
+                }}
+                className={`w-full rounded-xl border ${
+                  fieldErrors.fullName ? 'border-red-400 bg-red-50/20' : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50'
+                } px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition`}
+              />
+              {fieldErrors.fullName && <p className="text-xs text-red-500 mt-1 font-medium">{fieldErrors.fullName}</p>}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Email Address *</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={e => {
+                  setEmail(e.target.value);
+                  setFieldErrors(prev => ({ ...prev, email: validateUserField('email', e.target.value) }));
+                }}
+                className={`w-full rounded-xl border ${
+                  fieldErrors.email ? 'border-red-400 bg-red-50/20' : 'border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50'
+                } px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition`}
+              />
+              {fieldErrors.email && <p className="text-xs text-red-500 mt-1 font-medium">{fieldErrors.email}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Phone Number (Optional)</label>
+              <PhoneInput
+                value={phone}
+                onChange={v => {
+                  setPhone(v);
+                  setFieldErrors(prev => ({ ...prev, phone: validateUserField('phone', v) }));
+                }}
+                error={fieldErrors.phone}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Platform Role *</label>
+              <select
+                value={role}
+                onChange={e => setRole(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition"
+              >
+                <option value="ADMIN">Business Admin (ADMIN)</option>
+                <option value="MANAGER">Manager (MANAGER)</option>
+                <option value="WAITER">Waiter (WAITER)</option>
+                <option value="SUPER_ADMIN">Platform Super Admin (SUPER_ADMIN)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Assigned Business *</label>
+              <select
+                value={businessUuid}
+                onChange={e => setBusinessUuid(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition"
+              >
+                {role === 'SUPER_ADMIN' && <option value="">Platform-wide (No specific business)</option>}
+                {businesses.length === 0 && <option value="">No businesses available</option>}
+                {businesses.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.businessType})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Account Status *</label>
+              <select
+                value={isActive ? 'ACTIVE' : 'SUSPENDED'}
+                onChange={e => setIsActive(e.target.value === 'ACTIVE')}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white outline-none focus:border-blue-500 transition"
+              >
+                <option value="ACTIVE">Active (Login Enabled)</option>
+                <option value="SUSPENDED">Suspended (Login Disabled)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Optional Password Reset */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between mb-1.5">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Reset Password (Optional)</label>
+                <span className="block text-[11px] text-slate-400">Leave blank to keep existing password</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleGeneratePassword}
+                className="text-xs font-semibold text-blue-500 hover:text-blue-600 flex items-center gap-1"
+              >
+                <RefreshCcw className="h-3 w-3" /> Generate Password
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter new password or leave blank"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 pr-10 text-sm font-mono text-slate-900 dark:text-white outline-none focus:border-blue-500 transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Delete Danger Zone */}
+          {user.role !== 'SUPER_ADMIN' && (
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+              {showDeleteConfirm ? (
+                <div className="rounded-xl border border-red-300 dark:border-red-900/50 bg-red-50/60 dark:bg-red-950/20 p-3.5 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-red-700 dark:text-red-400">
+                    <ShieldAlert className="h-4 w-4" /> Permanently delete this account?
+                  </div>
+                  <p className="text-xs text-red-600 dark:text-red-400/90">
+                    Are you sure? User "{fullName}" will be deactivated and marked as deleted.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={deleting}
+                      onClick={handleDeleteUser}
+                      className="rounded-lg bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-xs font-bold transition flex items-center gap-1"
+                    >
+                      {deleting ? <RefreshCcw className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                      Confirm Delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Remove user access permanently</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-red-500 hover:text-red-600 hover:underline"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Delete User Account
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 disabled:opacity-50 transition"
+            >
+              {loading ? <RefreshCcw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+              {loading ? 'Saving Changes…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════
    FEATURE 6: BUSINESS ADMINS
 ══════════════════════════════════════ */
 const BusinessAdminsPage = ({
@@ -2808,6 +3207,7 @@ const BusinessAdminsPage = ({
   showToast: (m: string, t?: 'success' | 'error') => void;
 }) => {
   const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<BusinessAdmin | null>(null);
   const [search, setSearch] = useState('');
   const [businessFilter, setBusinessFilter] = useState('ALL');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -2854,6 +3254,20 @@ const BusinessAdminsPage = ({
               showToast(msg);
               onRefresh();
             }}
+          />
+        )}
+
+        {editingAdmin && (
+          <EditUserModal
+            user={editingAdmin}
+            businesses={businesses}
+            isBusinessAdminContext={true}
+            onClose={() => setEditingAdmin(null)}
+            onSuccess={msg => {
+              showToast(msg);
+              onRefresh();
+            }}
+            showToast={showToast}
           />
         )}
 
@@ -2960,23 +3374,32 @@ const BusinessAdminsPage = ({
                     <td className="px-5 py-3.5"><StatusBadge status={admin.status} /></td>
                     <td className="px-5 py-3.5 text-xs text-slate-400">{admin.lastLogin}</td>
                     <td className="px-5 py-3.5 text-right">
-                      <button
-                        onClick={() => toggleAdminStatus(admin)}
-                        disabled={actionLoading === admin.userUuid}
-                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                          admin.isActive
-                            ? 'border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40'
-                            : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-                        }`}
-                      >
-                        {actionLoading === admin.userUuid ? (
-                          <RefreshCcw className="h-3 w-3 animate-spin" />
-                        ) : admin.isActive ? (
-                          <><UserX className="h-3 w-3" /> Deactivate</>
-                        ) : (
-                          <><UserCheck className="h-3 w-3" /> Activate</>
-                        )}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setEditingAdmin(admin)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition shadow-sm"
+                          title="Edit Admin"
+                        >
+                          <Edit2 className="h-3 w-3" /> Edit
+                        </button>
+                        <button
+                          onClick={() => toggleAdminStatus(admin)}
+                          disabled={actionLoading === admin.userUuid}
+                          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                            admin.isActive
+                              ? 'border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40'
+                              : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                          }`}
+                        >
+                          {actionLoading === admin.userUuid ? (
+                            <RefreshCcw className="h-3 w-3 animate-spin" />
+                          ) : admin.isActive ? (
+                            <><UserX className="h-3 w-3" /> Deactivate</>
+                          ) : (
+                            <><UserCheck className="h-3 w-3" /> Activate</>
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -3002,6 +3425,7 @@ const PlatformUsersPage = ({
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddUser, setShowAddUser] = useState(false);
+  const [editingUser, setEditingUser] = useState<PlatformUser | null>(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [businessFilter, setBusinessFilter] = useState('ALL');
@@ -3091,6 +3515,20 @@ const PlatformUsersPage = ({
               showToast(msg);
               fetchUsers();
             }}
+          />
+        )}
+
+        {editingUser && (
+          <EditUserModal
+            user={editingUser}
+            businesses={businesses}
+            isBusinessAdminContext={false}
+            onClose={() => setEditingUser(null)}
+            onSuccess={msg => {
+              showToast(msg);
+              fetchUsers();
+            }}
+            showToast={showToast}
           />
         )}
 
@@ -3217,25 +3655,34 @@ const PlatformUsersPage = ({
                     </td>
                     <td className="px-5 py-3.5 text-xs text-slate-400">{user.createdAt}</td>
                     <td className="px-5 py-3.5 text-right">
-                      {user.role !== 'SUPER_ADMIN' && (
+                      <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => toggleUserStatus(user)}
-                          disabled={actionLoading === user.userUuid}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
-                            user.isActive
-                              ? 'border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40'
-                              : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-                          }`}
+                          onClick={() => setEditingUser(user)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition shadow-sm"
+                          title="Edit User"
                         >
-                          {actionLoading === user.userUuid ? (
-                            <RefreshCcw className="h-3 w-3 animate-spin" />
-                          ) : user.isActive ? (
-                            'Deactivate'
-                          ) : (
-                            'Activate'
-                          )}
+                          <Edit2 className="h-3 w-3" /> Edit
                         </button>
-                      )}
+                        {user.role !== 'SUPER_ADMIN' && (
+                          <button
+                            onClick={() => toggleUserStatus(user)}
+                            disabled={actionLoading === user.userUuid}
+                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                              user.isActive
+                                ? 'border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40'
+                                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                            }`}
+                          >
+                            {actionLoading === user.userUuid ? (
+                              <RefreshCcw className="h-3 w-3 animate-spin" />
+                            ) : user.isActive ? (
+                              'Deactivate'
+                            ) : (
+                              'Activate'
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

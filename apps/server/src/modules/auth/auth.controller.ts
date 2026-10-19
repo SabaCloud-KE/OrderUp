@@ -341,13 +341,38 @@ export class AuthController {
   updateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { uuid } = req.params;
-      const { fullName, email, phone, businessUuid, clubUuid, isActive } = req.body;
+      const callerRole = normalizeRole(req.user?.role || '');
+      const callerBusinessUuid = req.businessUuid || req.user?.businessUuid || req.user?.tenantId;
+      const { fullName, email, phone, role, businessUuid, clubUuid, isActive, password } = req.body;
+
+      if (callerRole !== UserRole.SUPER_ADMIN) {
+        const targetUser = await this.authService.getUserById(uuid);
+        if (!targetUser) {
+          res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } });
+          return;
+        }
+        if (targetUser.businessUuid !== callerBusinessUuid) {
+          res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You can only update users within your business' } });
+          return;
+        }
+        if (callerRole === UserRole.MANAGER && (targetUser.role === UserRole.ADMIN || targetUser.role === UserRole.SUPER_ADMIN)) {
+          res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Managers cannot modify administrator accounts' } });
+          return;
+        }
+        if (callerRole === UserRole.MANAGER && role && (role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN)) {
+          res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Managers cannot grant administrator privileges' } });
+          return;
+        }
+      }
+
       const updated = await this.authService.updateUserDetails(uuid, {
         fullName,
         email,
         phone,
-        businessUuid: businessUuid || clubUuid,
+        role,
+        businessUuid: businessUuid !== undefined ? businessUuid : clubUuid,
         isActive,
+        password,
       });
 
       res.json({
@@ -355,9 +380,11 @@ export class AuthController {
         data: {
           user: {
             uuid: updated.userUuid,
+            userUuid: updated.userUuid,
             fullName: updated.fullName,
             email: updated.email,
             phone: updated.phone,
+            role: updated.role,
             businessUuid: updated.businessUuid,
             clubUuid: updated.businessUuid,
             isActive: updated.isActive,

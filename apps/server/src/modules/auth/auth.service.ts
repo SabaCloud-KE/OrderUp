@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { IAuthRepository } from './auth.interface';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../common/utils/jwt';
-import { UnauthorizedError, BadRequestError, NotFoundError } from '../../common/errors/app-error';
+import { UnauthorizedError, BadRequestError, NotFoundError, ConflictError } from '../../common/errors/app-error';
 import { normalizeRole, UserRole, validateStrongPassword, STRONG_PASSWORD_MESSAGE } from '@orderup/shared';
 import { prisma } from '../../config/prisma';
 import { emailService } from '../notification/email.service';
@@ -746,24 +746,42 @@ export class AuthService {
       fullName?: string;
       email?: string;
       phone?: string;
-      businessUuid?: string;
-      clubUuid?: string;
+      role?: string;
+      businessUuid?: string | null;
+      clubUuid?: string | null;
       isActive?: boolean;
+      password?: string;
     },
   ): Promise<any> {
     const user = await this.authRepository.findById(userUuid);
     if (!user) throw new NotFoundError('User not found');
 
+    if (data.email && data.email.trim().toLowerCase() !== user.email.toLowerCase()) {
+      const existing = await this.authRepository.findByEmail(data.email.trim().toLowerCase());
+      if (existing && existing.userUuid !== userUuid) {
+        throw new ConflictError('A user with this email address already exists');
+      }
+    }
+
     const updateData: any = {};
     if (data.fullName !== undefined) updateData.fullName = data.fullName.trim();
     if (data.email !== undefined) updateData.email = data.email.trim().toLowerCase();
     if (data.phone !== undefined) updateData.phone = data.phone ? data.phone.trim() : null;
+    if (data.role !== undefined) updateData.role = normalizeRole(data.role);
     const bUuid = data.businessUuid !== undefined ? data.businessUuid : data.clubUuid;
     if (bUuid !== undefined) updateData.businessUuid = bUuid || null;
     if (data.isActive !== undefined) updateData.isActive = Boolean(data.isActive);
+    if (data.password !== undefined && data.password.trim().length > 0) {
+      const pwdVal = validateStrongPassword(data.password);
+      if (!pwdVal.isValid) {
+        throw new BadRequestError(pwdVal.error || STRONG_PASSWORD_MESSAGE);
+      }
+      updateData.passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+    }
 
     const updated = await this.authRepository.updateUser(userUuid, updateData);
     return updated;
   }
 }
+
 
